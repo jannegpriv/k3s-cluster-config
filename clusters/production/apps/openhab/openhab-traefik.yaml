@@ -18,7 +18,6 @@ spec:
       X-OPENHAB-AUTH-HEADER: "true"
     customResponseHeaders:
       X-OPENHAB-AUTH-HEADER: "true"
-spec:
   rules:
   - host: openhab.k3s.nu
     http:
