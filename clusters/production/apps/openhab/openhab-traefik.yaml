@@ -39,7 +39,7 @@ spec:
           service:
             name: openhab-production
             port:
-              name: openhab-http
+              number: 8080
   tls:
   - hosts:
     - openhab.k3s.nu
