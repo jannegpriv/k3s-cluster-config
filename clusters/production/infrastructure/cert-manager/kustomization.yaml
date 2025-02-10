@@ -6,8 +6,3 @@ resources:
   - release.yaml
   - cluster-issuer.yaml
   - cloudflare-secret.yaml
-
-decryption:
-  provider: sops
-  secretRef:
-    name: sops-gpg
