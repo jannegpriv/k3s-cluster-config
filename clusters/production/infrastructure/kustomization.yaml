@@ -4,3 +4,5 @@ resources:
   - cert-manager/namespace.yaml
   - cert-manager/repository.yaml
   - cert-manager/release.yaml
+  - cert-manager/cluster-issuer.yaml
+  - cert-manager/cloudflare-secret.yaml
