@@ -24,7 +24,7 @@ spec:
         node-role.kubernetes.io/worker: worker
       containers:
       - name: openhab432
-        image: ghcr.io/jannegpriv/openhab-container:4.3.2
+        image: ghcr.io/jannegpriv/openhab-container:4.3.2-arm64
         imagePullPolicy: Always
         resources:
           limits:
