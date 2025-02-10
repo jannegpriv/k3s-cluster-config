@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: openhab-production
+  labels:
+   app: openhab-production
+spec:
+  serviceName: openhab-production
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openhab-production
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: openhab-production
+      annotations:
+        kubernetes.io/change-cause: "Update to OpenHAB 4.3.2"
+    spec:
+      serviceAccountName: default
+      nodeSelector:
+        node-role.kubernetes.io/worker: worker
+      containers:
+      - name: openhab432
+        image: ghcr.io/jannegpriv/openhab-container:4.3.2
+        imagePullPolicy: Always
+        resources:
+          limits:
+            memory: "3000Mi"
+            cpu:    "2"
+          requests:
+            memory: "2000Mi"
+            cpu:    "1"
+        env:  
+        - name: EXTRA_JAVA_OPTS
+          value: "-Xmx1500m -Duser.timezone=Europe/Stockholm"
+        ports:
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        - containerPort: 8101
+          name: console
+          protocol: TCP
+        volumeMounts:
+        - name: etc-localtime
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: etc-timezone
+          mountPath: /etc/timezone
+          readOnly: true
+        - name: openhab-conf
+          mountPath: /openhab/conf
+          readOnly: false
+        - name: openhab-userdata
+          mountPath: /openhab/userdata
+          readOnly: false
+        - name: openhab-addons
+          mountPath: /openhab/addons
+          readOnly: false
+        - name: openhab-karaf
+          mountPath: /openhab/.karaf
+          readOnly: false
+      volumes:
+      - name: etc-localtime
+        hostPath:
+          path: /usr/share/zoneinfo/Europe/Stockholm
+      - name: etc-timezone
+        hostPath:
+          path: /etc/timezone
+      - name: openhab-conf
+        persistentVolumeClaim:
+          claimName: openhab-production-conf-claim
+      - name: openhab-userdata
+        persistentVolumeClaim:
+          claimName: openhab-production-userdata-claim
+      - name: openhab-addons
+        persistentVolumeClaim:
+          claimName: openhab-production-addons-claim
+      - name: openhab-karaf
+        persistentVolumeClaim:
+          claimName: openhab-production-karaf-claim
+      terminationGracePeriodSeconds: 300

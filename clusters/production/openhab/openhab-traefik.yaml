@@ -1,0 +1,36 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openhab-production
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-dns
+    traefik.ingress.kubernetes.io/router.middlewares: default-auth-basic@kubernetescrd,default-openhab-headers@kubernetescrd
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: openhab-headers
+spec:
+  headers:
+    customRequestHeaders:
+      X-OPENHAB-AUTH-HEADER: "true"
+    customResponseHeaders:
+      X-OPENHAB-AUTH-HEADER: "true"
+spec:
+  rules:
+  - host: openhab.k3s.nu
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: openhab-production
+            port:
+              name: openhab-http
+  tls:
+  - hosts:
+    - openhab.k3s.nu
+    secretName: openhab-k3s-nu-tls

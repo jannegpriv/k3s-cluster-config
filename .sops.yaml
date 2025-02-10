@@ -1,0 +1,4 @@
+creation_rules:
+  - path_regex: clusters/production/.*\.yaml
+    encrypted_regex: ^(data|stringData)$
+    pgp: BE7CC9C5400AF50610072526D7332A14FB23EE47 # OpenHAB K8s key
