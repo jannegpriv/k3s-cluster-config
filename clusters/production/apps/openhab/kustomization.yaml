@@ -7,3 +7,4 @@ resources:
   - openhab-service.yaml
   - openhab-statefulset.yaml
   - openhab-traefik.yaml
+  - openhab-middleware.yaml

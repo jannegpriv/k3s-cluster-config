@@ -23,14 +23,3 @@ spec:
   - hosts:
     - openhab.k3s.nu
     secretName: openhab-k3s-nu-tls
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: openhab-headers
-spec:
-  headers:
-    customRequestHeaders:
-      X-OPENHAB-AUTH-HEADER: "true"
-    customResponseHeaders:
-      X-OPENHAB-AUTH-HEADER: "true"
