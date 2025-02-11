@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: cert-manager
 resources:
   - namespace.yaml
+  - repository.yaml
   - release.yaml
   - cluster-issuer.yaml
   - cloudflare-secret.yaml
