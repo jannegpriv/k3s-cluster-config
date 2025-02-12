@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: test-dns-cert
+  namespace: cert-manager
+spec:
+  secretName: test-dns-cert-tls
+  duration: 24h
+  renewBefore: 12h
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  dnsNames:
+    - test.k3s.nu  # Test subdomain
+  issuerRef:
+    name: letsencrypt-staging    # Using staging to avoid rate limits
+    kind: ClusterIssuer
+    group: cert-manager.io

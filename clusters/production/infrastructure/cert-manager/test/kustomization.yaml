@@ -3,3 +3,6 @@ kind: Kustomization
 resources:
   - test-issuer.yaml
   - test-certificate.yaml
+  - test-dns-certificate.yaml
+  - test-http-certificate.yaml
+  - test-staging-issuer.yaml
