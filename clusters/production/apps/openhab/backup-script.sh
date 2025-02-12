@@ -53,11 +53,18 @@ sshpass -e ssh -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "mk
 
 # Create SSH config to force port 4711
 echo "Creating SSH config..."
-mkdir -p ~/.ssh
-cat > ~/.ssh/config << EOF
+SSH_CONFIG_DIR="/root/.ssh"
+SSH_CONFIG_FILE="${SSH_CONFIG_DIR}/config"
+mkdir -p "${SSH_CONFIG_DIR}"
+chmod 700 "${SSH_CONFIG_DIR}"
+cat > "${SSH_CONFIG_FILE}" << EOF
 Host ${NAS_HOST}
     Port 4711
 EOF
+chmod 600 "${SSH_CONFIG_FILE}"
+echo "Debug: SSH config created at ${SSH_CONFIG_FILE}"
+ls -la "${SSH_CONFIG_FILE}"
+cat "${SSH_CONFIG_FILE}"
 
 # Copy to NAS using sshpass
 echo "Copying backup to NAS..."
@@ -70,10 +77,10 @@ echo "NAS_USER=${NAS_USER}"
 echo "NAS_HOST=${NAS_HOST}"
 echo "NAS_PATH=${NAS_PATH}"
 echo "Debug: Full command:"
-echo "sshpass -e scp -rv -O -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no \"${TMP_DIR}/${BACKUP_NAME}.zip\" ${NAS_USER}@${NAS_HOST}:${NAS_PATH}"
+echo "sshpass -e scp -rv -O -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -F ${SSH_CONFIG_FILE} \"${TMP_DIR}/${BACKUP_NAME}.zip\" ${NAS_USER}@${NAS_HOST}:${NAS_PATH}"
 echo "Debug: Attempting to copy file using scp..."
 export SSHPASS="${NAS_PASS}"
-sshpass -e scp -rv -O -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no "${TMP_DIR}/${BACKUP_NAME}.zip" ${NAS_USER}@${NAS_HOST}:${NAS_PATH} || {
+sshpass -e scp -rv -O -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -F "${SSH_CONFIG_FILE}" "${TMP_DIR}/${BACKUP_NAME}.zip" ${NAS_USER}@${NAS_HOST}:${NAS_PATH} || {
     echo "Failed to copy backup to NAS"
     echo "Debug: Testing SSH connection..."
     sshpass -e ssh -v -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "ls -la \"${NAS_PATH}\""
