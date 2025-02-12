@@ -15,15 +15,20 @@ NAS_PASS="${NAS_PASSWORD}"
 
 # Create backup using kubectl exec
 echo "Creating backup in OpenHAB pod..."
+# Clean up old backups in OpenHAB pod
+echo "Cleaning up old backups..."
+kubectl exec -n openhab ${OPENHAB_POD} -- bash -c "rm -f /openhab/*.zip /openhab/userdata/backup/*.zip"
+
+# Create new backup
+echo "Creating backup in OpenHAB pod..."
 kubectl exec -n openhab ${OPENHAB_POD} -- bash -c "set -e && \
   export OPENHAB_CONF=/openhab/conf && \
   export OPENHAB_USERDATA=/openhab/userdata && \
   export OPENHAB_BACKUPS=/openhab/userdata/backup && \
   export OPENHAB_RUNTIME=/openhab/runtime && \
   mkdir -p \$OPENHAB_BACKUPS && \
-  cd /openhab && \
+  cd \$OPENHAB_BACKUPS && \
   /openhab/runtime/bin/backup ${BACKUP_NAME}.zip && \
-  mv ${BACKUP_NAME}.zip \$OPENHAB_BACKUPS/ && \
   chown -R openhab:openhab \$OPENHAB_BACKUPS"
 
 # Create temporary directory
@@ -40,7 +45,16 @@ kubectl cp openhab/${OPENHAB_POD}:/openhab/userdata/backup/${BACKUP_NAME}.zip ${
 # Copy to NAS using sshpass
 echo "Copying backup to NAS..."
 export SSHPASS="${NAS_PASS}"
-sshpass -e scp -o StrictHostKeyChecking=no -P 4711 ${TMP_DIR}/${BACKUP_NAME}.zip "${NAS_USER}@${NAS_HOST}:${NAS_PATH}/" || {
+
+# Debug info
+echo "Debug: Checking installed packages..."
+apk info | grep -E 'sshpass|openssh'
+echo "Debug: sshpass version:"
+sshpass -V
+echo "Debug: Attempting to connect to NAS..."
+
+# Try the scp command with verbose output
+sshpass -e scp -v -o StrictHostKeyChecking=no -P 4711 ${TMP_DIR}/${BACKUP_NAME}.zip "${NAS_USER}@${NAS_HOST}:${NAS_PATH}/" || {
     echo "Failed to copy backup to NAS. Check NAS connectivity and credentials."
     exit 1
 }
