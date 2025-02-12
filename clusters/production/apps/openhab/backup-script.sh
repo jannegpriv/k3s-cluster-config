@@ -18,7 +18,7 @@ echo "Creating backup in OpenHAB pod..."
 kubectl exec -n openhab ${OPENHAB_POD} -- bash -c "
   mkdir -p /openhab/userdata/backup && \
   cd /openhab/userdata/backup && \
-  /openhab/runtime/bin/client 'openhab:backup ${BACKUP_NAME}' && \
+  /openhab/runtime/bin/backup ${BACKUP_NAME} && \
   tar czf ${BACKUP_NAME}.tar.gz ${BACKUP_NAME} && \
   rm -rf ${BACKUP_NAME}"
 
