@@ -42,30 +42,36 @@ kubectl cp openhab/${OPENHAB_POD}:/openhab/userdata/backup/${BACKUP_NAME}.zip ${
     exit 1
 }
 
-# Copy to NAS using sshpass
-echo "Copying backup to NAS..."
+# Create backup directory on NAS
+echo "Creating backup directory on NAS..."
 export SSHPASS="${NAS_PASS}"
-
-# Debug info
-echo "Debug: Checking installed packages..."
-apk info | grep -E 'sshpass|openssh'
-echo "Debug: sshpass version:"
-sshpass -V
-echo "Debug: Attempting to connect to NAS..."
-
-# Try the scp command with verbose output
-sshpass -e scp -v -o StrictHostKeyChecking=no -P 4711 ${TMP_DIR}/${BACKUP_NAME}.zip "${NAS_USER}@${NAS_HOST}:${NAS_PATH}/" || {
-    echo "Failed to copy backup to NAS. Check NAS connectivity and credentials."
+sshpass -e ssh -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "mkdir -p '${NAS_PATH}'" || {
+    echo "Failed to create backup directory on NAS"
+    rm -rf "${TMP_DIR}"
     exit 1
 }
 
-# Clean up backups
-if [ $? -eq 0 ]; then
-    echo "Cleaning up temporary files..."
-    kubectl exec -n openhab ${OPENHAB_POD} -- rm -f /openhab/userdata/backup/${BACKUP_NAME}.zip
-    rm -rf ${TMP_DIR}
-    echo "Backup successfully copied to NAS: ${NAS_PATH}/${BACKUP_NAME}.zip"
-else
-    echo "Failed to copy backup to NAS. Backup remains in OpenHAB pod and ${TMP_DIR}"
+# Copy to NAS using sshpass
+echo "Copying backup to NAS..."
+sshpass -e scp -o StrictHostKeyChecking=no -P 4711 "${TMP_DIR}/${BACKUP_NAME}.zip" "${NAS_USER}@${NAS_HOST}:'${NAS_PATH}/'" || {
+    echo "Failed to copy backup to NAS"
+    rm -rf "${TMP_DIR}"
     exit 1
-fi
+}
+
+# Clean up temporary directory
+echo "Backup completed successfully. Cleaning up..."
+rm -rf "${TMP_DIR}"
+
+# Keep only the 5 most recent backups in the pod
+echo "Cleaning up old backups..."
+kubectl exec -n openhab ${OPENHAB_POD} -- bash -c 'cd /openhab/userdata/backup && ls -t *.zip | tail -n +6 | xargs -r rm --'
+
+# Keep only the 5 most recent backups on NAS
+echo "Cleaning up old backups on NAS..."
+sshpass -e ssh -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "cd '${NAS_PATH}' && ls -t *.zip | tail -n +6 | xargs -r rm --" || {
+    echo "Warning: Failed to clean up old backups on NAS"
+    # Don't exit with error as the backup was successful
+}
+
+echo "Backup successfully copied to NAS: ${NAS_PATH}/${BACKUP_NAME}.zip"
