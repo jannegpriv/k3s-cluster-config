@@ -53,8 +53,14 @@ sshpass -e ssh -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "mk
 
 # Copy to NAS using sshpass
 echo "Copying backup to NAS..."
-sshpass -e scp -o StrictHostKeyChecking=no -P 4711 "${TMP_DIR}/${BACKUP_NAME}.zip" "${NAS_USER}@${NAS_HOST}:'${NAS_PATH}/'" || {
+echo "Debug: Using sshpass version:"
+sshpass -V
+echo "Debug: Attempting to copy file using scp..."
+export SSHPASS="${NAS_PASS}"
+sshpass -e scp -v -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -P 4711 "${TMP_DIR}/${BACKUP_NAME}.zip" "${NAS_USER}@${NAS_HOST}:'${NAS_PATH}/'" || {
     echo "Failed to copy backup to NAS"
+    echo "Debug: Testing SSH connection..."
+    sshpass -e ssh -v -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "ls -la '${NAS_PATH}'"
     rm -rf "${TMP_DIR}"
     exit 1
 }
