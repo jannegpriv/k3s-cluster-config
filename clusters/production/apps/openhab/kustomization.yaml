@@ -8,3 +8,9 @@ resources:
   - openhab-statefulset.yaml
   - openhab-traefik.yaml
   - openhab-middleware.yaml
+  - backup-cronjob.yaml
+
+configMapGenerator:
+  - name: openhab-backup-script
+    files:
+      - backup-script.sh

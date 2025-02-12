@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: openhab-backup
+  namespace: openhab
+spec:
+  schedule: "0 2 * * *"  # Run at 2 AM every day
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            # Using Ubuntu image which we can easily install sshpass in
+            image: ubuntu:22.04
+            command: ["/bin/bash", "-c"]
+            args:
+              - |
+                apt-get update && 
+                apt-get install -y sshpass openssh-client && 
+                /scripts/backup-script.sh
+            env:
+              - name: NAS_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: nas-credentials
+                    key: password
+            volumeMounts:
+            - name: openhab-userdata
+              mountPath: /openhab/userdata
+            - name: backup-script
+              mountPath: /scripts
+            - name: openhab-runtime
+              mountPath: /openhab/runtime
+          volumes:
+          - name: openhab-userdata
+            persistentVolumeClaim:
+              claimName: openhab-production-userdata-claim
+          - name: backup-script
+            configMap:
+              name: openhab-backup-script
+              defaultMode: 0755
+          - name: openhab-runtime
+            persistentVolumeClaim:
+              claimName: openhab-production-karaf-claim
+          restartPolicy: OnFailure
