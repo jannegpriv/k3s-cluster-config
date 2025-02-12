@@ -3,8 +3,7 @@ kind: Ingress
 metadata:
   name: weave-gitops
   namespace: flux-system
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-dns
+  annotations: {}
 spec:
   ingressClassName: traefik
   rules:
@@ -18,7 +17,4 @@ spec:
                 name: ww-gitops-weave-gitops
                 port:
                   number: 9001
-  tls:
-    - hosts:
-        - weave.local
-      secretName: weave-gitops-tls
+
