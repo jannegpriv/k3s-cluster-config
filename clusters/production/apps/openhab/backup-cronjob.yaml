@@ -36,6 +36,7 @@ spec:
             volumeMounts:
             - name: backup-script
               mountPath: /scripts
+              subPath: backup-script.sh
           volumes:
           - name: backup-script
             configMap:

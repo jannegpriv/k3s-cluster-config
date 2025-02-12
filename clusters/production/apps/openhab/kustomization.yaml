@@ -14,4 +14,4 @@ resources:
 configMapGenerator:
   - name: openhab-backup-script
     files:
-      - backup-script.sh
+      - backup-script.sh=./backup-script.sh
