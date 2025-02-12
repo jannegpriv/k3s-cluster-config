@@ -18,10 +18,13 @@ echo "Creating backup in OpenHAB pod..."
 # Create backup in OpenHAB pod
 echo "Creating backup in OpenHAB pod..."
 kubectl exec -n openhab ${OPENHAB_POD} -- bash -c "
+  export OPENHAB_CONF=/openhab/conf && \
+  export OPENHAB_USERDATA=/openhab/userdata && \
+  export OPENHAB_BACKUPS=/openhab/userdata/backup && \
+  mkdir -p \$OPENHAB_BACKUPS && \
   cd /openhab && \
   /openhab/runtime/bin/backup --noninteractive ${BACKUP_NAME}.zip && \
-  mkdir -p userdata/backup && \
-  mv ${BACKUP_NAME}.zip userdata/backup/"
+  mv \$OPENHAB_BACKUPS/${BACKUP_NAME}.zip userdata/backup/"
 
 # Create temporary directory
 TMP_DIR=$(mktemp -d)
