@@ -15,16 +15,14 @@ NAS_PASS="${NAS_PASSWORD}"
 
 # Create backup using kubectl exec
 echo "Creating backup in OpenHAB pod..."
-# Create backup in OpenHAB pod
-echo "Creating backup in OpenHAB pod..."
 kubectl exec -n openhab ${OPENHAB_POD} -- bash -c "
   export OPENHAB_CONF=/openhab/conf && \
   export OPENHAB_USERDATA=/openhab/userdata && \
   export OPENHAB_BACKUPS=/openhab/userdata/backup && \
+  export OPENHAB_RUNTIME=/openhab/runtime && \
   mkdir -p \$OPENHAB_BACKUPS && \
   cd /openhab && \
-  /openhab/runtime/bin/backup --noninteractive ${BACKUP_NAME}.zip && \
-  mv \$OPENHAB_BACKUPS/${BACKUP_NAME}.zip userdata/backup/"
+  /openhab/runtime/bin/backup ${BACKUP_NAME}.zip"
 
 # Create temporary directory
 TMP_DIR=$(mktemp -d)
