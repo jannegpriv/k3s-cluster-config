@@ -9,6 +9,7 @@ resources:
   - openhab-traefik.yaml
   - openhab-middleware.yaml
   - backup-cronjob.yaml
+  - backup-rbac.yaml
 
 configMapGenerator:
   - name: openhab-backup-script
