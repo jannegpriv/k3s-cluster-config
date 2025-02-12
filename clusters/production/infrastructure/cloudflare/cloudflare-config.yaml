@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflared-config
+  namespace: cloudflare
+data:
+  config.yaml: |
+    tunnel: d6fbfcc5-709a-4396-859e-1aed2665d05f
+    credentials-file: /etc/cloudflared/credentials.json
+    ingress:
+      - hostname: openhab.k3s.nu
+        service: https://openhab-production.openhab:8443
+        originRequest:
+          noTLSVerify: true
+          connectTimeout: 30s
+          keepAliveTimeout: 30s
+          keepAliveConnections: 10
+      - service: http_status:404  # This catch-all rule is required
+    protocol: quic
+    retries: 5
+    graceShutdownTimeout: 30s
