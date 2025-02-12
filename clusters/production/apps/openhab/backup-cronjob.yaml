@@ -25,6 +25,7 @@ spec:
                 curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/arm64/kubectl && \
                 chmod +x ./kubectl && \
                 mv ./kubectl /usr/local/bin/kubectl && \
+                chmod +x /scripts/backup-script.sh && \
                 /scripts/backup-script.sh
             env:
               - name: NAS_PASSWORD
