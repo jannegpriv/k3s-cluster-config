@@ -15,7 +15,8 @@ NAS_PASS="${NAS_PASSWORD}"
 
 # Create backup using kubectl exec
 echo "Creating backup in OpenHAB pod..."
-kubectl exec -n openhab ${OPENHAB_POD} -- bash -c "
+kubectl exec -n openhab ${OPENHAB_POD} -- bash -c "set -e && \
+  chown -R openhab:openhab /openhab/userdata/backup && \
   export OPENHAB_CONF=/openhab/conf && \
   export OPENHAB_USERDATA=/openhab/userdata && \
   export OPENHAB_BACKUPS=/openhab/userdata/backup && \
