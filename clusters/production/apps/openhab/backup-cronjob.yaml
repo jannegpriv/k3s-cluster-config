@@ -15,12 +15,16 @@ spec:
           serviceAccountName: openhab-backup
           containers:
           - name: backup
-            image: bitnami/kubectl:latest
-            command: ["/bin/bash", "-c"]
+            image: alpine:3.18
+            command: ["/bin/sh", "-c"]
             args:
               - |
-                # Install sshpass
-                install_packages sshpass && \
+                # Install required packages
+                apk add --no-cache curl sshpass && \
+                # Install kubectl
+                curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/arm64/kubectl && \
+                chmod +x ./kubectl && \
+                mv ./kubectl /usr/local/bin/kubectl && \
                 /scripts/backup-script.sh
             env:
               - name: NAS_PASSWORD
