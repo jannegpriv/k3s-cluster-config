@@ -24,7 +24,7 @@ flux check --pre
 ```bash
 flux bootstrap github \
   --owner=jannegpriv \
-  --repository=openhab-k8s \
+  --repository=k3s-cluster-config \
   --branch=main \
   --path=clusters/production \
   --personal
@@ -178,7 +178,7 @@ graph TD
    - Downloads artifacts and verifies checksums
    - Makes artifacts available to other controllers
    - Your sources:
-     - Git: `jannegpriv/openhab-k8s`
+     - Git: `jannegpriv/k3s-cluster-config`
      - Helm: cert-manager, weave-gitops
 
 2. **Kustomize Controller**
