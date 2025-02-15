@@ -6,4 +6,3 @@ resources:
   - mosquitto-statefulset.yaml
   - mosquitto-service.yaml
   - mosquitto-config.yaml
-  - mosquitto-configmap.yaml
