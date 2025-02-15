@@ -5,14 +5,35 @@ metadata:
   namespace: mosquitto
 data:
   mosquitto.conf: |
+    # mosquitto.conf – minimal exempel
+
+    # 1. Kör broker på port 1883 (okrypterat, utan TLS)
+    port 1883
+
+    # 2. Tillåt anonyma anslutningar? 
+    #   - true  = alla får ansluta utan användarnamn/lösen
+    #   - false = kräver autentisering (du behöver lägga till "password_file" mm.)
+    allow_anonymous true
+
+    # 3. Behåll meddelanden mellan omstarter?
     persistence true
-    persistence_location /mosquitto/data
-    log_dest file /mosquitto/log/mosquitto.log
+    persistence_location /mosquitto/data/
+
+    # 4. Logginställningar
+    log_timestamp true
+    log_timestamp_format %Y-%m-%d %H:%M:%S
     log_dest stdout
-    
-    # MQTT Settings
-    listener 1883
-    allow_anonymous true  # Consider changing this in production
-    
-    # System Settings
-    sys_interval 10
+    # log_type info
+    # log_type error
+    # log_type warning
+    # log_type notice
+
+    # 5. (Valfritt) Ange fil för lösenord om du vill kräva användarnamn
+    # password_file /mosquitto/config/passwordfile
+    # allow_anonymous false
+
+    # 6. (Valfritt) Aktivera websockets, TLS, etc. vid behov
+    # listener 9001
+    # protocol websockets
+
+    # --- SLUT ---
