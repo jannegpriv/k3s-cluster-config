@@ -8,9 +8,13 @@ metadata:
 data: 
   # SMTP Configuration for email verification and 2FA
   SMTP_HOST: 'smtp-relay.sendinblue.com'
-  SMTP_FROM: 'jannegpriv@smtp-relay.sendinblue.com'
+  SMTP_FROM: 'jannegpriv@gmail.com'
+  SMTP_FROM_NAME: 'Vaultwarden'
   SMTP_PORT: '587'
   SMTP_SECURITY: 'starttls'
+  SMTP_TIMEOUT: '15'
+  SMTP_AUTH_MECHANISM: 'Login'
+  SMTP_DEBUG: 'true'
   
   # Domain and Web Configuration
   DOMAIN: 'https://vaultwarden.k3s.nu'
