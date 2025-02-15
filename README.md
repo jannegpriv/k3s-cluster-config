@@ -1,6 +1,9 @@
-# OpenHAB Kubernetes Configuration
+# Home Automation Kubernetes Configuration
 
-This repository contains Kubernetes configurations for deploying OpenHAB using FluxCD.
+This repository contains Kubernetes configurations for deploying home automation applications using FluxCD. Currently includes:
+
+- OpenHAB - Home automation platform
+- Mosquitto - MQTT message broker
 
 ## Prerequisites
 
@@ -49,6 +52,11 @@ clusters/
     │   └── release.yaml
     ├── openhab/
     │   ├── kustomization.yaml
+    ├── mosquitto/
+    │   ├── mosquitto-claims.yaml
+    │   ├── mosquitto-service.yaml
+    │   ├── mosquitto-statefulset.yaml
+    │   └── kustomization.yaml
     │   ├── openhab-claims.yaml
     │   ├── openhab-service.yaml
     │   ├── openhab-statefulset.yaml
@@ -199,6 +207,20 @@ graph TD
 4. **Notification Controller**
    - Handles alerts and notifications
    - Can notify about reconciliation failures
+
+## Mosquitto MQTT Broker
+
+The Mosquitto MQTT broker is deployed as a StatefulSet with persistent storage using Rook/Ceph. It provides:
+
+- MQTT protocol support on port 1883
+- Persistent message storage
+- Direct access through the master node's IP (192.168.50.75:1883)
+- Resource limits to ensure stable operation
+
+The deployment consists of:
+- StatefulSet with 1 replica
+- Persistent storage for configuration, data, and logs
+- Service configuration for internal and external access
 
 ### Directory Structure Explained
 

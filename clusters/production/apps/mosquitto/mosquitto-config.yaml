@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mosquitto-config
+  namespace: mosquitto
+data:
+  mosquitto.conf: |
+    persistence true
+    persistence_location /mosquitto/data
+    log_dest file /mosquitto/log/mosquitto.log
+    log_dest stdout
+    
+    # MQTT Settings
+    listener 1883
+    allow_anonymous true  # Consider changing this in production
+    
+    # System Settings
+    sys_interval 10
