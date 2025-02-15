@@ -10,7 +10,7 @@ data:
   SMTP_HOST: 'smtp-relay.sendinblue.com'
   SMTP_FROM: 'jannegpriv@smtp-relay.sendinblue.com'
   SMTP_PORT: '587'
-  SMTP_SSL: 'true'
+  SMTP_SECURITY: 'starttls'
   
   # Domain and Web Configuration
   DOMAIN: 'https://vaultwarden.k3s.nu'
