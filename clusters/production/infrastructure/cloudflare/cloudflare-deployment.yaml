@@ -31,7 +31,7 @@
         volumes:
           - name: config
             configMap:
-              name: cloudflared-config-cg42tbdgk5
+              name: cloudflared-config
           - name: creds
             secret:
               secretName: tunnel-credentials
