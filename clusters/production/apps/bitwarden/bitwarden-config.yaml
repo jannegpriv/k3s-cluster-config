@@ -18,6 +18,7 @@ data:
   WEB_VAULT_ENABLED: 'true'
   ROCKET_PORT: '8443'
   ROCKET_WORKERS: '10'
+  ROCKET_TLS: 'true'
   
   # Security Settings
   SIGNUPS_ALLOWED: 'false'  # Disabled after initial admin account creation
