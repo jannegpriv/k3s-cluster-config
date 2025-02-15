@@ -43,8 +43,8 @@ spec:
            readOnly: false
       volumes:
       - name: mosquitto-config
-        persistentVolumeClaim:
-            claimName: mosquitto-conf-claim
+        configMap:
+          name: mosquitto-config
       - name: mosquitto-data
         persistentVolumeClaim:
             claimName: mosquitto-data-claim
