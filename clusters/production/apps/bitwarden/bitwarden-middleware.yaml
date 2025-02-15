@@ -9,6 +9,9 @@ spec:
     stsSeconds: 31536000
     stsIncludeSubdomains: true
     stsPreload: true
+    sslRedirect: true
+    sslHost: vaultwarden.k3s.nu
+    sslForceHost: true
     customRequestHeaders:
       X-Forwarded-Proto: "https"
     contentSecurityPolicy: "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; frame-ancestors 'self' chrome-extension://nngceckbapebfimnlniiiahkandclblb chrome-extension://jbkfoedolllekgbhcbcoahefnbanhhlh moz-extension://*"
