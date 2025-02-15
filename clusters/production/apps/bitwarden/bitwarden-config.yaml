@@ -6,17 +6,40 @@ metadata:
   labels:
     app: bitwarden
 data: 
+  # SMTP Configuration for email verification and 2FA
   SMTP_HOST: 'smtp-relay.sendinblue.com'
   SMTP_FROM: 'jannegpriv@smtp-relay.sendinblue.com'
   SMTP_PORT: '587'
   SMTP_SSL: 'true'
-  WEBSOCKET_ENABLED: 'true'
-  DATA_FOLDER: '/data'
+  
+  # Domain and Web Configuration
   DOMAIN: 'https://vaultwarden.k3s.nu'
-  ROCKET_WORKERS: '10'
-  SHOW_PASSWORD_HINT: 'false'
+  WEBSOCKET_ENABLED: 'true'
   WEB_VAULT_ENABLED: 'true'
   ROCKET_PORT: '8080'
-  SIGNUPS_ALLOWED: 'true'
-  INVITATIONS_ALLOWED: 'true'
-  LOG_FILE: "/data/bitwarden.log"
+  ROCKET_WORKERS: '10'
+  
+  # Security Settings
+  SIGNUPS_ALLOWED: 'false'  # Disable after initial setup
+  INVITATIONS_ALLOWED: 'true'  # Allow invites even when signups are disabled
+  SHOW_PASSWORD_HINT: 'false'
+  EMERGENCY_ACCESS_ALLOWED: 'true'
+  
+  # 2FA Settings
+  TWO_FACTOR_AUTHENTICATION_ENABLED: 'true'
+  DUO_ENABLED: 'true'  # Enable Duo 2FA support
+  YUBIKEY_ENABLED: 'true'  # Enable YubiKey OTP
+  
+  # Email 2FA Settings
+  EMAIL_2FA_ENABLED: 'true'
+  EMAIL_TOKEN_SIZE: '8'  # Length of email 2FA token
+  EMAIL_EXPIRATION_TIME: '600'  # Email token validity in seconds (10 minutes)
+  
+  # Storage and Logging
+  DATA_FOLDER: '/data'
+  LOG_FILE: '/data/bitwarden.log'
+  LOG_LEVEL: 'warn'  # Logging level: trace, debug, info, warn, error
+  
+  # Password Policy
+  PASSWORD_ITERATIONS: '600000'  # PBKDF2 iterations for password hashing
+  PASSWORD_HINTS_ALLOWED: 'false'  # Disable password hints for security
