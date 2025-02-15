@@ -1,24 +1,31 @@
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
 metadata:
-  name: bitwarden
+  name: bitwarden-https
   namespace: bitwarden
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    kubernetes.io/ingress.class: traefik
 spec:
-  rules:
-  - host: vaultwarden.k3s.nu
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: bitwarden
-            port:
-              name: bitwarden-http
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`vaultwarden.k3s.nu`)
+      services:
+        - name: bitwarden
+          port: 8443
   tls:
-  - hosts:
-    - vaultwarden.k3s.nu
     secretName: vaultwarden-k3s-nu-tls
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: bitwarden-http
+  namespace: bitwarden
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`vaultwarden.k3s.nu`)
+      services:
+        - name: bitwarden
+          port: 8443
