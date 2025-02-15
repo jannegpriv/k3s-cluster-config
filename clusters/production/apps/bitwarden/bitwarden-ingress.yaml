@@ -14,7 +14,7 @@ spec:
           namespace: bitwarden
       services:
         - name: bitwarden
-          port: http
+          port: 80
   tls:
     secretName: vaultwarden-k3s-nu-tls
 ---
@@ -29,9 +29,6 @@ spec:
   routes:
     - kind: Rule
       match: Host(`vaultwarden.k3s.nu`)
-      middlewares:
-        - name: bitwarden-https
-          namespace: bitwarden
       services:
         - name: bitwarden
-          port: http
+          port: 80
