@@ -17,9 +17,6 @@ spec:
     stsIncludeSubdomains: true
     stsPreload: true
     stsSeconds: 31536000
-    customRequestHeaders:
-      X-Forwarded-Proto: "https"
     contentSecurityPolicy: "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; frame-ancestors 'self' chrome-extension://nngceckbapebfimnlniiiahkandclblb chrome-extension://jbkfoedolllekgbhcbcoahefnbanhhlh moz-extension://*"
-    browserXssFilter: true
     customFrameOptionsValue: "SAMEORIGIN"
     referrerPolicy: "same-origin"
