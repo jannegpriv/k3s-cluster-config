@@ -19,7 +19,11 @@ data:
   ROCKET_PORT: '80'
   ROCKET_WORKERS: '10'
   ROCKET_ADDRESS: '0.0.0.0'
-  X_FORWARDED_PROTO: 'https'
+  ROCKET_LOG: 'debug'
+  ROCKET_CLI_COLORS: 'false'
+  IP_HEADER: 'X-Forwarded-For'
+  PROXY_ENABLED: 'true'
+  PROXY_PROTOCOL_ENABLED: 'true'
   
   # Security Settings
   SIGNUPS_ALLOWED: 'false'  # Disabled after initial admin account creation
