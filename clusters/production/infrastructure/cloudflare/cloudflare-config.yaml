@@ -22,6 +22,7 @@ data:
           connectTimeout: 30s
           keepAliveTimeout: 30s
           keepAliveConnections: 10
+          originServerName: vaultwarden.k3s.nu
       - service: http_status:404  # This catch-all rule is required
     protocol: quic
     retries: 5
