@@ -9,4 +9,4 @@ resources:
   - bitwarden-rbac.yaml
   - bitwarden-statefulset.yaml
   - bitwarden-service.yaml
-  - bitwarden-ingress.yaml
+  - certificate.yaml

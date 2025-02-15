@@ -15,6 +15,13 @@ data:
           connectTimeout: 30s
           keepAliveTimeout: 30s
           keepAliveConnections: 10
+      - hostname: vaultwarden.k3s.nu
+        service: http://bitwarden.bitwarden:80
+        originRequest:
+          noTLSVerify: true
+          connectTimeout: 30s
+          keepAliveTimeout: 30s
+          keepAliveConnections: 10
       - service: http_status:404  # This catch-all rule is required
     protocol: quic
     retries: 5
