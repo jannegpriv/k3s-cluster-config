@@ -24,10 +24,6 @@ spec:
           image: vaultwarden/server:1.33.0
           imagePullPolicy: IfNotPresent
           env:
-            - name: ROCKET_TLS
-              value: "{certs=\"/certs/tls.crt\",key=\"/certs/tls.key\"}"
-            - name: ROCKET_PORT
-              value: "8443"
             - name: ADMIN_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -47,8 +43,8 @@ spec:
             - configMapRef:
                 name: bitwarden
           ports:
-            - containerPort: 8443
-              name: https
+            - containerPort: 8080
+              name: http
               protocol: TCP
             - containerPort: 3012
               name: websocket
