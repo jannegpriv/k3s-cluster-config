@@ -6,17 +6,13 @@ metadata:
 spec:
   headers:
     customResponseHeaders:
-      Strict-Transport-Security: "max-age=31536000; includeSubDomains"
+      Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      X-Content-Type-Options: "nosniff"
+      X-Frame-Options: "SAMEORIGIN"
+      X-XSS-Protection: "1; mode=block"
+      Referrer-Policy: "strict-origin-when-cross-origin"
     customRequestHeaders:
       X-Forwarded-Proto: "https"
       X-Forwarded-Host: "vaultwarden.k3s.nu"
-      X-Forwarded-For: ""
-    browserXssFilter: true
-    contentTypeNosniff: true
-    forceSTSHeader: true
-    stsIncludeSubdomains: true
-    stsPreload: true
-    stsSeconds: 31536000
-    contentSecurityPolicy: "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; frame-ancestors 'self' chrome-extension://nngceckbapebfimnlniiiahkandclblb chrome-extension://jbkfoedolllekgbhcbcoahefnbanhhlh moz-extension://*"
-    customFrameOptionsValue: "SAMEORIGIN"
-    referrerPolicy: "same-origin"
+      X-Real-IP: ""
+    contentSecurityPolicy: "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; frame-ancestors 'self' chrome-extension://nngceckbapebfimnlniiiahkandclblb chrome-extension://jbkfoedolllekgbhcbcoahefnbanhhlh moz-extension://*; upgrade-insecure-requests"
