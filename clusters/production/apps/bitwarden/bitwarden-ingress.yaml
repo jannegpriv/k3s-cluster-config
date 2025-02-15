@@ -9,6 +9,9 @@ spec:
   routes:
     - kind: Rule
       match: Host(`vaultwarden.k3s.nu`)
+      middlewares:
+        - name: bitwarden-https
+          namespace: bitwarden
       services:
         - name: bitwarden
           port: 8443
@@ -26,6 +29,9 @@ spec:
   routes:
     - kind: Rule
       match: Host(`vaultwarden.k3s.nu`)
+      middlewares:
+        - name: bitwarden-https
+          namespace: bitwarden
       services:
         - name: bitwarden
           port: 8443
