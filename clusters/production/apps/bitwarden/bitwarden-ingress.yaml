@@ -14,7 +14,7 @@ spec:
           namespace: bitwarden
       services:
         - name: bitwarden
-          port: 8443
+          port: 80
   tls:
     secretName: vaultwarden-k3s-nu-tls
 ---
@@ -34,4 +34,4 @@ spec:
           namespace: bitwarden
       services:
         - name: bitwarden
-          port: 8443
+          port: 80
