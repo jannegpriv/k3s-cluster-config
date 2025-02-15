@@ -14,8 +14,7 @@ spec:
           namespace: bitwarden
       services:
         - name: bitwarden
-          port:
-            name: http
+          port: http
   tls:
     secretName: vaultwarden-k3s-nu-tls
 ---
@@ -35,5 +34,4 @@ spec:
           namespace: bitwarden
       services:
         - name: bitwarden
-          port:
-            name: http
+          port: http
