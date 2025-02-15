@@ -16,7 +16,7 @@ data:
           keepAliveTimeout: 30s
           keepAliveConnections: 10
       - hostname: vaultwarden.k3s.nu
-        service: http://bitwarden.bitwarden:8443
+        service: http://traefik.kube-system:80
         originRequest:
           connectTimeout: 30s
           keepAliveTimeout: 30s
