@@ -5,14 +5,16 @@ metadata:
   namespace: bitwarden
 spec:
   headers:
-    customResponseHeaders:
-      Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
-      X-Content-Type-Options: "nosniff"
-      X-Frame-Options: "SAMEORIGIN"
-      X-XSS-Protection: "1; mode=block"
-      Referrer-Policy: "strict-origin-when-cross-origin"
+    sslRedirect: true
+    sslHost: vaultwarden.k3s.nu
+    forceSTSHeader: true
+    stsIncludeSubdomains: true
+    stsPreload: true
+    stsSeconds: 31536000
     customRequestHeaders:
       X-Forwarded-Proto: "https"
-      X-Forwarded-Host: "vaultwarden.k3s.nu"
-      X-Real-IP: ""
-    contentSecurityPolicy: "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; frame-ancestors 'self' chrome-extension://nngceckbapebfimnlniiiahkandclblb chrome-extension://jbkfoedolllekgbhcbcoahefnbanhhlh moz-extension://*; upgrade-insecure-requests"
+    contentSecurityPolicy: "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; frame-ancestors 'self' chrome-extension://nngceckbapebfimnlniiiahkandclblb chrome-extension://jbkfoedolllekgbhcbcoahefnbanhhlh moz-extension://*"
+    customFrameOptionsValue: "SAMEORIGIN"
+    browserXssFilter: true
+    contentTypeNosniff: true
+    referrerPolicy: "same-origin"
