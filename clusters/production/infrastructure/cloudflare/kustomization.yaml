@@ -5,30 +5,4 @@ namespace: cloudflare
 
 resources:
   - cloudflare-deployment.yaml
-
-configMapGenerator:
-  - name: cloudflared-config
-    behavior: replace
-    literals:
-      - config.yaml=|
-        tunnel: d6fbfcc5-709a-4396-859e-1aed2665d05f
-        credentials-file: /etc/cloudflared/credentials.json
-        ingress:
-          - hostname: openhab.k3s.nu
-            service: https://openhab-production.openhab:8443
-            originRequest:
-              noTLSVerify: true
-              connectTimeout: 30s
-              keepAliveTimeout: 30s
-              keepAliveConnections: 10
-          - hostname: vaultwarden.k3s.nu
-            service: http://traefik.kube-system:80
-            originRequest:
-              connectTimeout: 30s
-              keepAliveTimeout: 30s
-              keepAliveConnections: 10
-              httpHostHeader: vaultwarden.k3s.nu
-          - service: http_status:404  # This catch-all rule is required
-        protocol: quic
-        retries: 5
-        graceShutdownTimeout: 30s
+  - cloudflare-config.yaml
