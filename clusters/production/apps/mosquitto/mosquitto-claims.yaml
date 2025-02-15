@@ -5,8 +5,8 @@ metadata:
     app: mosquitto
   name: mosquitto-conf-claim
   namespace: mosquitto
-  storageClassName: rook-ceph-block
 spec:
+  storageClassName: rook-ceph-block
   accessModes:
     - ReadWriteOnce
   resources:
@@ -20,8 +20,8 @@ metadata:
     app: mosquitto
   name: mosquitto-log-claim
   namespace: mosquitto
-  storageClassName: rook-ceph-block
 spec:
+  storageClassName: rook-ceph-block
   accessModes:
     - ReadWriteOnce
   resources:
@@ -35,8 +35,8 @@ metadata:
     app: mosquitto 
   name: mosquitto-data-claim
   namespace: mosquitto
-  storageClassName: rook-ceph-block
 spec:
+  storageClassName: rook-ceph-block
   accessModes:
     - ReadWriteOnce
   resources:
