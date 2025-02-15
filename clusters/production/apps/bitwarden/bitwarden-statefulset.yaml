@@ -47,8 +47,8 @@ spec:
             - configMapRef:
                 name: bitwarden
           ports:
-            - containerPort: 8080
-              name: http
+            - containerPort: 443
+              name: https
               protocol: TCP
             - containerPort: 3012
               name: websocket
