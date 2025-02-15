@@ -24,6 +24,10 @@ spec:
           image: vaultwarden/server:1.33.0
           imagePullPolicy: IfNotPresent
           env:
+            - name: ROCKET_TLS
+              value: "{certs=\"/certs/tls.crt\",key=\"/certs/tls.key\"}"
+            - name: ROCKET_PORT
+              value: "443"
             - name: ADMIN_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -60,7 +64,13 @@ spec:
             - mountPath: /data
               name: bitwarden-data
               readOnly: false
+            - mountPath: /certs
+              name: cert
+              readOnly: true
       volumes:
         - name: bitwarden-data
           persistentVolumeClaim:
             claimName: bitwarden-data-claim
+        - name: cert
+          secret:
+            secretName: vaultwarden-k3s-nu-tls
