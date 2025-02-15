@@ -7,10 +7,10 @@ spec:
   selector:
     app: bitwarden
   ports:
-    - name: bitwarden-https
-      port: 8443
+    - name: bitwarden-http
+      port: 8080
       protocol: TCP
-      targetPort: 8443
+      targetPort: 8080
     - name: websocket
       protocol: TCP
       port: 3012
