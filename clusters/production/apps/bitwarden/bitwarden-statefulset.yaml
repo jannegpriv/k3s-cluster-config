@@ -27,7 +27,7 @@ spec:
             - name: ROCKET_TLS
               value: "{certs=\"/certs/tls.crt\",key=\"/certs/tls.key\"}"
             - name: ROCKET_PORT
-              value: "443"
+              value: "8443"
             - name: ADMIN_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -47,7 +47,7 @@ spec:
             - configMapRef:
                 name: bitwarden
           ports:
-            - containerPort: 443
+            - containerPort: 8443
               name: https
               protocol: TCP
             - containerPort: 3012
