@@ -16,7 +16,7 @@ data:
           keepAliveTimeout: 30s
           keepAliveConnections: 10
       - hostname: vaultwarden.k3s.nu
-        service: https://bitwarden.bitwarden:8443
+        service: http://bitwarden.bitwarden:8443
         originRequest:
           noTLSVerify: true
           connectTimeout: 30s
