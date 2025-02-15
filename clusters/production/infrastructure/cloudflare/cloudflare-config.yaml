@@ -19,9 +19,11 @@ data:
         service: http://bitwarden.bitwarden:8080
         originRequest:
           noTLSVerify: true
+          disableChunkedEncoding: true
           connectTimeout: 30s
           keepAliveTimeout: 30s
           keepAliveConnections: 10
+          httpHostHeader: vaultwarden.k3s.nu
       - service: http_status:404  # This catch-all rule is required
     protocol: quic
     retries: 5
