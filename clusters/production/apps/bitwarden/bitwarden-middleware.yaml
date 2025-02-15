@@ -5,13 +5,18 @@ metadata:
   namespace: bitwarden
 spec:
   headers:
+    customResponseHeaders:
+      Strict-Transport-Security: "max-age=31536000; includeSubDomains"
+    customRequestHeaders:
+      X-Forwarded-Proto: "https"
+      X-Forwarded-Host: "vaultwarden.k3s.nu"
+      X-Forwarded-For: ""
+    browserXssFilter: true
+    contentTypeNosniff: true
     forceSTSHeader: true
-    stsSeconds: 31536000
     stsIncludeSubdomains: true
     stsPreload: true
-    sslRedirect: true
-    sslHost: vaultwarden.k3s.nu
-    sslForceHost: true
+    stsSeconds: 31536000
     customRequestHeaders:
       X-Forwarded-Proto: "https"
     contentSecurityPolicy: "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; frame-ancestors 'self' chrome-extension://nngceckbapebfimnlniiiahkandclblb chrome-extension://jbkfoedolllekgbhcbcoahefnbanhhlh moz-extension://*"

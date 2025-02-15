@@ -16,12 +16,13 @@ data:
           keepAliveTimeout: 30s
           keepAliveConnections: 10
       - hostname: vaultwarden.k3s.nu
-        service: http://traefik.kube-system:80
+        service: https://traefik.kube-system:443
         originRequest:
           connectTimeout: 30s
           keepAliveTimeout: 30s
           keepAliveConnections: 10
           httpHostHeader: vaultwarden.k3s.nu
+          noTLSVerify: true
       - service: http_status:404  # This catch-all rule is required
     protocol: quic
     retries: 5
