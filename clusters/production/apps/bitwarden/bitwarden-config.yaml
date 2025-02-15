@@ -13,7 +13,7 @@ data:
   SMTP_SECURITY: 'starttls'
   
   # Domain and Web Configuration
-  DOMAIN: 'vaultwarden.k3s.nu'
+  DOMAIN: 'http://vaultwarden.k3s.nu'
   WEBSOCKET_ENABLED: 'true'
   WEB_VAULT_ENABLED: 'true'
   ROCKET_PORT: '8080'
