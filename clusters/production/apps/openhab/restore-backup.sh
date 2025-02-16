@@ -59,9 +59,9 @@ sleep 10
 echo "Copying backup to pod..."
 kubectl cp "${TMP_DIR}/${BACKUP_FILE}" "openhab/${OPENHAB_POD}:/openhab/${BACKUP_FILE}"
 
-# Extract backup in pod
-echo "Extracting backup in pod..."
-kubectl exec -n openhab ${OPENHAB_POD} -- sh -c "cd /openhab && unzip -o ${BACKUP_FILE}"
+# Restore backup in pod
+echo "Restoring backup in pod..."
+kubectl exec -n openhab ${OPENHAB_POD} -- /openhab/runtime/bin/restore ${BACKUP_FILE}
 
 # Clean up backup file in pod
 echo "Cleaning up..."
