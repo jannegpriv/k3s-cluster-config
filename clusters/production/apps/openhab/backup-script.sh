@@ -1,9 +1,5 @@
 #!/bin/sh
 
-# Cleanup old backups in pod
-echo "Cleaning up old backups in pod..."
-kubectl exec -n openhab ${OPENHAB_POD} -- find /openhab/userdata/backup -name "openhab-backup-*.zip" -type f -mtime +5 -delete
-
 # NAS details
 NAS_USER="jannenasadm"
 NAS_HOST="192.168.50.25"
@@ -16,6 +12,10 @@ if [ -z "$OPENHAB_POD" ]; then
     exit 1
 fi
 echo "Found OpenHAB pod: ${OPENHAB_POD}"
+
+# Cleanup old backups in pod
+echo "Cleaning up old backups in pod..."
+kubectl exec -n openhab ${OPENHAB_POD} -- find /openhab/userdata/backup -name "openhab-backup-*.zip" -type f -mtime +5 -delete
 
 # Get NAS password from environment
 NAS_PASS="${NAS_PASSWORD}"
