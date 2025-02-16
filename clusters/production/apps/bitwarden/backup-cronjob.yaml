@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bitwarden-backup
+  namespace: bitwarden
+spec:
+  schedule: "0 3 * * *"  # Run at 3 AM every day
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: bitwarden-backup
+          containers:
+          - name: backup
+            image: alpine:3.18
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                # Install required packages
+                apk add --no-cache curl openssh-client sshpass && \
+                # Install kubectl
+                curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/arm64/kubectl && \
+                chmod +x ./kubectl && \
+                mv ./kubectl /usr/local/bin/kubectl && \
+                /backup-script.sh
+            env:
+              - name: NAS_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: nas-credentials
+                    key: password
+            volumeMounts:
+            - name: backup-script
+              mountPath: /backup-script.sh
+              subPath: backup-script.sh
+          volumes:
+          - name: backup-script
+            configMap:
+              name: bitwarden-backup-script
+              defaultMode: 0777
+          restartPolicy: OnFailure

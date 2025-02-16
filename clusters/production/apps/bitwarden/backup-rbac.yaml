@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bitwarden-backup
+  namespace: bitwarden
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: bitwarden-backup
+  namespace: bitwarden
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/exec"]
+  verbs: ["get", "list", "create"]
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: bitwarden-backup
+  namespace: bitwarden
+subjects:
+- kind: ServiceAccount
+  name: bitwarden-backup
+  namespace: bitwarden
+roleRef:
+  kind: Role
+  name: bitwarden-backup
+  apiGroup: rbac.authorization.k8s.io
