@@ -6,21 +6,32 @@ metadata:
 data:
   backup-script.sh: |
     #!/bin/sh
-    set -e
+    set -ex
 
     # Create timestamp and set variables
+    echo "Setting up variables..."
     TIMESTAMP=$(date +%Y%m%d_%H%M%S)
     BACKUP_FILE="vaultwarden_backup_$TIMESTAMP.tar.gz"
     NAS_USER="jannenasadm"
     NAS_HOST="192.168.50.25"
     NAS_PATH="/volume1/k3s_backups/vaultwarden"
+    echo "Variables set:"
+    echo "TIMESTAMP=$TIMESTAMP"
+    echo "BACKUP_FILE=$BACKUP_FILE"
+    echo "NAS_USER=$NAS_USER"
+    echo "NAS_HOST=$NAS_HOST"
+    echo "NAS_PATH=$NAS_PATH"
     
     # Get the Vaultwarden pod name
+    echo "Getting Vaultwarden pod name..."
     VAULTWARDEN_POD=$(kubectl get pod -n bitwarden -l app=bitwarden -o jsonpath='{.items[0].metadata.name}')
+    echo "Found pod: $VAULTWARDEN_POD"
     
     # Create a temporary directory for the backup
+    echo "Creating backup directory..."
     BACKUP_DIR="/tmp/vaultwarden-backup"
     mkdir -p $BACKUP_DIR
+    echo "Created directory: $BACKUP_DIR"
     echo "Created temporary directory: ${BACKUP_DIR}"
     
     echo "Creating backup from pod $VAULTWARDEN_POD..."
