@@ -6,50 +6,49 @@ metadata:
 data:
   backup-script.sh: |
     #!/bin/sh
-    set -ex
+    set -e
 
-    # Create timestamp and set variables
-    echo "Setting up variables..."
+    # Create timestamp
     TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-    BACKUP_FILE="vaultwarden_backup_$TIMESTAMP.tar.gz"
+    BACKUP_NAME="vaultwarden-backup-${TIMESTAMP}"
+
+    # NAS details
     NAS_USER="jannenasadm"
     NAS_HOST="192.168.50.25"
     NAS_PATH="/volume1/k3s_backups/vaultwarden"
-    echo "Variables set:"
-    echo "TIMESTAMP=$TIMESTAMP"
-    echo "BACKUP_FILE=$BACKUP_FILE"
-    echo "NAS_USER=$NAS_USER"
-    echo "NAS_HOST=$NAS_HOST"
-    echo "NAS_PATH=$NAS_PATH"
-    
-    # Get the Vaultwarden pod name
-    echo "Getting Vaultwarden pod name..."
     VAULTWARDEN_POD=$(kubectl get pod -n bitwarden -l app=bitwarden -o jsonpath='{.items[0].metadata.name}')
-    echo "Found pod: $VAULTWARDEN_POD"
-    
-    # Create a temporary directory for the backup
-    echo "Creating backup directory..."
-    BACKUP_DIR="/tmp/vaultwarden-backup"
-    mkdir -p $BACKUP_DIR
-    echo "Created directory: $BACKUP_DIR"
-    echo "Created temporary directory: ${BACKUP_DIR}"
-    
-    echo "Creating backup from pod $VAULTWARDEN_POD..."
-    
-    # Copy SQLite database and attachments from the pod
-    kubectl cp bitwarden/$VAULTWARDEN_POD:/data/db.sqlite3 $BACKUP_DIR/db.sqlite3
-    kubectl cp bitwarden/$VAULTWARDEN_POD:/data/attachments $BACKUP_DIR/attachments
-    
-    # Create archive
-    cd /tmp
-    tar czf $BACKUP_FILE vaultwarden-backup/
+
+    # Get NAS password from environment
+    NAS_PASS="${NAS_PASSWORD}"
+
+    # Create temporary directory
+    TMP_DIR=$(mktemp -d)
+    echo "Created temporary directory: ${TMP_DIR}"
+
+    # Create backup in pod
+    echo "Creating backup in Vaultwarden pod..."
+    kubectl exec -n bitwarden ${VAULTWARDEN_POD} -- bash -c "set -e && \
+      cd /data && \
+      tar czf /tmp/${BACKUP_NAME}.tar.gz db.sqlite3 attachments" || {
+        echo "Failed to create backup in pod"
+        rm -rf "${TMP_DIR}"
+        exit 1
+    }
+
+    # Copy the backup from the pod
+    echo "Copying backup from pod..."
+    kubectl cp "bitwarden/${VAULTWARDEN_POD}:/tmp/${BACKUP_NAME}.tar.gz" "${TMP_DIR}/${BACKUP_NAME}.tar.gz" || {
+        echo "Failed to copy backup from pod"
+        rm -rf "${TMP_DIR}"
+        exit 1
+    }
     
     # Create backup directory on NAS
     echo "Creating backup directory on NAS..."
-    export SSHPASS="$NAS_PASSWORD"
-    sshpass -e ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "mkdir -p '${NAS_PATH}'" || {
+    export SSHPASS="${NAS_PASS}"
+    sshpass -e ssh -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "mkdir -p '${NAS_PATH}'" || {
         echo "Failed to create backup directory on NAS"
-        rm -rf "${BACKUP_DIR}"
+        rm -rf "${TMP_DIR}"
         exit 1
     }
 
@@ -59,39 +58,47 @@ data:
     SSH_CONFIG_FILE="${SSH_CONFIG_DIR}/config"
     mkdir -p "${SSH_CONFIG_DIR}"
     chmod 700 "${SSH_CONFIG_DIR}"
-    echo "Host ${NAS_HOST}\n    Port 4711" > "${SSH_CONFIG_FILE}"
+    cat > "${SSH_CONFIG_FILE}" << EOF
+Host ${NAS_HOST}
+    Port 4711
+EOF
     chmod 600 "${SSH_CONFIG_FILE}"
     echo "Debug: SSH config created at ${SSH_CONFIG_FILE}"
     ls -la "${SSH_CONFIG_FILE}"
     cat "${SSH_CONFIG_FILE}"
 
     # Copy to NAS using sshpass
-    echo "Uploading backup to NAS..."
+    echo "Copying backup to NAS..."
     echo "Debug: Using sshpass version:"
     sshpass -V
     echo "Debug: Command variables:"
-    echo "BACKUP_FILE=${BACKUP_FILE}"
+    echo "TMP_DIR=${TMP_DIR}"
+    echo "BACKUP_NAME=${BACKUP_NAME}"
     echo "NAS_USER=${NAS_USER}"
     echo "NAS_HOST=${NAS_HOST}"
     echo "NAS_PATH=${NAS_PATH}"
-    
     echo "Debug: Attempting to copy file using scp..."
-    sshpass -e scp -rv -O -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -F "${SSH_CONFIG_FILE}" "${BACKUP_FILE}" ${NAS_USER}@${NAS_HOST}:${NAS_PATH} || {
+    export SSHPASS="${NAS_PASS}"
+    sshpass -e scp -rv -O -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -F "${SSH_CONFIG_FILE}" "${TMP_DIR}/${BACKUP_NAME}.tar.gz" ${NAS_USER}@${NAS_HOST}:${NAS_PATH} || {
         echo "Failed to copy backup to NAS"
         echo "Debug: Testing SSH connection..."
         sshpass -e ssh -v -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "ls -la \"${NAS_PATH}\""
-        rm -rf "${BACKUP_DIR}"
+        rm -rf "${TMP_DIR}"
         exit 1
     }
 
-    # Clean up
+    # Clean up temporary directory
     echo "Backup completed successfully. Cleaning up..."
-    rm -rf "${BACKUP_DIR}" "${BACKUP_FILE}"
+    rm -rf "${TMP_DIR}"
+
+    # Clean up backup from pod
+    echo "Cleaning up backup from pod..."
+    kubectl exec -n bitwarden ${VAULTWARDEN_POD} -- rm -f "/tmp/${BACKUP_NAME}.tar.gz"
 
     # Keep only the 5 most recent backups on NAS
     echo "Cleaning up old backups on NAS..."
     sshpass -e ssh -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "cd '${NAS_PATH}' && ls -t *.tar.gz | tail -n +6 | xargs -r rm --" || {
         echo "Warning: Failed to clean up old backups on NAS"
     }
-    
+
     echo "Backup completed successfully!"
