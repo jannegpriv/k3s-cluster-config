@@ -8,7 +8,7 @@ metadata:
 data: 
   # SMTP Configuration for email verification and 2FA
   SMTP_HOST: 'smtp-relay.brevo.com'
-  SMTP_FROM: '85deaf001@smtp-brevo.com'
+  SMTP_FROM: 'jannegpriv@gmail.com'
   SMTP_FROM_NAME: 'Vaultwarden'
   SMTP_PORT: '587'
   SMTP_SECURITY: 'starttls'
