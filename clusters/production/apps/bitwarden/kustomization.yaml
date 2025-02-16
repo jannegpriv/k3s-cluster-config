@@ -15,4 +15,3 @@ resources:
   - backup-rbac.yaml
   - backup-script-configmap.yaml
   - backup-cronjob.yaml
-  - ssh-config-configmap.yaml

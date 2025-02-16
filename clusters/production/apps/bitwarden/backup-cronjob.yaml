@@ -20,7 +20,7 @@ spec:
             args:
               - |
                 # Install required packages
-                apk add --no-cache curl openssh-client sshpass rsync && \
+                apk add --no-cache curl openssh-client sshpass && \
                 # Install kubectl
                 curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/arm64/kubectl && \
                 chmod +x ./kubectl && \
@@ -36,16 +36,9 @@ spec:
             - name: backup-script
               mountPath: /backup-script.sh
               subPath: backup-script.sh
-            - name: ssh-config
-              mountPath: /ssh-config/config
-              subPath: config
           volumes:
           - name: backup-script
             configMap:
               name: bitwarden-backup-script
               defaultMode: 0777
-          - name: ssh-config
-            configMap:
-              name: bitwarden-ssh-config
-              defaultMode: 0600
           restartPolicy: OnFailure
