@@ -35,6 +35,10 @@ kubectl exec -n openhab ${OPENHAB_POD} -- bash -c "set -e && \
 TMP_DIR=$(mktemp -d)
 echo "Created temporary directory: ${TMP_DIR}"
 
+# Install unzip
+echo "Installing unzip..."
+apk add --no-cache unzip
+
 # Copy the backup from the pod
 echo "Copying backup from pod..."
 kubectl cp openhab/${OPENHAB_POD}:/openhab/userdata/backup/${BACKUP_NAME}.zip ${TMP_DIR}/${BACKUP_NAME}.zip || {
@@ -43,11 +47,9 @@ kubectl cp openhab/${OPENHAB_POD}:/openhab/userdata/backup/${BACKUP_NAME}.zip ${
 }
 
 # Verify backup contents
-echo "Installing unzip..."
-apk add --no-cache unzip
 echo "\nBackup contents:"
 echo "===================="
-unzip -l ${TMP_DIR}/${BACKUP_NAME}.zip
+cd ${TMP_DIR} && unzip -l ${BACKUP_NAME}.zip
 echo "===================="
 
 # Create backup directory on NAS
