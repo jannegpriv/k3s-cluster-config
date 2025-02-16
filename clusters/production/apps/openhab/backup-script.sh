@@ -49,10 +49,10 @@ kubectl cp "openhab/${OPENHAB_POD}:${LATEST_BACKUP}" "${TMP_DIR}/${BACKUP_NAME}"
     exit 1
 }
 
-# Create backup directory on NAS
-echo "Creating backup directory on NAS..."
+# Create backup directory and cleanup old backups on NAS
+echo "Creating backup directory and cleaning up old backups on NAS..."
 export SSHPASS="${NAS_PASS}"
-sshpass -e ssh -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "mkdir -p '${NAS_PATH}'" || {
+sshpass -e ssh -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "mkdir -p '${NAS_PATH}' && find '${NAS_PATH}' -name 'openhab-backup-*.zip' -type f -mtime +5 -delete" || {
     echo "Failed to create backup directory on NAS"
     rm -rf "${TMP_DIR}"
     exit 1
@@ -84,10 +84,10 @@ echo "NAS_USER=${NAS_USER}"
 echo "NAS_HOST=${NAS_HOST}"
 echo "NAS_PATH=${NAS_PATH}"
 echo "Debug: Full command:"
-echo "sshpass -e scp -rv -O -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -F ${SSH_CONFIG_FILE} \"${TMP_DIR}/${BACKUP_NAME}.zip\" ${NAS_USER}@${NAS_HOST}:${NAS_PATH}"
+echo "sshpass -e scp -rv -O -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -F ${SSH_CONFIG_FILE} \"${TMP_DIR}/${BACKUP_NAME}\" ${NAS_USER}@${NAS_HOST}:${NAS_PATH}"
 echo "Debug: Attempting to copy file using scp..."
 export SSHPASS="${NAS_PASS}"
-sshpass -e scp -rv -O -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -F "${SSH_CONFIG_FILE}" "${TMP_DIR}/${BACKUP_NAME}.zip" ${NAS_USER}@${NAS_HOST}:${NAS_PATH} || {
+sshpass -e scp -rv -O -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -F "${SSH_CONFIG_FILE}" "${TMP_DIR}/${BACKUP_NAME}" ${NAS_USER}@${NAS_HOST}:${NAS_PATH} || {
     echo "Failed to copy backup to NAS"
     echo "Debug: Testing SSH connection..."
     sshpass -e ssh -v -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "ls -la \"${NAS_PATH}\""
