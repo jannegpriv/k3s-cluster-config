@@ -37,8 +37,7 @@ data:
     # Upload to NAS
     echo "Uploading backup to NAS..."
     export SSHPASS="$NAS_PASSWORD"
-    sshpass -e ssh -o StrictHostKeyChecking=no jannenasadm@192.168.50.25 "mkdir -p /volume1/k3s_backups/vaultwarden"
-    sshpass -e scp -o StrictHostKeyChecking=no $BACKUP_FILE jannenasadm@192.168.50.25:/volume1/k3s_backups/vaultwarden/
+    sshpass -e rsync -e "ssh -o StrictHostKeyChecking=no" $BACKUP_FILE jannenasadm@192.168.50.25:/volume1/k3s_backups/vaultwarden/
     
     # Cleanup
     rm -rf $BACKUP_DIR $BACKUP_FILE

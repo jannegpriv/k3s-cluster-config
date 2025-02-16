@@ -20,7 +20,7 @@ spec:
             args:
               - |
                 # Install required packages
-                apk add --no-cache curl openssh-client sshpass && \
+                apk add --no-cache curl openssh-client sshpass rsync && \
                 # Install kubectl
                 curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/arm64/kubectl && \
                 chmod +x ./kubectl && \
