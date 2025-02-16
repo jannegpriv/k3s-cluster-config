@@ -7,7 +7,7 @@ BACKUP_NAME="openhab-backup-${TIMESTAMP}"
 # NAS details
 NAS_USER="jannenasadm"
 NAS_HOST="192.168.50.25"
-NAS_PATH="/volume1/openhab_backups"
+NAS_PATH="/volume1/k3s_backups/openhab"
 OPENHAB_POD="openhab-production-0"
 
 # Get NAS password from environment
