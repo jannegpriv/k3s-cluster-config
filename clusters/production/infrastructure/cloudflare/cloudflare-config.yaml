@@ -24,7 +24,7 @@ data:
           httpHostHeader: vaultwarden.k3s.nu
           headers:
             Cross-Origin-Resource-Policy: "same-site"
-            Content-Security-Policy: "default-src https: 'self'; script-src https: 'self' 'unsafe-inline' 'unsafe-eval'; style-src https: 'self' 'unsafe-inline'; img-src https: 'self' data:; frame-src 'self'"
+            Content-Security-Policy: "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; frame-src 'self' https:; connect-src 'self' https:; font-src 'self' https:; object-src 'none'"
             Strict-Transport-Security: "max-age=31536000; includeSubDomains"
             X-Content-Type-Options: "nosniff"
             X-Frame-Options: "SAMEORIGIN"
