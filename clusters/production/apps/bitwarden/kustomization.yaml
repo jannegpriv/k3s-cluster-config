@@ -12,3 +12,6 @@ resources:
   - bitwarden-ingress.yaml
   - bitwarden-middleware.yaml
   - certificate.yaml
+  - backup-rbac.yaml
+  - backup-script-configmap.yaml
+  - backup-cronjob.yaml
