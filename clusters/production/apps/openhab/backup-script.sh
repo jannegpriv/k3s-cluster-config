@@ -1,56 +1,53 @@
 #!/bin/sh
 
-# Create timestamp
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_NAME="openhab-backup-${TIMESTAMP}"
+# Cleanup old backups in pod
+echo "Cleaning up old backups in pod..."
+kubectl exec -n openhab ${OPENHAB_POD} -- find /openhab/userdata/backup -name "openhab-backup-*.zip" -type f -mtime +5 -delete
 
 # NAS details
 NAS_USER="jannenasadm"
 NAS_HOST="192.168.50.25"
 NAS_PATH="/volume1/k3s_backups/openhab"
-OPENHAB_POD="openhab-production-0"
+
+# Get pod name
+OPENHAB_POD=$(kubectl get pods -n openhab -l app.kubernetes.io/name=openhab -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+if [ -z "$OPENHAB_POD" ]; then
+    echo "Error: Could not find OpenHAB pod"
+    exit 1
+fi
+echo "Found OpenHAB pod: ${OPENHAB_POD}"
 
 # Get NAS password from environment
 NAS_PASS="${NAS_PASSWORD}"
 
-# Create backup using kubectl exec
+# Create backup using official OpenHAB backup script
 echo "Creating backup in OpenHAB pod..."
-# Clean up old backups in OpenHAB pod
-echo "Cleaning up old backups..."
-kubectl exec -n openhab ${OPENHAB_POD} -- bash -c "rm -f /openhab/*.zip /openhab/userdata/backup/*.zip"
-
-# Create new backup
-echo "Creating backup in OpenHAB pod..."
-kubectl exec -n openhab ${OPENHAB_POD} -- bash -c "set -e && \
-  export OPENHAB_CONF=/openhab/conf && \
-  export OPENHAB_USERDATA=/openhab/userdata && \
-  export OPENHAB_BACKUPS=/openhab/userdata/backup && \
-  export OPENHAB_RUNTIME=/openhab/runtime && \
-  mkdir -p \$OPENHAB_BACKUPS && \
-  cd \$OPENHAB_BACKUPS && \
-  /openhab/runtime/bin/backup ${BACKUP_NAME}.zip && \
-  chown -R openhab:openhab \$OPENHAB_BACKUPS"
-
-# Create temporary directory
-TMP_DIR=$(mktemp -d)
-echo "Created temporary directory: ${TMP_DIR}"
-
-# Install unzip
-echo "Installing unzip..."
-apk add --no-cache unzip
-
-# Copy the backup from the pod
-echo "Copying backup from pod..."
-kubectl cp openhab/${OPENHAB_POD}:/openhab/userdata/backup/${BACKUP_NAME}.zip ${TMP_DIR}/${BACKUP_NAME}.zip || {
-    echo "Failed to copy backup from pod. Check if backup was created successfully."
+kubectl exec -n openhab ${OPENHAB_POD} -- /openhab/runtime/bin/backup --full || {
+    echo "Error: Backup failed"
     exit 1
 }
 
-# Verify backup contents
-echo "\nBackup contents:"
-echo "===================="
-cd ${TMP_DIR} && unzip -l ${BACKUP_NAME}.zip
-echo "===================="
+# Create temporary directory for the transfer
+TMP_DIR=$(mktemp -d)
+echo "Created temporary directory: ${TMP_DIR}"
+
+# Find the latest backup file
+LATEST_BACKUP=$(kubectl exec -n openhab ${OPENHAB_POD} -- bash -c 'ls -t /openhab/userdata/backup/openhab-backup-*.zip | head -1')
+if [ -z "${LATEST_BACKUP}" ]; then
+    echo "Error: No backup file found in pod"
+    rm -rf "${TMP_DIR}"
+    exit 1
+fi
+echo "Found backup file: ${LATEST_BACKUP}"
+
+# Copy backup from pod
+echo "Copying backup from pod..."
+BACKUP_NAME=$(basename "${LATEST_BACKUP}")
+kubectl cp "openhab/${OPENHAB_POD}:${LATEST_BACKUP}" "${TMP_DIR}/${BACKUP_NAME}" || {
+    echo "Failed to copy backup from pod. Check if backup was created successfully."
+    rm -rf "${TMP_DIR}"
+    exit 1
+}
 
 # Create backup directory on NAS
 echo "Creating backup directory on NAS..."
