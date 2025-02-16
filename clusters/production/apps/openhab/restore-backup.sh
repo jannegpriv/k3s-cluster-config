@@ -4,7 +4,7 @@
 NAS_USER="jannenasadm"
 NAS_HOST="192.168.50.25"
 NAS_PORT="4711"
-NAS_PATH="/volume1/k3s_backups/openhab"
+NAS_PATH="/volume1/openhab_backups"
 
 # Get the pod name
 OPENHAB_POD=$(kubectl get pods -n openhab -l app.kubernetes.io/name=openhab -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
