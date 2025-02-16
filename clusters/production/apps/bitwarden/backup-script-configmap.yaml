@@ -48,10 +48,7 @@ data:
     SSH_CONFIG_FILE="${SSH_CONFIG_DIR}/config"
     mkdir -p "${SSH_CONFIG_DIR}"
     chmod 700 "${SSH_CONFIG_DIR}"
-    cat > "${SSH_CONFIG_FILE}" << EOF
-Host ${NAS_HOST}
-    Port 4711
-EOF
+    echo "Host ${NAS_HOST}\n    Port 4711" > "${SSH_CONFIG_FILE}"
     chmod 600 "${SSH_CONFIG_FILE}"
     echo "Debug: SSH config created at ${SSH_CONFIG_FILE}"
     ls -la "${SSH_CONFIG_FILE}"
