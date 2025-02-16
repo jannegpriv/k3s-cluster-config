@@ -6,7 +6,7 @@ NAS_HOST="192.168.50.25"
 NAS_PATH="/volume1/k3s_backups/openhab"
 
 # Get pod name
-OPENHAB_POD=$(kubectl get pods -n openhab -l app.kubernetes.io/name=openhab -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+OPENHAB_POD=$(kubectl get pods -n openhab -l app=openhab-production -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
 if [ -z "$OPENHAB_POD" ]; then
     echo "Error: Could not find OpenHAB pod"
     exit 1
