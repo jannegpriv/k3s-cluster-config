@@ -1,0 +1,26 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: headlamp
+  namespace: headlamp
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: headlamp
+      version: '0.22.1'  # Using a stable version
+      sourceRef:
+        kind: HelmRepository
+        name: headlamp
+        namespace: flux-system
+      interval: 1m
+  values:
+    config: {}
+    ingress:
+      enabled: true
+      className: "traefik"
+      hosts:
+        - host: headlamp.local
+          paths:
+            - path: /
+              pathType: Prefix
