@@ -23,5 +23,16 @@ spec:
         enabled: true
       plugin-catalog:
         enabled: true
+    persistence:
+      enabled: true
+      plugins:
+        enabled: true
+        size: 1Gi
+        accessModes:
+          - ReadWriteOnce
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
     ingress:
       enabled: false
