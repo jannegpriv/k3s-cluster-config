@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: headlamp
-      version: '0.22.1'  # Using a stable version
+      version: '0.28.1'  # Using the latest stable version
       sourceRef:
         kind: HelmRepository
         name: headlamp
