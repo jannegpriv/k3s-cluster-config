@@ -17,10 +17,14 @@ spec:
   values:
     config: {}
     ingress:
+      enabled: false
+    ingressRoute:
       enabled: true
-      className: "traefik"
-      hosts:
-        - host: headlamp.local
-          paths:
-            - path: /
-              pathType: ImplementationSpecific
+      entryPoints:
+        - web
+      routes:
+        - match: Host(`headlamp.local`)
+          kind: Rule
+          services:
+            - name: headlamp
+              port: 80
