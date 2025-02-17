@@ -23,16 +23,22 @@ spec:
         enabled: true
       plugin-catalog:
         enabled: true
-    persistence:
-      enabled: true
-      plugins:
-        enabled: true
-        size: 1Gi
-        accessModes:
-          - ReadWriteOnce
+    extraVolumes:
+      - name: plugins
+        emptyDir: {}
+      - name: config
+        emptyDir: {}
+    extraVolumeMounts:
+      - name: plugins
+        mountPath: /headlamp/plugins
+      - name: config
+        mountPath: /.config
     securityContext:
       runAsUser: 1000
       runAsGroup: 1000
       fsGroup: 1000
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: false
     ingress:
       enabled: false
