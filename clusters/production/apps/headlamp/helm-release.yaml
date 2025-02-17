@@ -18,13 +18,3 @@ spec:
     config: {}
     ingress:
       enabled: false
-    ingressRoute:
-      enabled: true
-      entryPoints:
-        - web
-      routes:
-        - match: Host(`headlamp.local`)
-          kind: Rule
-          services:
-            - name: headlamp
-              port: 80
