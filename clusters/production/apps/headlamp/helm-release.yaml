@@ -16,5 +16,12 @@ spec:
       interval: 1m
   values:
     config: {}
+    plugins:
+      flux:
+        enabled: true
+      opencost:
+        enabled: true
+      plugin-catalog:
+        enabled: true
     ingress:
       enabled: false
