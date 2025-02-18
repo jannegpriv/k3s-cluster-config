@@ -15,22 +15,13 @@ spec:
         namespace: flux-system
       interval: 1m
   values:
-    config:
-      pluginsDir: /plugins
+    config: {}
     extraVolumes:
-      - name: plugins
-        emptyDir: {}
-      - name: config
-        emptyDir: {}
-      - name: tmp
+      - name: data
         emptyDir: {}
     extraVolumeMounts:
-      - name: plugins
-        mountPath: /plugins
-      - name: config
-        mountPath: /home/headlamp/.config
-      - name: tmp
-        mountPath: /tmp
+      - name: data
+        mountPath: /data
     initContainers:
       - name: init-dirs
         image: busybox
@@ -38,15 +29,11 @@ spec:
           - sh
           - -c
           - |
-            mkdir -p /plugins /home/headlamp/.config/Headlamp/plugins /tmp/headlamp/plugins &&
-            chmod -R 777 /plugins /home/headlamp/.config /tmp
+            mkdir -p /data/plugins /data/.config &&
+            chmod -R 777 /data
         volumeMounts:
-          - name: plugins
-            mountPath: /plugins
-          - name: config
-            mountPath: /home/headlamp/.config
-          - name: tmp
-            mountPath: /tmp
+          - name: data
+            mountPath: /data
     securityContext:
       runAsUser: 1000
       runAsGroup: 1000
@@ -55,7 +42,9 @@ spec:
       allowPrivilegeEscalation: false
       readOnlyRootFilesystem: false
     env:
+      - name: HOME
+        value: /data
       - name: PLUGINS_DIR
-        value: /tmp/headlamp/plugins
+        value: /data/plugins
     ingress:
       enabled: false
