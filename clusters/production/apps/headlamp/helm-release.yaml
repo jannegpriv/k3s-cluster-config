@@ -26,11 +26,11 @@ spec:
       - name: plugins
         mountPath: /headlamp/plugins
       - name: config
-        mountPath: /.config
+        mountPath: /home/headlamp/.config
     initContainers:
       - name: init-plugins
         image: busybox
-        command: ['sh', '-c', 'chmod -R 777 /headlamp/plugins && chmod -R 777 /.config']
+        command: ['sh', '-c', 'mkdir -p /home/headlamp/.config && chmod -R 777 /headlamp/plugins && chmod -R 777 /home/headlamp/.config']
         volumeMounts:
           - name: plugins
             mountPath: /headlamp/plugins
