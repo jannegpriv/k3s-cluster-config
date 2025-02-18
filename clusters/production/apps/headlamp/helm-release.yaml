@@ -15,29 +15,23 @@ spec:
         namespace: flux-system
       interval: 1m
   values:
-    config: {}
+    config:
+      pluginsDir: /build/plugins
     extraVolumes:
-      - name: data
+      - name: plugins
         emptyDir: {}
     extraVolumeMounts:
-      - name: data
-        mountPath: /.config
-        subPath: .config
-      - name: data
-        mountPath: /headlamp/plugins
-        subPath: plugins
+      - name: plugins
+        mountPath: /build/plugins
     initContainers:
-      - name: init-dirs
+      - name: init-plugins
         image: busybox
         command:
           - sh
           - -c
           - |
-            mkdir -p /data/.config /data/plugins &&
-            chmod -R 777 /data
-        volumeMounts:
-          - name: data
-            mountPath: /data
+            mkdir -p /build/plugins &&
+            chmod -R 777 /build/plugins
     securityContext:
       runAsUser: 1000
       runAsGroup: 1000
@@ -45,10 +39,6 @@ spec:
     containerSecurityContext:
       allowPrivilegeEscalation: false
       readOnlyRootFilesystem: false
-    env:
-      - name: HOME
-        value: /data
-      - name: PLUGINS_DIR
-        value: /data/plugins
+    env: []
     ingress:
       enabled: false
