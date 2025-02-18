@@ -15,7 +15,8 @@ spec:
         namespace: flux-system
       interval: 1m
   values:
-    config: {}
+    config:
+      pluginsDir: /headlamp/plugins
     extraVolumes:
       - name: plugins
         emptyDir: {}
@@ -29,7 +30,7 @@ spec:
     initContainers:
       - name: init-plugins
         image: busybox
-        command: ['sh', '-c', 'chmod -R 777 /headlamp/plugins']
+        command: ['sh', '-c', 'chmod -R 777 /headlamp/plugins && chmod -R 777 /.config']
         volumeMounts:
           - name: plugins
             mountPath: /headlamp/plugins
