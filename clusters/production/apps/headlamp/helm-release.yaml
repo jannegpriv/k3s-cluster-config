@@ -26,10 +26,8 @@ spec:
     extraVolumeMounts:
       - name: data
         mountPath: /plugins
-        subPath: plugins
       - name: data
-        mountPath: /.config
-        subPath: config
+        mountPath: /tmp
     initContainers:
       - name: init-dirs
         image: busybox
@@ -37,7 +35,7 @@ spec:
           - sh
           - -c
           - |
-            mkdir -p /data/plugins /data/config &&
+            mkdir -p /data/plugins /data/tmp &&
             chmod -R 777 /data
         volumeMounts:
           - name: data
@@ -51,6 +49,8 @@ spec:
       readOnlyRootFilesystem: false
     env:
       - name: HOME
-        value: /
+        value: /tmp
+      - name: PLUGINS_DIR
+        value: /plugins
     ingress:
       enabled: false
