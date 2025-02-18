@@ -18,20 +18,27 @@ spec:
     config:
       pluginsDir: /build/plugins
     extraVolumes:
-      - name: plugins
+      - name: data
         emptyDir: {}
     extraVolumeMounts:
-      - name: plugins
+      - name: data
         mountPath: /build/plugins
+        subPath: plugins
+      - name: data
+        mountPath: /home/headlamp/.config
+        subPath: config
     initContainers:
-      - name: init-plugins
+      - name: init-dirs
         image: busybox
         command:
           - sh
           - -c
           - |
-            mkdir -p /build/plugins &&
-            chmod -R 777 /build/plugins
+            mkdir -p /data/plugins /data/config/Headlamp/plugins &&
+            chmod -R 777 /data
+        volumeMounts:
+          - name: data
+            mountPath: /data
     securityContext:
       runAsUser: 1000
       runAsGroup: 1000
