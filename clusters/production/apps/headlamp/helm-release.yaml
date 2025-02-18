@@ -16,26 +16,37 @@ spec:
       interval: 1m
   values:
     config:
-      pluginsDir: /headlamp/plugins
+      pluginsDir: /plugins
     extraVolumes:
       - name: plugins
         emptyDir: {}
       - name: config
         emptyDir: {}
+      - name: tmp
+        emptyDir: {}
     extraVolumeMounts:
       - name: plugins
-        mountPath: /headlamp/plugins
+        mountPath: /plugins
       - name: config
         mountPath: /home/headlamp/.config
+      - name: tmp
+        mountPath: /tmp
     initContainers:
-      - name: init-plugins
+      - name: init-dirs
         image: busybox
-        command: ['sh', '-c', 'mkdir -p /home/headlamp/.config && chmod -R 777 /headlamp/plugins && chmod -R 777 /home/headlamp/.config']
+        command:
+          - sh
+          - -c
+          - |
+            mkdir -p /plugins /home/headlamp/.config/Headlamp/plugins /tmp/headlamp/plugins &&
+            chmod -R 777 /plugins /home/headlamp/.config /tmp
         volumeMounts:
           - name: plugins
-            mountPath: /headlamp/plugins
+            mountPath: /plugins
           - name: config
-            mountPath: /.config
+            mountPath: /home/headlamp/.config
+          - name: tmp
+            mountPath: /tmp
     securityContext:
       runAsUser: 1000
       runAsGroup: 1000
