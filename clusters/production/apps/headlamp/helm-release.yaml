@@ -16,13 +16,16 @@ spec:
       interval: 1m
   values:
     config:
-      pluginsDir: /build/plugins
+      pluginsDir: /plugins
+    serviceAccount:
+      create: true
+      name: headlamp
     extraVolumes:
       - name: data
         emptyDir: {}
     extraVolumeMounts:
       - name: data
-        mountPath: /build/plugins
+        mountPath: /plugins
         subPath: plugins
       - name: data
         mountPath: /home/headlamp/.config
@@ -34,7 +37,7 @@ spec:
           - sh
           - -c
           - |
-            mkdir -p /data/plugins /data/config/Headlamp/plugins &&
+            mkdir -p /data/plugins /data/config &&
             chmod -R 777 /data
         volumeMounts:
           - name: data
@@ -46,6 +49,8 @@ spec:
     containerSecurityContext:
       allowPrivilegeEscalation: false
       readOnlyRootFilesystem: false
-    env: []
+    env:
+      - name: HOME
+        value: /home/headlamp
     ingress:
       enabled: false
