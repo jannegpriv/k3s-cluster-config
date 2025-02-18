@@ -15,14 +15,10 @@ spec:
         namespace: flux-system
       interval: 1m
   values:
-    config: {}
-    plugins:
-      flux:
-        enabled: true
-      opencost:
-        enabled: true
-      plugin-catalog:
-        enabled: true
+    config:
+      pluginsDir: /tmp/headlamp/plugins
+      pluginsUrl: https://headlamp-k8s.github.io/headlamp/plugins/
+    plugins: {}
     securityContext:
       runAsUser: 1000
       runAsGroup: 1000
