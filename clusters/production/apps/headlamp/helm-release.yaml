@@ -15,10 +15,20 @@ spec:
         namespace: flux-system
       interval: 1m
   values:
-    config:
-      pluginsDir: /tmp/headlamp/plugins
-      pluginsUrl: https://headlamp-k8s.github.io/headlamp/plugins/
-    plugins: {}
+    config: {}
+    extraVolumes:
+      - name: plugins
+        emptyDir: {}
+    extraVolumeMounts:
+      - name: plugins
+        mountPath: /headlamp/plugins
+    initContainers:
+      - name: init-plugins
+        image: busybox
+        command: ['sh', '-c', 'chmod -R 777 /headlamp/plugins']
+        volumeMounts:
+          - name: plugins
+            mountPath: /headlamp/plugins
     securityContext:
       runAsUser: 1000
       runAsGroup: 1000
