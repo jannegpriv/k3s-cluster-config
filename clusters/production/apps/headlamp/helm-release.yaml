@@ -16,7 +16,7 @@ spec:
       interval: 1m
   values:
     config:
-      pluginsDir: /plugins
+      pluginsDir: /data/plugins
     serviceAccount:
       create: true
       name: headlamp
@@ -25,9 +25,7 @@ spec:
         emptyDir: {}
     extraVolumeMounts:
       - name: data
-        mountPath: /plugins
-      - name: data
-        mountPath: /tmp
+        mountPath: /data
     initContainers:
       - name: init-dirs
         image: busybox
@@ -35,7 +33,7 @@ spec:
           - sh
           - -c
           - |
-            mkdir -p /data/plugins /data/tmp &&
+            mkdir -p /data/plugins /data/tmp /data/.config &&
             chmod -R 777 /data
         volumeMounts:
           - name: data
@@ -49,8 +47,10 @@ spec:
       readOnlyRootFilesystem: false
     env:
       - name: HOME
-        value: /tmp
+        value: /data/tmp
       - name: PLUGINS_DIR
-        value: /plugins
+        value: /data/plugins
+      - name: XDG_CONFIG_HOME
+        value: /data/.config
     ingress:
       enabled: false
