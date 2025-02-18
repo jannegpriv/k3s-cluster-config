@@ -19,9 +19,13 @@ spec:
     extraVolumes:
       - name: plugins
         emptyDir: {}
+      - name: config
+        emptyDir: {}
     extraVolumeMounts:
       - name: plugins
         mountPath: /headlamp/plugins
+      - name: config
+        mountPath: /.config
     initContainers:
       - name: init-plugins
         image: busybox
@@ -29,6 +33,8 @@ spec:
         volumeMounts:
           - name: plugins
             mountPath: /headlamp/plugins
+          - name: config
+            mountPath: /.config
     securityContext:
       runAsUser: 1000
       runAsGroup: 1000
