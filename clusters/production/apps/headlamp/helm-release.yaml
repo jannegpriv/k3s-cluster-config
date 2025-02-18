@@ -21,7 +21,11 @@ spec:
         emptyDir: {}
     extraVolumeMounts:
       - name: data
-        mountPath: /data
+        mountPath: /.config
+        subPath: .config
+      - name: data
+        mountPath: /headlamp/plugins
+        subPath: plugins
     initContainers:
       - name: init-dirs
         image: busybox
@@ -29,7 +33,7 @@ spec:
           - sh
           - -c
           - |
-            mkdir -p /data/plugins /data/.config &&
+            mkdir -p /data/.config /data/plugins &&
             chmod -R 777 /data
         volumeMounts:
           - name: data
