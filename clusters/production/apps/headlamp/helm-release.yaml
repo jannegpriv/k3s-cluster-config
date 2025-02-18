@@ -23,9 +23,13 @@ spec:
     extraVolumes:
       - name: data
         emptyDir: {}
+      - name: frontend
+        emptyDir: {}
     extraVolumeMounts:
       - name: data
         mountPath: /data
+      - name: frontend
+        mountPath: /headlamp/frontend
     initContainers:
       - name: init-dirs
         image: busybox
@@ -33,11 +37,13 @@ spec:
           - sh
           - -c
           - |
-            mkdir -p /data/plugins /data/tmp /data/.config &&
-            chmod -R 777 /data
+            mkdir -p /data/plugins /data/tmp /data/.config /frontend &&
+            chmod -R 777 /data /frontend
         volumeMounts:
           - name: data
             mountPath: /data
+          - name: frontend
+            mountPath: /frontend
     securityContext:
       runAsUser: 1000
       runAsGroup: 1000
@@ -52,5 +58,7 @@ spec:
         value: /data/plugins
       - name: XDG_CONFIG_HOME
         value: /data/.config
+      - name: HEADLAMP_CONFIG_PATH
+        value: /data/.config/headlamp
     ingress:
       enabled: false
