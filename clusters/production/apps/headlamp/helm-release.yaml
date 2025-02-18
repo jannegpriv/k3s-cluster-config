@@ -28,7 +28,7 @@ spec:
         mountPath: /plugins
         subPath: plugins
       - name: data
-        mountPath: /home/headlamp/.config
+        mountPath: /.config
         subPath: config
     initContainers:
       - name: init-dirs
@@ -51,6 +51,6 @@ spec:
       readOnlyRootFilesystem: false
     env:
       - name: HOME
-        value: /home/headlamp
+        value: /
     ingress:
       enabled: false
