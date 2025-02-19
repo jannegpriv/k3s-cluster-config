@@ -15,61 +15,8 @@ spec:
         namespace: flux-system
       interval: 1m
   values:
-    config:
-      pluginsDir: /plugins
     serviceAccount:
       create: true
       name: headlamp
-    extraVolumes:
-      - name: plugins
-        emptyDir: {}
-      - name: config
-        emptyDir: {}
-      - name: tmp
-        emptyDir: {}
-      - name: frontend
-        emptyDir: {}
-    extraVolumeMounts:
-      - name: plugins
-        mountPath: /plugins
-      - name: config
-        mountPath: /.config
-      - name: tmp
-        mountPath: /tmp
-      - name: frontend
-        mountPath: /headlamp/frontend
-    initContainers:
-      - name: init-dirs
-        image: busybox
-        command:
-          - sh
-          - -c
-          - |
-            chmod -R 777 / &&
-            mkdir -p /plugins /tmp /.config /headlamp/frontend &&
-            chmod -R 777 /plugins /tmp /.config /headlamp/frontend
-        volumeMounts:
-          - name: plugins
-            mountPath: /plugins
-          - name: config
-            mountPath: /.config
-          - name: tmp
-            mountPath: /tmp
-          - name: frontend
-            mountPath: /headlamp/frontend
-    securityContext:
-      runAsUser: 1000
-      runAsGroup: 1000
-      fsGroup: 1000
-    containerSecurityContext:
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: false
-    env:
-      - name: HOME
-        value: /tmp
-      - name: PLUGINS_DIR
-        value: /plugins
-      - name: XDG_CONFIG_HOME
-        value: /.config
     ingress:
       enabled: false
