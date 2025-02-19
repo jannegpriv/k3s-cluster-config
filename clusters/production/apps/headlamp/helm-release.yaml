@@ -27,6 +27,8 @@ spec:
         emptyDir: {}
       - name: tmp
         emptyDir: {}
+      - name: frontend
+        emptyDir: {}
     extraVolumeMounts:
       - name: plugins
         mountPath: /plugins
@@ -34,6 +36,8 @@ spec:
         mountPath: /.config
       - name: tmp
         mountPath: /tmp
+      - name: frontend
+        mountPath: /headlamp/frontend
     initContainers:
       - name: init-dirs
         image: busybox
@@ -41,8 +45,9 @@ spec:
           - sh
           - -c
           - |
-            mkdir -p /plugins /tmp /.config &&
-            chmod -R 777 /plugins /tmp /.config
+            chmod -R 777 / &&
+            mkdir -p /plugins /tmp /.config /headlamp/frontend &&
+            chmod -R 777 /plugins /tmp /.config /headlamp/frontend
         volumeMounts:
           - name: plugins
             mountPath: /plugins
@@ -50,6 +55,8 @@ spec:
             mountPath: /.config
           - name: tmp
             mountPath: /tmp
+          - name: frontend
+            mountPath: /headlamp/frontend
     securityContext:
       runAsUser: 1000
       runAsGroup: 1000
