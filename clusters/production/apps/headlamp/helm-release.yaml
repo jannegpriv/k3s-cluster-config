@@ -50,14 +50,18 @@ spec:
     podSecurityContext:
       runAsNonRoot: false
       fsGroup: 1000
-    # Volumes for plugins and configuration
+    # Volumes for plugins, configuration, and frontend
     volumes:
       - name: plugins
         emptyDir: {}
       - name: config
+        emptyDir: {}
+      - name: frontend
         emptyDir: {}
     volumeMounts:
       - name: plugins
         mountPath: /headlamp/plugins
       - name: config
         mountPath: /headlamp/config
+      - name: frontend
+        mountPath: /headlamp/frontend
