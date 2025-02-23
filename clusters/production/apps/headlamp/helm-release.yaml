@@ -19,7 +19,7 @@ spec:
       tag: v0.28.1
     config:
       inCluster: true
-      baseURL: "http://headlamp.local"
+      baseURL: "/"
       pluginsDir: /headlamp/plugins
     staticAuth:
       enabled: true
