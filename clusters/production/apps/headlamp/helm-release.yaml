@@ -17,14 +17,18 @@ spec:
   values:
     config:
       inCluster: true
+      enableStaticLogin: true
+    rbac:
+      create: true
     staticAuth:
       enabled: true
       tokens:
-        - token: "Xh8et5UMP8G3OUJlMhs+e3zGzTeBFBjNTuXhGl29LP0="
+        - token: "admin-token"
           name: "admin"
           groups:
             - "system:masters"
     serviceAccount:
       create: true
+      clusterAdmin: true
     ingress:
       enabled: false
