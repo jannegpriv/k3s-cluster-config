@@ -15,12 +15,8 @@ spec:
         namespace: flux-system
       interval: 1m
   values:
-    image:
-      tag: v0.28.1
     config:
       inCluster: true
-      baseURL: "/"
-      pluginsDir: /headlamp/plugins
     staticAuth:
       enabled: true
       tokens:
@@ -28,40 +24,7 @@ spec:
           name: "admin"
           groups:
             - "system:masters"
-    env:
-      - name: HEADLAMP_PLUGINS_INSTALL_ENABLED
-        value: "true"
-      - name: HEADLAMP_CONFIG_ENABLE_PLUGIN_INSTALL
-        value: "true"
-      - name: HOME
-        value: /headlamp/config
-      - name: XDG_CONFIG_HOME
-        value: /headlamp/config
     serviceAccount:
       create: true
-      name: headlamp
     ingress:
       enabled: false
-    securityContext:
-      runAsNonRoot: false
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop: [ALL]
-    podSecurityContext:
-      runAsNonRoot: false
-      fsGroup: 1000
-    # Volumes for plugins, configuration, and frontend
-    volumes:
-      - name: plugins
-        emptyDir: {}
-      - name: config
-        emptyDir: {}
-      - name: frontend
-        emptyDir: {}
-    volumeMounts:
-      - name: plugins
-        mountPath: /headlamp/plugins
-      - name: config
-        mountPath: /headlamp/config
-      - name: frontend
-        mountPath: /headlamp/frontend
