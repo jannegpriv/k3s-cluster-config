@@ -43,14 +43,12 @@ spec:
     ingress:
       enabled: false
     securityContext:
-      runAsNonRoot: true
-      runAsUser: 1000
+      runAsNonRoot: false
       allowPrivilegeEscalation: false
       capabilities:
         drop: [ALL]
     podSecurityContext:
-      runAsNonRoot: true
-      runAsUser: 1000
+      runAsNonRoot: false
       fsGroup: 1000
     # Volumes for plugins and configuration
     volumes:
