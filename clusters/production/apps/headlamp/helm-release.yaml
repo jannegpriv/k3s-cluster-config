@@ -18,19 +18,16 @@ spec:
     image:
       tag: v0.28.1
     config:
-      enablePluginCatalog: true
-      enablePluginInstall: true
-      pluginsDir: /headlamp/plugins
       inCluster: true
       baseURL: "http://headlamp.local"
-      staticAuth:
-        enabled: true
-        # The tokens below are just examples and should be replaced with secure ones
-        tokens:
-          - token: "Xh8et5UMP8G3OUJlMhs+e3zGzTeBFBjNTuXhGl29LP0="
-            name: "admin"
-            groups:
-              - "system:masters"
+      pluginsDir: /headlamp/plugins
+    staticAuth:
+      enabled: true
+      tokens:
+        - token: "Xh8et5UMP8G3OUJlMhs+e3zGzTeBFBjNTuXhGl29LP0="
+          name: "admin"
+          groups:
+            - "system:masters"
     env:
       - name: HEADLAMP_PLUGINS_INSTALL_ENABLED
         value: "true"
@@ -40,16 +37,6 @@ spec:
         value: /headlamp/config
       - name: XDG_CONFIG_HOME
         value: /headlamp/config
-      - name: GITHUB_CLIENT_ID
-        valueFrom:
-          secretKeyRef:
-            name: github-oauth
-            key: client-id
-      - name: GITHUB_CLIENT_SECRET
-        valueFrom:
-          secretKeyRef:
-            name: github-oauth
-            key: client-secret
     serviceAccount:
       create: true
       name: headlamp
