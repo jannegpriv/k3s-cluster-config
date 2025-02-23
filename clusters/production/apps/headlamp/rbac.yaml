@@ -3,17 +3,41 @@ kind: ClusterRole
 metadata:
   name: headlamp-minimal
 rules:
+  # Core API access
   - apiGroups: [""]
-    resources: ["pods", "services", "nodes", "namespaces", "events", "configmaps"]
+    resources: ["pods", "services", "nodes", "namespaces", "events", "configmaps", "secrets"]
     verbs: ["get", "list", "watch"]
+  # Apps API access
   - apiGroups: ["apps"]
-    resources: ["deployments", "daemonsets", "statefulsets"]
+    resources: ["deployments", "daemonsets", "statefulsets", "replicasets"]
     verbs: ["get", "list", "watch"]
+  # Batch API access
   - apiGroups: ["batch"]
     resources: ["jobs", "cronjobs"]
     verbs: ["get", "list", "watch"]
+  # Networking API access
   - apiGroups: ["networking.k8s.io"]
     resources: ["ingresses"]
+    verbs: ["get", "list", "watch"]
+  # Required for Headlamp functionality
+  - apiGroups: ["authorization.k8s.io"]
+    resources: ["selfsubjectaccessreviews", "selfsubjectrulesreviews"]
+    verbs: ["create"]
+  - apiGroups: ["authentication.k8s.io"]
+    resources: ["selfsubjectreviews"]
+    verbs: ["create"]
+  # Required for Flux plugin
+  - apiGroups: ["source.toolkit.fluxcd.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["kustomize.toolkit.fluxcd.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["helm.toolkit.fluxcd.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["notification.toolkit.fluxcd.io"]
+    resources: ["*"]
     verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
