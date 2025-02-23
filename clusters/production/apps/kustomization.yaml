@@ -5,3 +5,4 @@ resources:
   - mosquitto
   - bitwarden
   - headlamp
+  - monitoring
