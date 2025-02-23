@@ -43,11 +43,16 @@ echo "Found backup file: ${LATEST_BACKUP}"
 # Copy backup from pod
 echo "Copying backup from pod..."
 BACKUP_NAME=$(basename "${LATEST_BACKUP}")
+echo "Debug: LATEST_BACKUP=${LATEST_BACKUP}"
+echo "Debug: BACKUP_NAME=${BACKUP_NAME}"
+echo "Debug: Copying from openhab/${OPENHAB_POD}:${LATEST_BACKUP} to ${TMP_DIR}/${BACKUP_NAME}"
 kubectl cp "openhab/${OPENHAB_POD}:${LATEST_BACKUP}" "${TMP_DIR}/${BACKUP_NAME}" || {
     echo "Failed to copy backup from pod. Check if backup was created successfully."
     rm -rf "${TMP_DIR}"
     exit 1
 }
+echo "Debug: Contents of ${TMP_DIR}:"
+ls -la "${TMP_DIR}"
 
 # Create backup directory and cleanup old backups on NAS
 echo "Creating backup directory and cleaning up old backups on NAS..."
