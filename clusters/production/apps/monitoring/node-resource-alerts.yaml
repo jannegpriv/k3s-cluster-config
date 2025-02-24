@@ -10,7 +10,7 @@ spec:
     - name: NodeResources
       rules:
         - alert: NodeHighCPUUsage
-          expr: instance:node_cpu_utilisation:rate5m * 100 > 90
+          expr: instance:node_cpu_utilisation:rate5m * 100 > 5
           for: 10m
           labels:
             severity: warning
