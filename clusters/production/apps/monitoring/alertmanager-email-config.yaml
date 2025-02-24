@@ -33,5 +33,8 @@ spec:
       - receiver: email
         matchers:
           - name: severity
+            value: warning|critical
+            regex: true
+          - name: severity
             value: none
-            operator: notequal
+            matchType: notEqual
