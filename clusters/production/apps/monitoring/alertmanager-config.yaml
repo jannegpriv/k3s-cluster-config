@@ -17,9 +17,9 @@ spec:
   receivers:
     - name: 'email'
       emailConfigs:
-        - to: 'your-email@gmail.com'
-          from: 'your-email@gmail.com'
-          smarthost: 'smtp.gmail.com:587'
+        - to: 'jannegpriv@gmail.com'
+          from: 'jannegpriv@gmail.com'
+          smarthost: 'smtp-relay.brevo.com:587'
           authUsername: '${smtp_auth_username}'
           authPassword: '${smtp_auth_password}'
           authIdentity: '${smtp_auth_username}'
