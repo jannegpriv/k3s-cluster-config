@@ -38,6 +38,8 @@ spec:
             secret:
               name: alertmanager-notification-secret
               key: password
+          smtp_auth_identity: 85deaf001@smtp-brevo.com
+          smtp_hello: smtp-relay.brevo.com
           smtp_require_tls: true
         route:
           group_by: ['alertname', 'severity']
