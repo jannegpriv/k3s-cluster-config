@@ -52,8 +52,14 @@ spec:
               - to: jannegpriv@gmail.com
                 send_resolved: true
       alertmanagerSpec:
-        secrets:
-          - alertmanager-notification-secret
+        volumes:
+          - name: notification-secret
+            secret:
+              secretName: alertmanager-notification-secret
+        volumeMounts:
+          - name: notification-secret
+            mountPath: /etc/alertmanager/secrets/alertmanager-notification-secret
+            readOnly: true
       ingress:
         enabled: true
         ingressClassName: traefik
