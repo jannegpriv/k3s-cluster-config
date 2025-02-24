@@ -10,25 +10,43 @@ spec:
     - name: NodeResources
       rules:
         - alert: NodeHighCPUUsage
-          expr: instance:node_cpu_utilisation:rate5m * 100 > 5
-          for: 10m
+          expr: instance:node_cpu_utilisation:rate5m * 100 > 80
+          for: 5m
           labels:
             severity: warning
           annotations:
             summary: "High CPU usage on node"
-            description: "Node {{ $labels.instance }} CPU usage is above 80% for more than 10 minutes"
+            description: "Node {{ $labels.instance }} CPU usage is above 80% for more than 5 minutes. Consider investigating running pods or restarting k3s if persistent."
 
         - alert: NodeCPUThrottling
-          expr: sum(increase(container_cpu_cfs_throttled_periods_total[5m])) by (container, pod, namespace) > 0
+          expr: sum(increase(container_cpu_cfs_throttled_periods_total[5m])) by (container, pod, namespace) > 10
           for: 5m
           labels:
             severity: warning
           annotations:
             summary: "Container CPU throttling detected"
-            description: "Container {{ $labels.container }} in pod {{ $labels.pod }} ({{ $labels.namespace }}) is being throttled"
+            description: "Container {{ $labels.container }} in pod {{ $labels.pod }} ({{ $labels.namespace }}) is being throttled significantly. This may indicate resource constraints."
+
+        - alert: K3sCPUPressure
+          expr: rate(process_cpu_seconds_total{job="k3s"}[5m]) * 100 > 50
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High k3s CPU usage"
+            description: "k3s process is using more than 50% CPU over 5 minutes. This may lead to cluster instability."
+
+        - alert: K3sCriticalCPUPressure
+          expr: rate(process_cpu_seconds_total{job="k3s"}[5m]) * 100 > 80
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Critical k3s CPU usage"
+            description: "k3s process is using more than 80% CPU over 2 minutes. Consider restarting k3s.service if persistent."
 
         - alert: NodeHighMemoryUsage
-          expr: instance:node_memory_utilisation:ratio * 100 > 90
+          expr: instance:node_memory_utilisation:ratio * 100 > 85
           for: 5m
           labels:
             severity: warning
@@ -38,12 +56,12 @@ spec:
 
         - alert: NodeSwapUsage
           expr: instance:node_memory_swap_io_bytes:rate5m > 0
-          for: 10m
+          for: 5m
           labels:
             severity: warning
           annotations:
             summary: "Swap usage detected"
-            description: "Node {{ $labels.instance }} is using swap memory"
+            description: "Node {{ $labels.instance }} is using swap memory. This may indicate memory pressure."
 
         - alert: NodeHighDiskUsage
           expr: max((node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_free_bytes{mountpoint="/"}) * 100 / node_filesystem_size_bytes{mountpoint="/"}) by (instance) > 85
@@ -55,28 +73,19 @@ spec:
             description: "Node {{ $labels.instance }} disk usage is above 85%"
 
         - alert: NodeCriticalCPUUsage
-          expr: instance:node_cpu_utilisation:rate5m * 100 > 97
-          for: 5m
+          expr: instance:node_cpu_utilisation:rate5m * 100 > 90
+          for: 2m
           labels:
             severity: critical
           annotations:
             summary: "Critical CPU usage on node"
-            description: "Node {{ $labels.instance }} CPU usage is above 95% for more than 5 minutes"
+            description: "Node {{ $labels.instance }} CPU usage is above 90% for more than 2 minutes"
 
         - alert: NodeCriticalMemoryUsage
-          expr: instance:node_memory_utilisation:ratio * 100 > 97
-          for: 5m
+          expr: instance:node_memory_utilisation:ratio * 100 > 95
+          for: 2m
           labels:
             severity: critical
           annotations:
             summary: "Critical memory usage on node"
-            description: "Node {{ $labels.instance }} memory usage is above 97% for more than 5 minutes"
-
-        - alert: OpenHABHighResourceUsage
-          expr: sum(rate(container_cpu_usage_seconds_total{namespace="openhab"}[5m])) * 100 > 150 or sum(container_memory_working_set_bytes{namespace="openhab"}) > 2.5 * 1024 * 1024 * 1024
-          for: 10m
-          labels:
-            severity: warning
-          annotations:
-            summary: "OpenHAB high resource usage"
-            description: "OpenHAB is using high resources (either >150% CPU or >2.5GB memory) for more than 10 minutes"
+            description: "Node {{ $labels.instance }} memory usage is above 95% for more than 2 minutes"
