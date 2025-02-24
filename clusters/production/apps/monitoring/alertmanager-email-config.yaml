@@ -29,15 +29,9 @@ spec:
     repeatInterval: 6h
     receiver: email
     routes:
-      # Route for warning or critical alerts
+      # Route for warning/critical alerts and anything not none
       - receiver: email
         matchers:
           - name: severity
-            value: "warning|critical"
+            value: warning|critical|!none
             regex: true
-      # Route for any severity that's not none
-      - receiver: email
-        matchers:
-          - name: severity
-            value: "none"
-            matchType: notEqual
