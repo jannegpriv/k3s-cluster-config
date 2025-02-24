@@ -1,0 +1,27 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: main-rules-alert-config
+  namespace: monitoring
+spec:
+  route:
+    receiver: 'email'
+    group_by: ['alertname', 'severity']
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 4h
+    matchers:
+      - name: severity
+        matchType: =~
+        value: "warning|critical"
+  receivers:
+    - name: 'email'
+      emailConfigs:
+        - to: 'your-email@gmail.com'
+          from: 'your-email@gmail.com'
+          smarthost: 'smtp.gmail.com:587'
+          authUsername: '${smtp_auth_username}'
+          authPassword: '${smtp_auth_password}'
+          authIdentity: '${smtp_auth_username}'
+          authSecret: '${smtp_auth_password}'
+          requireTLS: true

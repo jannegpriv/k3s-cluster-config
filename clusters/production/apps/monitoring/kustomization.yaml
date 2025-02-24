@@ -7,3 +7,6 @@ resources:
   - helm-release.yaml
   - coredns-alerts.yaml
   - node-resource-alerts.yaml
+  - apiserver-alerts.yaml
+  - alertmanager-secret.yaml
+  - alertmanager-config.yaml
