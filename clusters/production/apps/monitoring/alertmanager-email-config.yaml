@@ -9,7 +9,7 @@ spec:
       emailConfigs:
         - to: jannegpriv@gmail.com
           from: jannegpriv@gmail.com
-          smarthost: smtp-relay.brevo.com:465
+          smarthost: smtp-relay.brevo.com:587
           authUsername: 85deaf001@smtp-brevo.com
           authPassword:
             name: alertmanager-notification-secret
