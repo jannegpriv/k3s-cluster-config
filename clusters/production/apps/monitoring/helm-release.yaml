@@ -28,18 +28,35 @@ spec:
         hosts:
           - prometheus.local
     alertmanager:
+      alertmanagerSpec:
+        env:
+          - name: SMTP_FROM
+            valueFrom:
+              configMapKeyRef:
+                name: alertmanager-env
+                key: SMTP_FROM
+          - name: SMTP_SMARTHOST
+            valueFrom:
+              configMapKeyRef:
+                name: alertmanager-env
+                key: SMTP_SMARTHOST
+          - name: SMTP_AUTH_USERNAME
+            valueFrom:
+              configMapKeyRef:
+                name: alertmanager-env
+                key: SMTP_AUTH_USERNAME
+          - name: SMTP_AUTH_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: alertmanager-notification-secret
+                key: password
       config:
         global:
           resolve_timeout: 5m
-          smtp_from: jannegpriv@gmail.com
-          smtp_smarthost: smtp-relay.brevo.com:587
-          smtp_auth_username: 85deaf001@smtp-brevo.com
-          smtp_auth_password:
-            secret:
-              name: alertmanager-notification-secret
-              key: password
-          smtp_auth_identity: 85deaf001@smtp-brevo.com
-          smtp_hello: smtp-relay.brevo.com
+          smtp_from: ${SMTP_FROM}
+          smtp_smarthost: ${SMTP_SMARTHOST}
+          smtp_auth_username: ${SMTP_AUTH_USERNAME}
+          smtp_auth_password: ${SMTP_AUTH_PASSWORD}
           smtp_require_tls: true
         route:
           group_by: ['alertname', 'severity']

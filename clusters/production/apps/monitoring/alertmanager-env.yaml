@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-env
+  namespace: monitoring
+data:
+  SMTP_FROM: jannegpriv@gmail.com
+  SMTP_SMARTHOST: smtp-relay.brevo.com:587
+  SMTP_AUTH_USERNAME: 85deaf001@smtp-brevo.com
