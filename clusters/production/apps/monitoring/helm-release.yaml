@@ -28,17 +28,27 @@ spec:
         hosts:
           - prometheus.local
     alertmanager:
-      alertmanagerConfigMatcherStrategy: OnNamespace
-      alertmanagerConfiguration:
-        enabled: true
-        name: alertmanager-config
+      alertmanagerConfigNamespaceSelector: {}
+      alertmanagerConfigSelector:
+        matchLabels:
+          alertmanagerConfig: email
       config:
         global:
           resolve_timeout: 5m
         route:
-          receiver: "null"
+          receiver: email
+          group_by: ['alertname', 'severity']
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 4h
+          routes:
+            - receiver: email
+              matchers:
+                - name: severity
+                  value: warning|critical
+                  regex: true
         receivers:
-          - name: "null"
+          - name: email
       ingress:
         enabled: true
         ingressClassName: traefik
