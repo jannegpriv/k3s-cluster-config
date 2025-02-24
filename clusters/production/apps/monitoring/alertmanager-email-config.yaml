@@ -5,6 +5,7 @@ metadata:
   namespace: monitoring
 spec:
   receivers:
+    - name: "null"
     - name: email
       emailConfigs:
         - to: jannegpriv@gmail.com
@@ -16,9 +17,6 @@ spec:
             key: password
           requireTLS: true
           sendResolved: true
-          headers:
-            From: "Alertmanager" <jannegpriv@gmail.com>
-            Subject: '{{ template "email.default.subject" . }}'
   route:
     # Group by more fields to combine related alerts
     groupBy: ['alertname', 'severity', 'job']
@@ -30,9 +28,14 @@ spec:
     repeatInterval: 6h
     receiver: email
     routes:
-      # Route for warning/critical alerts and anything not none
+      # Route for warning/critical alerts
       - receiver: email
         matchers:
           - name: severity
-            value: warning|critical|!none
+            value: warning|critical
             regex: true
+      # Drop alerts with severity=none
+      - receiver: "null"
+        matchers:
+          - name: severity
+            value: none
