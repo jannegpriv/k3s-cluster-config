@@ -9,15 +9,16 @@ spec:
       emailConfigs:
         - to: jannegpriv@gmail.com
           from: jannegpriv@gmail.com
-          smarthost: smtp-relay.brevo.com:587
+          smarthost: smtp-relay.brevo.com:465
           authUsername: 85deaf001@smtp-brevo.com
           authPassword:
             name: alertmanager-notification-secret
             key: password
           requireTLS: true
-          tlsConfig:
-            insecureSkipVerify: false
           sendResolved: true
+          headers:
+            From: "Alertmanager" <jannegpriv@gmail.com>
+            Subject: '{{ template "email.default.subject" . }}'
   route:
     # Group by more fields to combine related alerts
     groupBy: ['alertname', 'severity', 'job']
