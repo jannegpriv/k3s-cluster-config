@@ -5,6 +5,9 @@ metadata:
   namespace: monitoring
 spec:
   interval: 5m
+  valuesFrom:
+    - kind: ConfigMap
+      name: alertmanager-values
   chart:
     spec:
       chart: kube-prometheus-stack

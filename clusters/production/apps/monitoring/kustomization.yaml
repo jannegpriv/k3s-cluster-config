@@ -10,3 +10,4 @@ resources:
   - apiserver-alerts.yaml
   - alertmanager-secret.yaml
   - alertmanager-config.yaml
+  - alertmanager-values.yaml

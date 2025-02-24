@@ -3,6 +3,8 @@ kind: AlertmanagerConfig
 metadata:
   name: main-rules-alert-config
   namespace: monitoring
+  labels:
+    alertmanagerConfig: "true"
 spec:
   route:
     receiver: 'email'
