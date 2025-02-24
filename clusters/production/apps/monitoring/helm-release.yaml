@@ -5,9 +5,6 @@ metadata:
   namespace: monitoring
 spec:
   interval: 5m
-  valuesFrom:
-    - kind: ConfigMap
-      name: alertmanager-values
   chart:
     spec:
       chart: kube-prometheus-stack
@@ -31,6 +28,10 @@ spec:
         hosts:
           - prometheus.local
     alertmanager:
+      alertmanagerSpec:
+        alertmanagerConfigSelector:
+          matchLabels:
+            alertmanagerConfig: "true"
       ingress:
         enabled: true
         ingressClassName: traefik
