@@ -12,6 +12,7 @@ resources:
   - alertmanager-email-config.yaml
   - alertmanager-crd.yaml
   - k3s-alert-rules.yaml
+  - silence-rules.yaml
 configMapGenerator:
   - name: alertmanager-values
     files:

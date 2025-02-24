@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: silence-rules
+  namespace: monitoring
+spec:
+  route:
+    receiver: 'null'
+    routes:
+      # Silence k3s component alerts with severity=none
+      - receiver: 'null'
+        matchers:
+          - name: severity
+            value: none
+            matchType: "="
+          - name: alertname
+            value: "KubeControllerManagerDown|KubeProxyDown|KubeSchedulerDown|Watchdog"
+            matchType: "=~"
+  receivers:
+    - name: 'null'
