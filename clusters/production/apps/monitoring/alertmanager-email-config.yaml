@@ -33,8 +33,5 @@ spec:
       - receiver: email
         matchers:
           - name: severity
-            value: warning|critical
+            value: "warning|critical|^(?!none$).*"
             regex: true
-          - name: severity
-            value: none
-            matchType: notEqual
