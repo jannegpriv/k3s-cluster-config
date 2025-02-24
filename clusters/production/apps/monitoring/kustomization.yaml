@@ -9,7 +9,7 @@ resources:
   - node-resource-alerts.yaml
   - apiserver-alerts.yaml
   - alertmanager-secret.yaml
-  - alertmanager-config.yaml
+  - alertmanager-email-config.yaml
   - alertmanager-crd.yaml
   - k3s-alert-rules.yaml
 configMapGenerator:
