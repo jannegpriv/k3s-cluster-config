@@ -7,9 +7,8 @@ spec:
   route:
     receiver: 'email'
     groupBy: ['alertname', 'severity']
-    group_wait: 30s
-    group_interval: 5m
-    repeat_interval: 4h
+    groupInterval: 5m
+    repeatInterval: 4h
     matchers:
       - name: severity
         matchType: =~
@@ -20,8 +19,6 @@ spec:
         - to: 'jannegpriv@gmail.com'
           from: 'jannegpriv@gmail.com'
           smarthost: 'smtp-relay.brevo.com:587'
-          auth:
-            username: '85deaf001@smtp-brevo.com'
-            password: '3tL2ksWXvczOSYFN'
-          authIdentity: '85deaf001@smtp-brevo.com'
+          authUsername: '85deaf001@smtp-brevo.com'
+          authPassword: '3tL2ksWXvczOSYFN'
           requireTLS: true
