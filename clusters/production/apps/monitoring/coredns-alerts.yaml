@@ -19,7 +19,7 @@ spec:
             description: "CoreDNS is experiencing high response times (>100ms) for 95th percentile of requests"
 
         - alert: CoreDNSHighErrorRate
-          expr: rate(coredns_dns_response_rcode_count_total{rcode="SERVFAIL"}[5m]) > 1
+          expr: rate(coredns_dns_response_rcode_count_total{rcode="SERVFAIL"}[5m]) > 0.5
           for: 5m
           labels:
             severity: warning
@@ -28,7 +28,7 @@ spec:
             description: "CoreDNS is returning SERVFAIL responses at a rate higher than 1 per second"
 
         - alert: CoreDNSHighQueryRate
-          expr: sum(rate(coredns_dns_requests_total[5m])) > 1000
+          expr: sum(rate(coredns_dns_requests_total[5m])) > 500
           for: 5m
           labels:
             severity: warning
