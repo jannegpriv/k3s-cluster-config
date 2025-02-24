@@ -1,7 +1,7 @@
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 metadata:
-  name: email-config
+  name: alertmanager-config
   namespace: monitoring
 spec:
   receivers:
