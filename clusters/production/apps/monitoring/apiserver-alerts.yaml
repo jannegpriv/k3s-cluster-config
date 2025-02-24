@@ -49,18 +49,12 @@ spec:
 
         - alert: ApiServerHighMemory
           expr: process_resident_memory_bytes{job="apiserver"} > 1.5 * 1024 * 1024 * 1024
-          for: 5m
-          labels:
-            severity: warning
-          annotations:
-            summary: "API server high memory usage"
-            description: "API server is using more than 1.5GB of memory"
           for: 15m
           labels:
             severity: warning
           annotations:
             summary: "API server high memory usage"
-            description: "API server is using more than 2GB of memory for 15 minutes"
+            description: "API server is using more than 1.5GB of memory for 15 minutes"
 
         - alert: ApiServerHighCPU
           expr: rate(process_cpu_seconds_total{job="apiserver"}[5m]) * 100 > 80
