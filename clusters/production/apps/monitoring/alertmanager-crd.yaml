@@ -9,7 +9,7 @@ spec:
     - alertmanager-config
   secrets:
     - alertmanager-notification-secret
-  configuration:
+  alertmanagerConfiguration:
     route:
       receiver: email
       group_by: ['alertname', 'severity']
