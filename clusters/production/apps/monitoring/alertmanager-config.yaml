@@ -22,6 +22,8 @@ spec:
           from: 'jannegpriv@gmail.com'
           smarthost: 'smtp-relay.brevo.com:587'
           authUsername: '85deaf001@smtp-brevo.com'
+          authIdentity: '85deaf001@smtp-brevo.com'
+          authType: LOGIN
           authSecret:
             name: alertmanager-notification-secret
             key: password
