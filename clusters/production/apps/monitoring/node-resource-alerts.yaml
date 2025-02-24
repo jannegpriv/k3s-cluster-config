@@ -10,7 +10,7 @@ spec:
     - name: NodeResources
       rules:
         - alert: NodeHighCPUUsage
-          expr: instance:node_cpu_utilisation:rate5m * 100 > 80
+          expr: instance:node_cpu_utilisation:rate5m * 100 > 90
           for: 10m
           labels:
             severity: warning
@@ -28,7 +28,7 @@ spec:
             description: "Container {{ $labels.container }} in pod {{ $labels.pod }} ({{ $labels.namespace }}) is being throttled"
 
         - alert: NodeHighMemoryUsage
-          expr: instance:node_memory_utilisation:ratio * 100 > 85
+          expr: instance:node_memory_utilisation:ratio * 100 > 90
           for: 5m
           labels:
             severity: warning
@@ -55,7 +55,7 @@ spec:
             description: "Node {{ $labels.instance }} disk usage is above 85%"
 
         - alert: NodeCriticalCPUUsage
-          expr: instance:node_cpu_utilisation:rate5m * 100 > 95
+          expr: instance:node_cpu_utilisation:rate5m * 100 > 97
           for: 5m
           labels:
             severity: critical
@@ -64,10 +64,19 @@ spec:
             description: "Node {{ $labels.instance }} CPU usage is above 95% for more than 5 minutes"
 
         - alert: NodeCriticalMemoryUsage
-          expr: instance:node_memory_utilisation:ratio * 100 > 95
+          expr: instance:node_memory_utilisation:ratio * 100 > 97
           for: 5m
           labels:
             severity: critical
           annotations:
             summary: "Critical memory usage on node"
-            description: "Node {{ $labels.instance }} memory usage is above 95% for more than 5 minutes"
+            description: "Node {{ $labels.instance }} memory usage is above 97% for more than 5 minutes"
+
+        - alert: OpenHABHighResourceUsage
+          expr: sum(rate(container_cpu_usage_seconds_total{namespace="openhab"}[5m])) * 100 > 150 or sum(container_memory_working_set_bytes{namespace="openhab"}) > 2.5 * 1024 * 1024 * 1024
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "OpenHAB high resource usage"
+            description: "OpenHAB is using high resources (either >150% CPU or >2.5GB memory) for more than 10 minutes"
