@@ -6,7 +6,7 @@ metadata:
 spec:
   route:
     receiver: 'email'
-    group_by: ['alertname', 'severity']
+    groupBy: ['alertname', 'severity']
     group_wait: 30s
     group_interval: 5m
     repeat_interval: 4h
@@ -20,8 +20,8 @@ spec:
         - to: 'jannegpriv@gmail.com'
           from: 'jannegpriv@gmail.com'
           smarthost: 'smtp-relay.brevo.com:587'
-          authUsername: '${smtp_auth_username}'
-          authPassword: '${smtp_auth_password}'
-          authIdentity: '${smtp_auth_username}'
-          authSecret: '${smtp_auth_password}'
+          auth:
+            username: '85deaf001@smtp-brevo.com'
+            password: '3tL2ksWXvczOSYFN'
+          authIdentity: '85deaf001@smtp-brevo.com'
           requireTLS: true
