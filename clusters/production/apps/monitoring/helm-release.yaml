@@ -31,6 +31,14 @@ spec:
       config:
         global:
           resolve_timeout: 5m
+          smtp_from: jannegpriv@gmail.com
+          smtp_smarthost: smtp-relay.brevo.com:587
+          smtp_auth_username: 85deaf001@smtp-brevo.com
+          smtp_auth_password:
+            secret:
+              name: alertmanager-notification-secret
+              key: password
+          smtp_require_tls: true
         route:
           group_by: ['alertname', 'severity']
           group_wait: 30s
@@ -47,13 +55,6 @@ spec:
           - name: email
             email_configs:
               - to: jannegpriv@gmail.com
-                from: jannegpriv@gmail.com
-                smarthost: smtp-relay.brevo.com:587
-                auth_username: 85deaf001@smtp-brevo.com
-                auth_secret:
-                  name: alertmanager-notification-secret
-                  key: password
-                require_tls: true
                 send_resolved: true
       ingress:
         enabled: true
