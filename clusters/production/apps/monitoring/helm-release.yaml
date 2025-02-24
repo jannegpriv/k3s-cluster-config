@@ -28,40 +28,17 @@ spec:
         hosts:
           - prometheus.local
     alertmanager:
+      alertmanagerConfigMatcherStrategy: OnNamespace
+      alertmanagerConfiguration:
+        enabled: true
+        name: alertmanager-config
       config:
         global:
           resolve_timeout: 5m
-          smtp_from: jannegpriv@gmail.com
-          smtp_smarthost: smtp-relay.brevo.com:587
-          smtp_auth_username: 85deaf001@smtp-brevo.com
-          smtp_auth_password: ${SMTP_AUTH_PASSWORD}
-          smtp_require_tls: true
-      alertmanagerSpec:
-        secrets:
-          - alertmanager-notification-secret
-        env:
-          - name: SMTP_AUTH_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: alertmanager-notification-secret
-                key: password
         route:
-          group_by: ['alertname', 'severity']
-          group_wait: 30s
-          group_interval: 5m
-          repeat_interval: 4h
-          receiver: email
-          routes:
-            - receiver: email
-              matchers:
-                - name: severity
-                  value: warning|critical
-                  regex: true
+          receiver: "null"
         receivers:
-          - name: email
-            email_configs:
-              - to: jannegpriv@gmail.com
-                send_resolved: true
+          - name: "null"
       ingress:
         enabled: true
         ingressClassName: traefik

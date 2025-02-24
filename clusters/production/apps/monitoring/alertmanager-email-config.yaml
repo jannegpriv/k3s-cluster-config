@@ -1,0 +1,30 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: email-config
+  namespace: monitoring
+  labels:
+    alertmanagerConfig: email
+spec:
+  receivers:
+    - name: email
+      emailConfigs:
+        - to: jannegpriv@gmail.com
+          from: jannegpriv@gmail.com
+          smarthost: smtp-relay.brevo.com:587
+          authUsername: 85deaf001@smtp-brevo.com
+          authPassword:
+            name: alertmanager-notification-secret
+            key: password
+          requireTLS: true
+          sendResolved: true
+  route:
+    groupBy: ['alertname', 'severity']
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+    matchers:
+      - name: severity
+        value: warning|critical
+        regex: true
+    receiver: email
