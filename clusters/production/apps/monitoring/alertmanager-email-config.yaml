@@ -15,6 +15,9 @@ spec:
             name: alertmanager-notification-secret
             key: password
           requireTLS: true
+          authType: LOGIN
+          tlsConfig:
+            insecureSkipVerify: false
           sendResolved: true
   route:
     groupBy: ['alertname', 'severity']
