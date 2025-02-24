@@ -19,10 +19,14 @@ spec:
             insecureSkipVerify: false
           sendResolved: true
   route:
-    groupBy: ['alertname', 'severity']
-    groupWait: 30s
-    groupInterval: 5m
-    repeatInterval: 4h
+    # Group by more fields to combine related alerts
+    groupBy: ['alertname', 'severity', 'job']
+    # Wait longer before initial notification
+    groupWait: 1m
+    # Wait longer between notification groups
+    groupInterval: 10m
+    # Wait longer before repeating
+    repeatInterval: 6h
     receiver: email
     routes:
       - receiver: email
@@ -30,3 +34,6 @@ spec:
           - name: severity
             value: warning|critical
             regex: true
+          - name: severity
+            value: none
+            matchType: notEqual
