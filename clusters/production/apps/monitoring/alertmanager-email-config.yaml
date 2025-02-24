@@ -3,8 +3,6 @@ kind: AlertmanagerConfig
 metadata:
   name: email-config
   namespace: monitoring
-  labels:
-    alertmanagerConfig: email
 spec:
   receivers:
     - name: email
