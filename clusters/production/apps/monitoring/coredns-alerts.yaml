@@ -1,0 +1,55 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: coredns-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: CoreDNS
+      rules:
+        - alert: CoreDNSHighResponseTime
+          expr: histogram_quantile(0.95, sum(rate(coredns_dns_request_duration_seconds_bucket[5m])) by (le)) > 0.1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "CoreDNS high response time"
+            description: "CoreDNS is experiencing high response times (>100ms) for 95th percentile of requests"
+
+        - alert: CoreDNSHighErrorRate
+          expr: rate(coredns_dns_response_rcode_count_total{rcode="SERVFAIL"}[5m]) > 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "CoreDNS high error rate"
+            description: "CoreDNS is returning SERVFAIL responses at a rate higher than 1 per second"
+
+        - alert: CoreDNSHighQueryRate
+          expr: sum(rate(coredns_dns_requests_total[5m])) > 1000
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "CoreDNS high query rate"
+            description: "CoreDNS is processing more than 1000 queries per second"
+
+        - alert: CoreDNSPodNotReady
+          expr: kube_pod_container_status_ready{namespace="kube-system", container="coredns"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "CoreDNS pod not ready"
+            description: "CoreDNS pod has not been ready for 5 minutes"
+
+        - alert: CoreDNSLatencyHigh
+          expr: histogram_quantile(0.95, sum(rate(coredns_dns_request_duration_seconds_bucket[5m])) by (le)) > 0.4
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: "CoreDNS latency critical"
+            description: "CoreDNS is experiencing very high latency (>400ms) for 95th percentile of requests"
