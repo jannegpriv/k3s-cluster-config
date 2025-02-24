@@ -21,8 +21,10 @@ spec:
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 4h
-    matchers:
-      - name: severity
-        value: warning|critical
-        regex: true
     receiver: email
+    routes:
+      - receiver: email
+        matchers:
+          - name: severity
+            value: warning|critical
+            regex: true
