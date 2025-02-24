@@ -10,6 +10,7 @@ resources:
   - apiserver-alerts.yaml
   - alertmanager-secret.yaml
   - alertmanager-config.yaml
+  - alertmanager-crd.yaml
   - k3s-alert-rules.yaml
 configMapGenerator:
   - name: alertmanager-values

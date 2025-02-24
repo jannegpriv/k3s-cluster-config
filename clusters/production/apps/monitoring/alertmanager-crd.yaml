@@ -1,0 +1,36 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
+metadata:
+  name: kube-prometheus-stack-alertmanager
+  namespace: monitoring
+spec:
+  replicas: 1
+  configSecret: alertmanager-notification-secret
+  configMaps:
+    - alertmanager-config
+  secrets:
+    - alertmanager-notification-secret
+  configRoutes:
+    receiver: email
+    groupBy: ['alertname', 'severity']
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+    routes:
+      - receiver: email
+        matchers:
+          - name: severity
+            value: warning|critical
+            regex: true
+  receivers:
+    - name: email
+      emailConfigs:
+        - to: jannegpriv@gmail.com
+          from: jannegpriv@gmail.com
+          smarthost: smtp-relay.brevo.com:587
+          authUsername: 85deaf001@smtp-brevo.com
+          authPassword:
+            name: alertmanager-notification-secret
+            key: password
+          requireTLS: true
+          sendResolved: true
