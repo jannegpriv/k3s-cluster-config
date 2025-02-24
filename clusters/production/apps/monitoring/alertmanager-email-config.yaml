@@ -15,6 +15,7 @@ spec:
             name: alertmanager-notification-secret
             key: password
           requireTLS: true
+          authType: LOGIN
           tlsConfig:
             insecureSkipVerify: false
           sendResolved: true
@@ -32,8 +33,5 @@ spec:
       - receiver: email
         matchers:
           - name: severity
-            value: warning|critical
-            regex: true
-          - name: severity
             value: none
-            matchType: notEqual
+            operator: notequal
