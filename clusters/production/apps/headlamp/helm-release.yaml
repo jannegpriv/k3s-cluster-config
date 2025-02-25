@@ -19,6 +19,10 @@ spec:
       inCluster: true
       extraArgs:
         - "--in-cluster"
+        - "--plugins-dir=/headlamp/plugins"
+    env:
+      - name: KUBECONFIG
+        value: ""
     serviceAccount:
       create: true
       clusterAdmin: true
