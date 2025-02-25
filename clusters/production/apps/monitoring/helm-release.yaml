@@ -29,8 +29,6 @@ spec:
           - prometheus.local
     alertmanager:
       alertmanagerSpec:
-        configMaps:
-          - alertmanager-config
         secrets:
           - alertmanager-notification-secret
       ingress:
