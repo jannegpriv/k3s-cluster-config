@@ -30,28 +30,4 @@ spec:
     app: rook-ceph-mgr
     rook_cluster: rook-ceph
   type: ClusterIP
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: rook-ceph-mgr-dashboard
-  namespace: rook-ceph
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/service.serversscheme: https
-    traefik.ingress.kubernetes.io/service.insecureskipverify: "true"
-spec:
-  tls:
-  - hosts:
-    - ceph.local
-  rules:
-  - host: ceph.local
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: rook-ceph-mgr-dashboard
-            port:
-              number: 8443
+

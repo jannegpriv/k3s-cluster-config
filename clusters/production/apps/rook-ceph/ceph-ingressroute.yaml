@@ -1,0 +1,25 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ceph-dashboard
+  namespace: rook-ceph
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`ceph.local`)
+      kind: Rule
+      services:
+        - name: rook-ceph-mgr-dashboard
+          port: 8443
+          scheme: https
+          serversTransport: ceph-insecure-transport
+  tls: {}
+---
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: ceph-insecure-transport
+  namespace: rook-ceph
+spec:
+  insecureSkipVerify: true
