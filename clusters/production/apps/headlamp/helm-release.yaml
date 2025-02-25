@@ -17,6 +17,8 @@ spec:
   values:
     config:
       inCluster: true
+      extraArgs:
+        - "--in-cluster"
     serviceAccount:
       create: true
       clusterAdmin: true
