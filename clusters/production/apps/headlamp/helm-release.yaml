@@ -19,6 +19,7 @@ spec:
       inCluster: true
       extraArgs:
         - "--plugins-dir=/headlamp/plugins"
+        - "--kubeconfig=/home/headlamp/.config/Headlamp/kubeconfigs/config"
     env:
       - name: KUBECONFIG
         value: "/home/headlamp/.config/Headlamp/kubeconfigs/config"
