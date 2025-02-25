@@ -29,4 +29,10 @@ spec:
       create: true
       clusterAdmin: true
     ingress:
-      enabled: false
+      enabled: true
+      ingressClassName: traefik
+      hosts:
+        - host: headlamp.local
+          paths:
+            - path: /
+              pathType: Prefix
