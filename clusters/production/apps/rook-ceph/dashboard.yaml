@@ -6,7 +6,7 @@ metadata:
 spec:
   dashboard:
     enabled: true
-    ssl: false
+    ssl: true
   mgr:
     modules:
     - name: dashboard
@@ -39,13 +39,13 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web
     traefik.ingress.kubernetes.io/service.serversscheme: https
-    traefik.ingress.kubernetes.io/service.serverstransport: insecure@file
+    traefik.ingress.kubernetes.io/service.serverstransport: rook-ceph-insecure@kubernetescrd
 spec:
   rules:
   - host: ceph.local
     http:
       paths:
-      - path: /ui
+      - path: /
         pathType: Prefix
         backend:
           service:
