@@ -41,6 +41,9 @@ metadata:
     traefik.ingress.kubernetes.io/service.serversscheme: https
     traefik.ingress.kubernetes.io/service.insecureskipverify: "true"
 spec:
+  tls:
+  - hosts:
+    - ceph.local
   rules:
   - host: ceph.local
     http:
