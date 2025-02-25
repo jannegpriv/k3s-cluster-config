@@ -3,7 +3,6 @@ kind: Kustomization
 namespace: monitoring
 resources:
   - namespace.yaml
-  - helm-repository.yaml
   - helm-release.yaml
   - coredns-alerts.yaml
   - node-resource-alerts.yaml
