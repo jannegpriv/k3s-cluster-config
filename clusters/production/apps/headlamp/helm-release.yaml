@@ -24,9 +24,6 @@ spec:
     rbac:
       create: true
       clusterRoleName: cluster-admin
-    serviceAccount:
-      create: true
-      clusterAdmin: true
     ingress:
       enabled: true
       ingressClassName: traefik
