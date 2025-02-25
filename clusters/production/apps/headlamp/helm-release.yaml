@@ -17,6 +17,11 @@ spec:
   values:
     config:
       inCluster: true
+    env:
+      - name: KUBERNETES_SERVICE_HOST
+        value: "10.43.0.1"
+      - name: KUBERNETES_SERVICE_PORT
+        value: "443"
       baseURL: "/"
     rbac:
       create: true
