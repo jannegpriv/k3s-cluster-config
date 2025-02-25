@@ -6,3 +6,4 @@ resources:
   - bitwarden
   - headlamp
   - monitoring
+  - rook-ceph
