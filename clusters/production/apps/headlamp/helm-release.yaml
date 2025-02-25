@@ -18,6 +18,7 @@ spec:
     config:
       inCluster: true
       baseURL: "/"
+      useInClusterConfig: true
     env:
       - name: KUBERNETES_SERVICE_HOST
         value: "10.43.0.1"
