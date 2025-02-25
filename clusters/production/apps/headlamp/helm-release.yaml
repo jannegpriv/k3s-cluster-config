@@ -18,8 +18,12 @@ spec:
     config:
       inCluster: true
       baseURL: "/"
+    serviceAccount:
+      create: true
+      clusterAdmin: true
     rbac:
       create: true
+      clusterRoleName: cluster-admin
     serviceAccount:
       create: true
       clusterAdmin: true
