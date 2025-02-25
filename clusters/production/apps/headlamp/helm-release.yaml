@@ -18,11 +18,46 @@ spec:
     config:
       inCluster: true
       extraArgs:
-        - "--in-cluster"
         - "--plugins-dir=/headlamp/plugins"
     env:
       - name: KUBECONFIG
-        value: ""
+        value: "/home/headlamp/.config/Headlamp/kubeconfigs/config"
+    initContainers:
+      - name: init-config
+        image: busybox
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            mkdir -p /home/headlamp/.config/Headlamp/kubeconfigs/
+            cat > /home/headlamp/.config/Headlamp/kubeconfigs/config << EOF
+            apiVersion: v1
+            kind: Config
+            current-context: default
+            clusters:
+            - name: default
+              cluster:
+                certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                server: https://10.43.0.1:443
+            contexts:
+            - name: default
+              context:
+                cluster: default
+                user: default
+            users:
+            - name: default
+              user:
+                tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+            EOF
+            chown -R 100:101 /home/headlamp
+        volumeMounts:
+          - name: config-dir
+            mountPath: /home/headlamp
+    volumeMounts:
+      - name: config-dir
+        mountPath: /home/headlamp
+    volumes:
+      - name: config-dir
+        emptyDir: {}
     serviceAccount:
       create: true
       clusterAdmin: true
