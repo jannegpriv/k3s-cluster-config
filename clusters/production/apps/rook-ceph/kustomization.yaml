@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - dashboard.yaml
   - traefik-server-transport.yaml
+  - traefik-middleware.yaml
