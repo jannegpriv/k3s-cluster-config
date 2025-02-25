@@ -3,6 +3,8 @@ kind: AlertmanagerConfig
 metadata:
   name: alertmanager-config
   namespace: monitoring
+  labels:
+    alertmanagerConfig: "true"
 spec:
   receivers:
     - name: "null"
