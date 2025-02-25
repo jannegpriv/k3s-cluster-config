@@ -40,7 +40,6 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: web
     traefik.ingress.kubernetes.io/service.serversscheme: https
     traefik.ingress.kubernetes.io/service.serverstransport: insecure@file
-    traefik.ingress.kubernetes.io/router.middlewares: rook-ceph-strip-prefix@kubernetescrd
 spec:
   rules:
   - host: ceph.local
