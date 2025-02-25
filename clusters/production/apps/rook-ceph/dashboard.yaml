@@ -23,9 +23,9 @@ metadata:
 spec:
   ports:
   - name: dashboard
-    port: 7000
+    port: 8080
     protocol: TCP
-    targetPort: 7000
+    targetPort: 8080
   selector:
     app: rook-ceph-mgr
     rook_cluster: rook-ceph
@@ -49,4 +49,4 @@ spec:
           service:
             name: rook-ceph-mgr-dashboard
             port:
-              number: 7000
+              number: 8080
