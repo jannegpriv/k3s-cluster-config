@@ -4,6 +4,6 @@ metadata:
   name: strip-prefix
   namespace: rook-ceph
 spec:
-  stripPrefix:
-    prefixes:
-      - /ui
+  stripPrefixRegex:
+    regex:
+      - "^/ui/[^/]+/"
