@@ -17,7 +17,6 @@ spec:
   values:
     config:
       inCluster: true
-      baseURL: "/"
     serviceAccount:
       create: true
       clusterAdmin: true
