@@ -53,6 +53,9 @@ spec:
       annotations:
         traefik.ingress.kubernetes.io/router.entrypoints: web
         traefik.ingress.kubernetes.io/router.middlewares: default-redirect-https@kubernetescrd
+      paths:
+        - path: /
+          pathType: Prefix
     
     # Node affinity to avoid running intensive components on master
     worker:
