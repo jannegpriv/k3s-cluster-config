@@ -13,13 +13,13 @@ spec:
     matchNames:
       - kubeshark
   endpoints:
-    - port: metrics
+    - targetPort: 9100
       path: /metrics
       interval: 30s
       relabelings:
         - sourceLabels: [__meta_kubernetes_pod_node_name]
           targetLabel: node
-    - port: worker-metrics
+    - targetPort: 49100
       path: /metrics
       interval: 30s
       relabelings:
