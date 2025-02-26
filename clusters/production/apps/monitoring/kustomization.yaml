@@ -14,6 +14,7 @@ resources:
   - silence-rules.yaml
   - kubeshark-rules.yaml
   - kubeshark-dashboard-configmap.yaml
+  - kubeshark-alerts.yaml
 configMapGenerator:
   - name: alertmanager-values
     files:

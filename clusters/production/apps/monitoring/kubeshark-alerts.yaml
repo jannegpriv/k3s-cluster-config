@@ -1,0 +1,53 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kubeshark-alerts
+  namespace: monitoring
+spec:
+  groups:
+    - name: kubeshark
+      rules:
+        - alert: KubesharkHighPacketDropRate
+          expr: rate(kubeshark_dropped_packets_total[5m]) > 10
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: High packet drop rate in Kubeshark
+            description: Kubeshark is dropping more than 10 packets per second for 5 minutes.
+            
+        - alert: KubesharkHighTCPStreamDropRate
+          expr: rate(kubeshark_dropped_tcp_streams_total[5m]) > 5
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: High TCP stream drop rate in Kubeshark
+            description: Kubeshark is dropping more than 5 TCP streams per second for 5 minutes.
+            
+        - alert: KubesharkHighMemoryUsage
+          expr: process_resident_memory_bytes{namespace="kubeshark"} / 1024 / 1024 > 400
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: High memory usage in Kubeshark
+            description: Kubeshark component {{ $labels.pod }} is using more than 400MB of memory.
+            
+        - alert: KubesharkHighCPUUsage
+          expr: rate(process_cpu_seconds_total{namespace="kubeshark"}[5m]) * 100 > 50
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: High CPU usage in Kubeshark
+            description: Kubeshark component {{ $labels.pod }} is using more than 50% CPU.
+            
+        - alert: KubesharkWebSocketLag
+          expr: rate(kubeshark_ws_write_count[5m]) < 0.1 and on() rate(kubeshark_item_count[5m]) > 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: WebSocket write lag in Kubeshark
+            description: Kubeshark WebSocket writes are lagging behind item generation.
