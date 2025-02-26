@@ -5,4 +5,4 @@ metadata:
   namespace: flux-system
 spec:
   interval: 1h
-  url: https://kubeshark.github.io/helm-chart
+  url: https://helm.kubeshark.co
