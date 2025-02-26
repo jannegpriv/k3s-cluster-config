@@ -6,3 +6,4 @@ resources:
   - weave-gitops
   - traefik
   - cloudflare
+  - repositories
