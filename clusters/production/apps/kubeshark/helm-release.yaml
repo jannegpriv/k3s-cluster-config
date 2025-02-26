@@ -7,7 +7,7 @@ spec:
   interval: 5m
   chart:
     spec:
-      chart: kubeshark
+      chart: kubeshark/kubeshark
       version: '52.4'  # Latest stable version
       sourceRef:
         kind: HelmRepository
