@@ -50,6 +50,9 @@ spec:
       enabled: true
       className: traefik
       host: kubeshark.local
+      annotations:
+        traefik.ingress.kubernetes.io/router.entrypoints: web
+        traefik.ingress.kubernetes.io/router.middlewares: default-redirect-https@kubernetescrd
     
     # Node affinity to avoid running intensive components on master
     worker:
