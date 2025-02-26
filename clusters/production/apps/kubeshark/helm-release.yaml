@@ -38,6 +38,10 @@ spec:
       serviceMonitor:
         enabled: true
         namespace: monitoring
+      packetCapture:
+        enabled: true
+      storage:
+        enabled: true
 
     service:
       front:
