@@ -1,0 +1,13 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta3
+kind: HelmChart
+metadata:
+  name: kubeshark
+  namespace: flux-system
+spec:
+  chart: kubeshark
+  version: '52.4'
+  sourceRef:
+    kind: HelmRepository
+    name: kubeshark
+    namespace: flux-system
+  interval: 1m
