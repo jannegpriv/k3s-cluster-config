@@ -1,0 +1,14 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: kubeshark
+  namespace: kubeshark
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`kubeshark.local`)
+      kind: Rule
+      services:
+        - name: kubeshark-front
+          port: 80
