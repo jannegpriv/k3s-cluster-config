@@ -21,6 +21,12 @@ spec:
         ingressClassName: traefik
         hosts:
           - grafana.local
+      sidecar:
+        dashboards:
+          enabled: true
+          label: grafana_dashboard
+          labelValue: true
+          searchNamespace: monitoring
     prometheus:
       ingress:
         enabled: true
