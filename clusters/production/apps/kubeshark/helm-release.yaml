@@ -46,11 +46,15 @@ spec:
       size: 1Gi
 
     # Web interface configuration
-    ingress:
-      enabled: true
-      ingressClassName: traefik
-      hosts:
-        - kubeshark.local
+    front:
+      ingress:
+        enabled: true
+        ingressClassName: traefik
+        hosts:
+          - host: kubeshark.local
+            paths:
+              - path: /
+                pathType: Prefix
     
     # Node affinity to avoid running intensive components on master
     worker:
