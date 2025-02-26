@@ -5,10 +5,10 @@ metadata:
   namespace: kubeshark
 spec:
   entryPoints:
-    - web
+  - web
   routes:
-    - match: Host(`kubeshark.local`)
-      kind: Rule
-      services:
-        - name: kubeshark-front
-          port: 80
+  - kind: Rule
+    match: Host(`kubeshark.local`)
+    services:
+    - name: kubeshark-front
+      port: 80
