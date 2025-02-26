@@ -4,7 +4,7 @@ metadata:
   name: kubeshark
   namespace: flux-system
 spec:
-  chart: kubeshark
+  chart: kubeshark/kubeshark
   version: '52.4'
   sourceRef:
     kind: HelmRepository
