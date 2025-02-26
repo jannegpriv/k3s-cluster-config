@@ -38,6 +38,11 @@ spec:
       serviceMonitor:
         enabled: true
         namespace: monitoring
+
+    tap:
+      proxy:
+        front:
+          port: 8899
     
     # Configure persistent storage for captures
     persistence:
@@ -59,7 +64,7 @@ spec:
           service:
             name: kubeshark-front
             port:
-              number: 8899
+              number: 80
     
     # Node affinity to avoid running intensive components on master
     worker:
