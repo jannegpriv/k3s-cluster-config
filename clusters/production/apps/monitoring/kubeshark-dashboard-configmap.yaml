@@ -506,6 +506,124 @@ data:
               "legendFormat": "Processed Data (MB)"
             }
           ]
+        },
+        {
+          "title": "Protocol Distribution",
+          "type": "row",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 18
+          }
+        },
+        {
+          "title": "TCP/UDP Traffic",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 19
+          },
+          "targets": [
+            {
+              "expr": "rate(kubeshark_tcp_packets_total[5m])",
+              "legendFormat": "TCP Packets/sec"
+            },
+            {
+              "expr": "rate(kubeshark_udp_packets_total[5m])",
+              "legendFormat": "UDP Packets/sec"
+            }
+          ]
+        },
+        {
+          "title": "TCP Stream Health",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 19
+          },
+          "targets": [
+            {
+              "expr": "kubeshark_live_tcp_streams",
+              "legendFormat": "Live TCP Streams"
+            },
+            {
+              "expr": "rate(kubeshark_dropped_tcp_streams_total[5m])",
+              "legendFormat": "Dropped TCP Streams/sec"
+            }
+          ]
+        },
+        {
+          "title": "Performance Metrics",
+          "type": "row",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 27
+          }
+        },
+        {
+          "title": "Packet Processing",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 28
+          },
+          "targets": [
+            {
+              "expr": "rate(kubeshark_dropped_packets_total[5m])",
+              "legendFormat": "Dropped Packets/sec"
+            },
+            {
+              "expr": "rate(kubeshark_reassembled_tcp_payloads_total[5m])",
+              "legendFormat": "Reassembled TCP Payloads/sec"
+            }
+          ]
+        },
+        {
+          "title": "WebSocket Activity",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 28
+          },
+          "targets": [
+            {
+              "expr": "rate(kubeshark_ws_write_count[5m])",
+              "legendFormat": "WebSocket Writes/sec"
+            },
+            {
+              "expr": "rate(kubeshark_item_count[5m])",
+              "legendFormat": "Items Generated/sec"
+            }
+          ]
         }
       ],
       "templating": {
