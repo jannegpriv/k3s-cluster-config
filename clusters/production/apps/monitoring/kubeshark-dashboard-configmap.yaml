@@ -408,7 +408,13 @@ data:
         {
           "title": "Resource Usage",
           "type": "row",
-          "collapsed": false
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          }
         },
         {
           "title": "CPU Usage",
@@ -416,6 +422,12 @@ data:
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 1
           },
           "targets": [
             {
@@ -431,6 +443,12 @@ data:
             "type": "prometheus",
             "uid": "prometheus"
           },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 1
+          },
           "targets": [
             {
               "expr": "process_resident_memory_bytes{namespace=\"kubeshark\"} / 1024 / 1024",
@@ -441,7 +459,13 @@ data:
         {
           "title": "Traffic Analysis",
           "type": "row",
-          "collapsed": false
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 9
+          }
         },
         {
           "title": "Packet Capture Rate",
@@ -449,6 +473,12 @@ data:
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 10
           },
           "targets": [
             {
@@ -463,6 +493,12 @@ data:
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 10
           },
           "targets": [
             {
