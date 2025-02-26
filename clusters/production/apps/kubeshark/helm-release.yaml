@@ -39,6 +39,10 @@ spec:
         enabled: true
         namespace: monitoring
 
+    service:
+      front:
+        port: 8899
+
     tap:
       proxy:
         front:
