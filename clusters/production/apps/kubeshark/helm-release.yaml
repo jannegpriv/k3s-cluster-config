@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: kubeshark
-      version: '0.15.0'  # Using a stable version
+      version: '52.4'  # Latest stable version
       sourceRef:
         kind: HelmRepository
         name: kubeshark
