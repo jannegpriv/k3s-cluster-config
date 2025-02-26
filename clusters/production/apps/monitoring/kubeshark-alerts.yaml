@@ -1,7 +1,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: kubeshark-alerts
+  name: kubeshark-performance-alerts
   namespace: monitoring
 spec:
   groups:
