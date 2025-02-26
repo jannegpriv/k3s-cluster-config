@@ -9,5 +9,4 @@ spec:
   sourceRef:
     kind: HelmRepository
     name: kubeshark
-    namespace: flux-system
   interval: 1m
