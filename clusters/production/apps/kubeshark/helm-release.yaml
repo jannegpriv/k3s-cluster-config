@@ -55,10 +55,6 @@ spec:
             paths:
               - path: /
                 pathType: Prefix
-        tls:
-          - secretName: kubeshark-tls
-            hosts:
-              - kubeshark.local
     
     # Node affinity to avoid running intensive components on master
     worker:
