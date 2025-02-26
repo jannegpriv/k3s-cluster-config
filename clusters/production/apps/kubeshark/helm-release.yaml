@@ -56,6 +56,9 @@ spec:
       paths:
         - path: /
           pathType: Prefix
+          service:
+            name: kubeshark-front
+            port: 80
     
     # Node affinity to avoid running intensive components on master
     worker:
