@@ -404,6 +404,74 @@ data:
       "schemaVersion": 38,
       "style": "dark",
       "tags": ["kubeshark", "monitoring"],
+      "panels": [
+        {
+          "title": "Resource Usage",
+          "type": "row",
+          "collapsed": false
+        },
+        {
+          "title": "CPU Usage",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "expr": "rate(process_cpu_seconds_total{namespace=\"kubeshark\"}[5m]) * 100",
+              "legendFormat": "{{pod}} - CPU"
+            }
+          ]
+        },
+        {
+          "title": "Memory Usage",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "expr": "process_resident_memory_bytes{namespace=\"kubeshark\"} / 1024 / 1024",
+              "legendFormat": "{{pod}} - Memory"
+            }
+          ]
+        },
+        {
+          "title": "Traffic Analysis",
+          "type": "row",
+          "collapsed": false
+        },
+        {
+          "title": "Packet Capture Rate",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "expr": "rate(kubeshark_received_packets_total[5m])",
+              "legendFormat": "Packets/sec"
+            }
+          ]
+        },
+        {
+          "title": "Storage Usage",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "expr": "kubeshark_processed_bytes_total / 1024 / 1024",
+              "legendFormat": "Processed Data (MB)"
+            }
+          ]
+        }
+      ],
       "templating": {
         "list": []
       },
