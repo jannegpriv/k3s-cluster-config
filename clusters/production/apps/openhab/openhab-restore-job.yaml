@@ -1,0 +1,61 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openhab-restore-job
+  namespace: openhab
+spec:
+  ttlSecondsAfterFinished: 100
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: openhab-restore
+        image: ghcr.io/jannegpriv/openhab-container:4.3.2
+        env:
+        - name: BACKUP_FILE
+          value: "openhab-backup-25_02_28-22_20_32.zip"  # Change this value to your backup filename
+        command: 
+        - "/bin/bash"
+        - "-c"
+        - |
+          echo "Starting restore process..."
+          echo "Looking for backup file: $BACKUP_FILE"
+          if [ -f "/openhab/userdata/$BACKUP_FILE" ]; then
+            echo "Found backup file at /openhab/userdata/$BACKUP_FILE"
+            echo "Running restore command..."
+            /openhab/runtime/bin/restore /openhab/userdata/$BACKUP_FILE
+            RESULT=$?
+            if [ $RESULT -eq 0 ]; then
+              echo "Restore completed successfully."
+            else
+              echo "Restore failed with exit code $RESULT."
+            fi
+          else
+            echo "ERROR: Backup file /openhab/userdata/$BACKUP_FILE not found!"
+            ls -la /openhab/userdata/ | grep .zip
+            exit 1
+          fi
+          echo "Sleeping for 30 seconds before exiting..."
+          sleep 30
+        volumeMounts:
+        - name: openhab-conf
+          mountPath: /openhab/conf
+        - name: openhab-userdata
+          mountPath: /openhab/userdata
+        - name: openhab-addons
+          mountPath: /openhab/addons
+        - name: openhab-karaf
+          mountPath: /openhab/.karaf
+      volumes:
+      - name: openhab-conf
+        persistentVolumeClaim:
+          claimName: openhab-production-conf-claim
+      - name: openhab-userdata
+        persistentVolumeClaim:
+          claimName: openhab-production-userdata-claim
+      - name: openhab-addons
+        persistentVolumeClaim:
+          claimName: openhab-production-addons-claim
+      - name: openhab-karaf
+        persistentVolumeClaim:
+          claimName: openhab-production-karaf-claim
