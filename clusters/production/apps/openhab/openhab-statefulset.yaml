@@ -47,19 +47,19 @@ spec:
           httpGet:
             path: /
             port: 8080
-          initialDelaySeconds: 180
-          periodSeconds: 30
-          timeoutSeconds: 10
-          failureThreshold: 3
+          initialDelaySeconds: 300
+          periodSeconds: 60
+          timeoutSeconds: 15
+          failureThreshold: 5
         readinessProbe:
           httpGet:
             path: /
             port: 8080
-          initialDelaySeconds: 120
-          periodSeconds: 30
-          timeoutSeconds: 10
+          initialDelaySeconds: 240
+          periodSeconds: 60
+          timeoutSeconds: 15
           successThreshold: 1
-          failureThreshold: 3
+          failureThreshold: 5
         volumeMounts:
         - name: etc-localtime
           mountPath: /etc/localtime
