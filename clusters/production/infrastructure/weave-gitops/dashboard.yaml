@@ -14,8 +14,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 1h0m0s
-  type: oci
-  url: oci://ghcr.io/weaveworks/charts
+  url: https://helm.gitops.weave.works
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -38,4 +37,3 @@ spec:
       create: true
       passwordHash: $2a$10$Llmayf1KIBzgt3pCMbWQWesSjs7n9e8yxOqFepDM23cSf1y5k2d1u
       username: admin
-
