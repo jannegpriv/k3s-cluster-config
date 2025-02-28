@@ -1,0 +1,37 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: k3s-service-monitor
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: k3s
+  namespaceSelector:
+    matchNames:
+      - kube-system
+  endpoints:
+    - port: https
+      scheme: https
+      path: /metrics
+      interval: 30s
+      tlsConfig:
+        insecureSkipVerify: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: k3s-metrics
+  namespace: kube-system
+  labels:
+    app: k3s
+spec:
+  ports:
+  - name: https
+    port: 10250
+    protocol: TCP
+    targetPort: 10250
+  selector:
+    node-role.kubernetes.io/control-plane: "true"
