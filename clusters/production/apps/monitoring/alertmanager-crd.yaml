@@ -5,6 +5,9 @@ metadata:
   namespace: monitoring
 spec:
   replicas: 1
+  configSecret: alertmanager-kube-prometheus-stack-alertmanager
+  configMaps:
+    - alertmanager-config
   alertmanagerConfiguration:
     name: alertmanager-config
     global:

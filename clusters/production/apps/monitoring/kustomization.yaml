@@ -18,6 +18,7 @@ resources:
   - alert-history-dashboard-configmap.yaml
   - alertmanager-config.yaml
   - k3s-silence-rules.yaml
+  - alertmanager-config-configmap.yaml
 configMapGenerator:
   - name: alertmanager-values
     files:
