@@ -25,7 +25,7 @@ spec:
         dashboards:
           enabled: true
           label: grafana_dashboard
-          labelValue: true
+          labelValue: "1"
           searchNamespace: monitoring
       resources:
         requests:
