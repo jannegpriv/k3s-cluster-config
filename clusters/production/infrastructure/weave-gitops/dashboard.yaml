@@ -16,6 +16,8 @@ spec:
   interval: 1h0m0s
   type: oci
   url: oci://ghcr.io/weaveworks/charts
+  secretRef:
+    name: ghcr-auth
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
