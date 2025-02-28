@@ -20,6 +20,7 @@ resources:
   - k3s-silence-rules.yaml
   - alertmanager-config-configmap.yaml
   - k3s-service-monitor.yaml
+  - alertmanager-ingress.yaml
 configMapGenerator:
   - name: alertmanager-values
     files:
