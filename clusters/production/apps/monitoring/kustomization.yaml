@@ -20,8 +20,7 @@ resources:
   - k3s-silence-rules.yaml
   - alertmanager-config-configmap.yaml
   - k3s-service-monitor.yaml
-  - prometheus-resources.yaml
-  - node-affinity.yaml
+  - prometheus-optimizations.yaml
 configMapGenerator:
   - name: alertmanager-values
     files:
