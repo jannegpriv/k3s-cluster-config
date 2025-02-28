@@ -20,25 +20,118 @@ spec:
         enabled: true
         ingressClassName: traefik
         hosts:
-          - grafana.local
-      sidecar:
-        dashboards:
-          enabled: true
-          label: grafana_dashboard
-          labelValue: true
-          searchNamespace: monitoring
+          - grafana.home.lan
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          cpu: 100m
+          memory: 256Mi
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: NotIn
+                values:
+                - "true"
+              - key: node-role.kubernetes.io/master
+                operator: NotIn
+                values:
+                - "true"
+    
     prometheus:
       ingress:
         enabled: true
         ingressClassName: traefik
         hosts:
           - prometheus.local
+      prometheusSpec:
+        # Resource limits
+        resources:
+          requests:
+            cpu: 50m
+            memory: 512Mi
+          limits:
+            cpu: 200m
+            memory: 1Gi
+        # Performance optimizations
+        retention: 5d  # Reduce from default 10d
+        retentionSize: "10GB"
+        scrapeInterval: "60s"  # Increase from default 30s
+        evaluationInterval: "60s"  # Increase from default 30s
+        # Node affinity to keep off master node
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: NotIn
+                  values:
+                  - "true"
+                - key: node-role.kubernetes.io/master
+                  operator: NotIn
+                  values:
+                  - "true"
+    
     alertmanager:
       alertmanagerSpec:
         secrets:
           - alertmanager-notification-secret
-      ingress:
-        enabled: true
-        ingressClassName: traefik
-        hosts:
-          - alertmanager.local
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+          limits:
+            cpu: 50m
+            memory: 128Mi
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: NotIn
+                  values:
+                  - "true"
+                - key: node-role.kubernetes.io/master
+                  operator: NotIn
+                  values:
+                  - "true"
+        ingress:
+          enabled: true
+          ingressClassName: traefik
+          hosts:
+            - alertmanager.local
+    
+    prometheusOperator:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          cpu: 100m
+          memory: 256Mi
+    
+    kube-state-metrics:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 64Mi
+        limits:
+          cpu: 50m
+          memory: 128Mi
+    
+    nodeExporter:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+        limits:
+          cpu: 50m
+          memory: 64Mi
