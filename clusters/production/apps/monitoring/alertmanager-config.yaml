@@ -1,0 +1,54 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: k3s-silences
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  route:
+    receiver: "null"
+    routes:
+      # Silence the embedded component alerts in k3s
+      - receiver: "null"
+        matchers:
+          - name: alertname
+            value: KubeControllerManagerDown|KubeSchedulerDown|KubeProxyDown
+            regex: true
+        continue: true
+      # Route for critical alerts
+      - receiver: "critical-alerts"
+        matchers:
+          - name: severity
+            value: critical
+            regex: false
+        continue: true
+      # Route for warning alerts
+      - receiver: "warning-alerts"
+        matchers:
+          - name: severity
+            value: warning
+            regex: false
+        continue: true
+  
+  receivers:
+    - name: "null"
+    - name: "critical-alerts"
+      # This is a placeholder. In a real setup, you would configure
+      # email, Slack, PagerDuty, etc. notifications here
+    - name: "warning-alerts"
+      # This is a placeholder. In a real setup, you would configure
+      # email, Slack, PagerDuty, etc. notifications here
+  
+  inhibitRules:
+    # Inhibit alerts for embedded components in k3s
+    - targetMatchers:
+        - name: alertname
+          value: KubeControllerManagerDown|KubeSchedulerDown|KubeProxyDown
+          regex: true
+      sourceMatchers:
+        - name: alertname
+          value: Watchdog
+          regex: false
+      equal:
+        - namespace

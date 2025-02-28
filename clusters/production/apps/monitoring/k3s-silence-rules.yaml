@@ -1,0 +1,62 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: k3s-silence-rules
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+    prometheus: kube-prometheus-stack-prometheus
+    app: kube-prometheus-stack
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/part-of: kube-prometheus-stack
+spec:
+  groups:
+  - name: k3s-silences
+    rules:
+    # This rule will create an "InfoInhibitor" alert that will inhibit any info-level alerts
+    # We're using this pattern to silence the embedded component alerts
+    - alert: K3sComponentsInhibitor
+      annotations:
+        description: "This alert exists to inhibit alerts for components that are embedded in k3s"
+        summary: "Inhibitor for k3s embedded components"
+      expr: vector(1)
+      labels:
+        inhibit_k3s_components: "true"
+        severity: none
+  
+  # Add inhibition rules to silence the embedded component alerts
+  - name: kubernetes-system-controller-manager-inhibit
+    rules:
+    - alert: KubeControllerManagerDown
+      annotations:
+        description: "This alert is silenced for k3s as the controller manager is embedded"
+        summary: "Silenced - KubeControllerManager is embedded in k3s"
+      expr: absent(up{job="kube-controller-manager"} == 1)
+      for: 1s
+      labels:
+        severity: none
+        inhibited_by_k3s: "true"
+  
+  - name: kubernetes-system-scheduler-inhibit
+    rules:
+    - alert: KubeSchedulerDown
+      annotations:
+        description: "This alert is silenced for k3s as the scheduler is embedded"
+        summary: "Silenced - KubeScheduler is embedded in k3s"
+      expr: absent(up{job="kube-scheduler"} == 1)
+      for: 1s
+      labels:
+        severity: none
+        inhibited_by_k3s: "true"
+  
+  - name: kubernetes-system-kube-proxy-inhibit
+    rules:
+    - alert: KubeProxyDown
+      annotations:
+        description: "This alert is silenced for k3s as kube-proxy is managed differently"
+        summary: "Silenced - KubeProxy is embedded in k3s"
+      expr: absent(up{job="kube-proxy"} == 1)
+      for: 1s
+      labels:
+        severity: none
+        inhibited_by_k3s: "true"
