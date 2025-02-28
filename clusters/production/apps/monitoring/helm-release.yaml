@@ -20,7 +20,7 @@ spec:
         enabled: true
         ingressClassName: traefik
         hosts:
-          - grafana.home.lan
+          - grafana.local
       resources:
         requests:
           cpu: 50m
