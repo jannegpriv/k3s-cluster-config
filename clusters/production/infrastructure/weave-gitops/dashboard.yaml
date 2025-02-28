@@ -14,7 +14,8 @@ metadata:
   namespace: flux-system
 spec:
   interval: 1h0m0s
-  url: https://weave-gitops.github.io/weave-gitops
+  type: oci
+  url: oci://ghcr.io/weaveworks/charts
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
