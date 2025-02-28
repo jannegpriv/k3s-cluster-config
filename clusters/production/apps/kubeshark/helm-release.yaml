@@ -19,17 +19,17 @@ spec:
     resources:
       hub:
         limits:
-          cpu: "500m"
-          memory: "512Mi"
-        requests:
           cpu: "100m"
           memory: "128Mi"
+        requests:
+          cpu: "50m"
+          memory: "64Mi"
       worker:
         limits:
-          cpu: "500m"
-          memory: "512Mi"
-        requests:
           cpu: "100m"
+          memory: "256Mi"
+        requests:
+          cpu: "50m"
           memory: "128Mi"
     
     # Enable Prometheus metrics
