@@ -15,6 +15,7 @@ resources:
   - kubeshark-rules.yaml
   - kubeshark-dashboard-configmap.yaml
   - kubeshark-alerts.yaml
+  - alert-history-dashboard-configmap.yaml
 configMapGenerator:
   - name: alertmanager-values
     files:
