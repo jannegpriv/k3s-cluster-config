@@ -39,16 +39,3 @@ spec:
     - name: "warning-alerts"
       # This is a placeholder. In a real setup, you would configure
       # email, Slack, PagerDuty, etc. notifications here
-  
-  inhibitRules:
-    # Inhibit alerts for embedded components in k3s
-    - targetMatchers:
-        - name: alertname
-          value: KubeControllerManagerDown|KubeSchedulerDown|KubeProxyDown
-          regex: true
-      sourceMatchers:
-        - name: alertname
-          value: Watchdog
-          regex: false
-      equal:
-        - namespace
