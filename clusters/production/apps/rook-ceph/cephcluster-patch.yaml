@@ -5,6 +5,10 @@ metadata:
   namespace: rook-ceph
 spec:
   dataDirHostPath: /var/lib/rook
+  # Specify the Ceph version
+  cephVersion:
+    image: quay.io/ceph/ceph:v18.2.2
+    allowUnsupported: false
   # Ensure all volume paths are absolute
   mon:
     volumeClaimTemplate:
