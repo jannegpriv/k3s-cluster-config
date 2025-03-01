@@ -86,6 +86,7 @@ spec:
     
     alertmanager:
       alertmanagerSpec:
+        externalUrl: http://alertmanager.local
         secrets:
           - alertmanager-notification-secret
         resources:
