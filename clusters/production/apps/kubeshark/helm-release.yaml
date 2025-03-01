@@ -57,18 +57,17 @@ spec:
       enabled: true
       storageClass: "local-path"  # Using k3s default storage class
       size: 10Gi
-    
-    # Configure worker pods to use more storage for EmptyDir
-    worker:
-      emptyDir:
-        sizeLimit: "10Gi"
 
     # Web interface configuration
     ingress:
       enabled: false
     
-    # Node affinity to avoid running intensive components on master
+    # Configure worker pods
     worker:
+      # Configure EmptyDir size limit to prevent evictions
+      emptyDir:
+        sizeLimit: "10Gi"
+      # Node affinity to avoid running intensive components on master
       nodeSelector:
         node-role.kubernetes.io/master: "false"
       tolerations:
