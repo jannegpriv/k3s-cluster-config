@@ -21,11 +21,25 @@ spec:
         image: rook/ceph:v1.14.8
         command: ["/bin/bash"]
         args: ["-m", "-c", "while true; do sleep 5; done"]
+        env:
+        - name: ROOK_CEPH_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: rook-ceph-mon
+              key: ceph-username
+        - name: ROOK_CEPH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: rook-ceph-mon
+              key: ceph-secret
         volumeMounts:
         - mountPath: /etc/ceph
           name: ceph-config
         - name: mon-endpoint-volume
           mountPath: /etc/rook
+        - name: ceph-admin-keyring
+          mountPath: /etc/ceph/keyring
+          subPath: keyring
       volumes:
       - name: mon-endpoint-volume
         configMap:
@@ -35,3 +49,9 @@ spec:
             path: mon-endpoints
       - name: ceph-config
         emptyDir: {}
+      - name: ceph-admin-keyring
+        secret:
+          secretName: rook-ceph-mon
+          items:
+          - key: admin-keyring
+            path: keyring
