@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-mon-dirs
+  namespace: rook-ceph
+spec:
+  template:
+    spec:
+      serviceAccountName: rook-ceph-system
+      containers:
+      - name: create-dirs
+        image: busybox:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          mkdir -p /var/lib/rook/mon
+          chmod 777 /var/lib/rook/mon
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: host-path
+          mountPath: /var/lib/rook
+      volumes:
+      - name: host-path
+        hostPath:
+          path: /var/lib/rook
+      restartPolicy: Never
+  backoffLimit: 3

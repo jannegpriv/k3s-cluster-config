@@ -6,6 +6,8 @@ resources:
   - ceph-version-configmap.yaml
   - hostpath-fix-configmap.yaml
   - ceph-log-pvc.yaml
+  - ceph-mon-storageclass.yaml
+  - create-mon-dirs-job.yaml
 
 patchesStrategicMerge:
   - cephcluster-patch.yaml
