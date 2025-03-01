@@ -21,10 +21,10 @@ data:
   # Host path configuration
   ROOK_DATA_DIR_HOST_PATH: "/var/lib/rook"
   
-  # Proper paths for logs and crash dumps
-  ROOK_LOG_DIR_PATH: "/var/lib/rook/rook-ceph/log"
-  ROOK_CRASH_COLLECTOR_DIR_PATH: "/var/lib/rook/rook-ceph/crash"
-  
   # Skip version check to avoid reconciliation
   ROOK_SKIP_CEPH_VERSION_CHECK: "true"
-  ROOK_DISABLE_ADMISSION_PLUGINS: "true"
+  
+  # Allow monitors to run on the same node
+  CSI_FORCE_CEPHFS_KERNEL_CLIENT: "true"
+  CSI_VOLUME_MOUNT_ROOTPATH: "/var/lib/kubelet/pods"
+  ROOK_ENABLE_DISCOVERY_DAEMON: "false"
