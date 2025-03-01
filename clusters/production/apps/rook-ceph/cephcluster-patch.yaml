@@ -9,10 +9,14 @@ spec:
   cephVersion:
     image: quay.io/ceph/ceph:v18.2.2
     allowUnsupported: false
-  # Configure a single monitor
+  # Configure monitors
   mon:
-    count: 1
+    count: 2
     allowMultiplePerNode: true
+    # Explicitly specify which monitors to keep
+    instances:
+      - a
+      - c
   # Skip version check
   skipUpgradeChecks: true
   # Disable monitoring
