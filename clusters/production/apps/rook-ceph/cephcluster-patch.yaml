@@ -13,10 +13,6 @@ spec:
   mon:
     count: 2
     allowMultiplePerNode: true
-    # Explicitly specify which monitors to keep
-    instances:
-      - a
-      - c
   # Skip version check
   skipUpgradeChecks: true
   # Disable monitoring
