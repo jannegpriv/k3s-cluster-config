@@ -3,6 +3,3 @@ kind: Kustomization
 resources:
   - dashboard.yaml
   - ceph-ingressroute.yaml
-
-patchesStrategicMerge:
-  - cephcluster-patch.yaml
