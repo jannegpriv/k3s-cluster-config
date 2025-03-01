@@ -65,5 +65,5 @@ spec:
       volumes:
       - name: openhab-addons
         persistentVolumeClaim:
-          claimName: openhab-addons
+          claimName: openhab-production-addons-claim
   backoffLimit: 4
