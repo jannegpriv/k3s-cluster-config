@@ -56,7 +56,12 @@ spec:
     persistence:
       enabled: true
       storageClass: "local-path"  # Using k3s default storage class
-      size: 1Gi
+      size: 10Gi
+    
+    # Configure worker pods to use more storage for EmptyDir
+    worker:
+      emptyDir:
+        sizeLimit: "10Gi"
 
     # Web interface configuration
     ingress:
