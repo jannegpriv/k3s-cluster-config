@@ -9,19 +9,15 @@ spec:
   cephVersion:
     image: quay.io/ceph/ceph:v18.2.2
     allowUnsupported: false
-  # Configure monitors with custom StorageClass
+  # Configure a single monitor
   mon:
     count: 1
     allowMultiplePerNode: true
-    volumeClaimTemplate:
-      spec:
-        storageClassName: rook-ceph-mon-storage
-        accessModes: ["ReadWriteOnce"]
-        resources:
-          requests:
-            storage: 10Gi
   # Skip version check
   skipUpgradeChecks: true
   # Disable monitoring
   monitoring:
     enabled: false
+  # Disable crash collector
+  crashCollector:
+    disable: true

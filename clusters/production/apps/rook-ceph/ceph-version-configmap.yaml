@@ -34,3 +34,12 @@ data:
   CSI_FORCE_CEPHFS_KERNEL_CLIENT: "true"
   CSI_VOLUME_MOUNT_ROOTPATH: "/var/lib/kubelet/pods"
   ROOK_ENABLE_DISCOVERY_DAEMON: "false"
+  
+  # Additional monitor configuration
+  ROOK_MON_OUT_TIMEOUT: "600"
+  ROOK_MON_HEALTHCHECK_INTERVAL: "45s"
+  ROOK_MON_HEALTHCHECK_TIMEOUT: "30s"
+  
+  # Disable crash collector
+  ROOK_DISABLE_DEVICE_HOTPLUG: "true"
+  ROOK_ENABLE_FSGROUP_VOLUME_DIR: "false"
