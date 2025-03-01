@@ -8,10 +8,6 @@ spec:
     enabled: true
     ssl: true
     port: 8443
-    # Set the dashboard admin user credentials
-    admin:
-      username: admin
-      password: Admin123
   mgr:
     modules:
     - name: dashboard
