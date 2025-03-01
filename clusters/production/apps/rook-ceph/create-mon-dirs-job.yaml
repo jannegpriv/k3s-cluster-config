@@ -1,13 +1,19 @@
-apiVersion: batch/v1
-kind: Job
+apiVersion: apps/v1
+kind: DaemonSet
 metadata:
   name: create-mon-dirs
   namespace: rook-ceph
 spec:
+  selector:
+    matchLabels:
+      app: create-mon-dirs
   template:
+    metadata:
+      labels:
+        app: create-mon-dirs
     spec:
       serviceAccountName: rook-ceph-system
-      containers:
+      initContainers:
       - name: create-dirs
         image: busybox:latest
         command:
@@ -15,15 +21,23 @@ spec:
         - -c
         - |
           mkdir -p /var/lib/rook/mon
-          chmod 777 /var/lib/rook/mon
+          mkdir -p /var/lib/rook/log
+          mkdir -p /var/lib/rook/crash
+          mkdir -p /var/lib/rook/mon-a/data
+          mkdir -p /var/lib/rook/mon-b/data
+          mkdir -p /var/lib/rook/mon-c/data
+          chmod -R 777 /var/lib/rook
+          echo "Directories created successfully"
         securityContext:
           privileged: true
         volumeMounts:
         - name: host-path
           mountPath: /var/lib/rook
+      containers:
+      - name: sleep
+        image: busybox:latest
+        command: ["sleep", "3600"]
       volumes:
       - name: host-path
         hostPath:
           path: /var/lib/rook
-      restartPolicy: Never
-  backoffLimit: 3
