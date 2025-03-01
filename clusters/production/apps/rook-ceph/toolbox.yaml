@@ -37,8 +37,8 @@ spec:
           name: ceph-config
         - name: mon-endpoint-volume
           mountPath: /etc/rook
-        - name: ceph-admin-keyring
-          mountPath: /etc/ceph/keyring
+        - name: ceph-admin-creds
+          mountPath: /etc/ceph/ceph.client.admin.keyring
           subPath: keyring
       volumes:
       - name: mon-endpoint-volume
@@ -49,9 +49,11 @@ spec:
             path: mon-endpoints
       - name: ceph-config
         emptyDir: {}
-      - name: ceph-admin-keyring
+      - name: ceph-admin-creds
         secret:
           secretName: rook-ceph-mon
           items:
-          - key: admin-keyring
+          - key: ceph-username
+            path: username
+          - key: ceph-secret
             path: keyring
