@@ -9,7 +9,7 @@ spec:
   cephVersion:
     image: quay.io/ceph/ceph:v18.2.2
     allowUnsupported: false
-  # Configure monitors with proper paths
+  # Configure monitors with PVCs
   mon:
     count: 1
     allowMultiplePerNode: true
@@ -20,3 +20,8 @@ spec:
         resources:
           requests:
             storage: 10Gi
+  # Configure proper paths for logs and crash dumps
+  logCollector:
+    enabled: true
+    periodicity: daily
+    maxLogSize: 500M

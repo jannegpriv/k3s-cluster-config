@@ -5,6 +5,7 @@ resources:
   - ceph-ingressroute.yaml
   - ceph-version-configmap.yaml
   - hostpath-fix-configmap.yaml
+  - ceph-log-pvc.yaml
 
 patchesStrategicMerge:
   - cephcluster-patch.yaml
