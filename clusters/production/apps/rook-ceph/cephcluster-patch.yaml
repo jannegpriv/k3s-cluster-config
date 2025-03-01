@@ -7,3 +7,4 @@ spec:
   cephVersion:
     image: quay.io/ceph/ceph:v18.2.2
     allowUnsupported: false
+  rookVersion: rook/ceph:v1.14.8
