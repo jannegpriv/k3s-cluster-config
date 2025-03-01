@@ -9,7 +9,14 @@ spec:
   cephVersion:
     image: quay.io/ceph/ceph:v18.2.2
     allowUnsupported: false
-  # Use existing monitors
+  # Configure monitors with proper paths
   mon:
     count: 1
     allowMultiplePerNode: true
+    volumeClaimTemplate:
+      spec:
+        storageClassName: local-path
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi

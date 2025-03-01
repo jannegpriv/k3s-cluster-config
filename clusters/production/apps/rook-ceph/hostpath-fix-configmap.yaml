@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rook-ceph-hostpath-fix
+  namespace: rook-ceph
+data:
+  MON_DATA_DIR: "/var/lib/rook/mon-%s/data"
+  LOG_DIR: "/var/lib/rook/log"
+  CRASH_DIR: "/var/lib/rook/crash"

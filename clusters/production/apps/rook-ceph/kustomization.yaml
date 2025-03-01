@@ -4,6 +4,8 @@ resources:
   - dashboard.yaml
   - ceph-ingressroute.yaml
   - ceph-version-configmap.yaml
+  - hostpath-fix-configmap.yaml
 
 patchesStrategicMerge:
   - cephcluster-patch.yaml
+  - operator-patch.yaml
