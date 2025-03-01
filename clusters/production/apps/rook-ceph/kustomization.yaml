@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - dashboard.yaml
   - dashboard-password-job.yaml
+  - dashboard-password-rbac.yaml
   - ceph-ingressroute.yaml
   - ceph-version-configmap.yaml
   - hostpath-fix-configmap.yaml
