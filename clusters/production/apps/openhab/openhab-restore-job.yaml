@@ -23,7 +23,7 @@ spec:
           if [ -f "/openhab/userdata/$BACKUP_FILE" ]; then
             echo "Found backup file at /openhab/userdata/$BACKUP_FILE"
             echo "Running restore command..."
-            /openhab/runtime/bin/restore /openhab/userdata/$BACKUP_FILE
+            echo "y" | /openhab/runtime/bin/restore /openhab/userdata/$BACKUP_FILE
             RESULT=$?
             if [ $RESULT -eq 0 ]; then
               echo "Restore completed successfully."
