@@ -11,7 +11,7 @@ spec:
     # Set the dashboard admin user credentials
     admin:
       username: admin
-      password: Admin123!
+      password: Admin123
   mgr:
     modules:
     - name: dashboard

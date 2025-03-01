@@ -22,6 +22,6 @@ kubectl -n rook-ceph wait --for=condition=Ready pod/$TOOLS_POD --timeout=60s
 
 # Set the dashboard password
 echo "Setting dashboard password..."
-kubectl -n rook-ceph exec $TOOLS_POD -- ceph dashboard ac-user-set-password admin Admin123! --force-password
+kubectl -n rook-ceph exec $TOOLS_POD -- ceph dashboard ac-user-set-password admin Admin123 --force-password
 
 echo "Dashboard password set successfully"
