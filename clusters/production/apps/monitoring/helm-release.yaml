@@ -59,10 +59,10 @@ spec:
         # Resource limits
         resources:
           requests:
-            cpu: 50m
+            cpu: 200m
             memory: 512Mi
           limits:
-            cpu: 200m
+            cpu: 500m
             memory: 1Gi
         # Performance optimizations
         retention: 5d  # Reduce from default 10d
@@ -119,10 +119,10 @@ spec:
     prometheusOperator:
       resources:
         requests:
-          cpu: 50m
+          cpu: 100m
           memory: 128Mi
         limits:
-          cpu: 100m
+          cpu: 300m
           memory: 256Mi
     
     kube-state-metrics:
