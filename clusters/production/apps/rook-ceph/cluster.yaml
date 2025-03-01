@@ -1,0 +1,90 @@
+apiVersion: ceph.rook.io/v1
+kind: CephCluster
+metadata:
+  name: rook-ceph
+  namespace: rook-ceph
+spec:
+  # The Ceph version to use
+  cephVersion:
+    # The image used for the Ceph daemon containers
+    image: quay.io/ceph/ceph:v18.2.2
+    # Allow unsupported versions is set to true to use an unsupported version of Ceph
+    allowUnsupported: false
+  
+  # The version information for the Rook operator
+  rookVersion: v1.14.8
+  # The image used for the Rook operator jobs
+  rookCephCleanupPolicy:
+    # Cleanup confirms that various cleanup jobs can be started
+    confirmation: ""
+  
+  # Enable the Ceph dashboard
+  dashboard:
+    enabled: true
+    ssl: true
+  
+  # Configure the Ceph manager modules
+  mgr:
+    modules:
+    - name: dashboard
+      enabled: true
+  
+  # Network configuration
+  network:
+    multiClusterService: {}
+  
+  # Monitor configuration
+  mon:
+    # Set the number of mons to be started
+    count: 1
+    # The mons should be on unique nodes
+    allowMultiplePerNode: true
+  
+  # Configure the Ceph CSI drivers
+  csi:
+    # Enable the CSI driver for CephFS
+    cephfs: {}
+    # Configure read affinity
+    readAffinity:
+      enabled: false
+  
+  # Security configuration
+  security:
+    # Key rotation configuration
+    keyRotation:
+      enabled: false
+    # KMS configuration
+    kms: {}
+  
+  # Health check configuration
+  healthCheck:
+    daemonHealth:
+      mon: {}
+      osd: {}
+      status: {}
+  
+  # Storage configuration
+  storage:
+    # Interval in hours to wait between restarting a daemon that has flapped
+    flappingRestartIntervalHours: 0
+    # Use all nodes with available devices
+    useAllNodes: true
+    useAllDevices: false
+    # When true, directories can be used as devices
+    directories: []
+  
+  # Disruption management
+  disruptionManagement: {}
+  
+  # Crash collector configuration
+  crashCollector: {}
+  
+  # Log collector configuration
+  logCollector: {}
+  
+  # Monitoring configuration
+  monitoring: {}
+  
+  # Cleanup policy
+  cleanupPolicy:
+    sanitizeDisks: {}
