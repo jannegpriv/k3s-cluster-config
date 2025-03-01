@@ -23,3 +23,4 @@ data:
   
   # Skip version check to avoid reconciliation
   ROOK_SKIP_CEPH_VERSION_CHECK: "true"
+  ROOK_DISABLE_ADMISSION_PLUGINS: "true"
