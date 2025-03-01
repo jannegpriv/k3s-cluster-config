@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: maintenance-mode-rules
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+  - name: maintenance.rules
+    rules:
+    # This rule can be activated by creating a configmap with the appropriate label
+    - alert: MaintenanceMode
+      expr: kube_configmap_labels{label_maintenance_mode="true"} == 1
+      for: 1m
+      labels:
+        severity: none
+      annotations:
+        summary: "Maintenance mode active for {{ $labels.namespace }}"
+        description: "Maintenance mode is active for namespace {{ $labels.namespace }}. Certain alerts will be inhibited."

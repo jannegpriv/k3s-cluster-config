@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: maintenance-mode
+  namespace: openhab
+  labels:
+    maintenance_mode: "false"  # Change to "true" to activate maintenance mode
+data:
+  description: |
+    This ConfigMap is used to activate maintenance mode for the OpenHAB namespace.
+    When the maintenance_mode label is set to "true", certain alerts will be inhibited.
+    This is useful during planned maintenance activities or when troubleshooting issues.

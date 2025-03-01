@@ -36,10 +36,10 @@ data:
     inhibit_rules:
       # Inhibit alerts for embedded K3s components
       - source_match:
-          alertname: 'K3sComponentsInhibitor'
+          inhibit_k3s_components: 'true'
         target_match_re:
           alertname: 'KubeControllerManagerDown|KubeSchedulerDown|KubeProxyDown'
-        equal: ['job']
+        equal: []
       
       # Don't alert on NodeCPUThrottling if the node is already known to be under pressure
       - source_match:
@@ -47,6 +47,24 @@ data:
         target_match:
           alertname: 'NodeCPUThrottlingHigh'
         equal: ['instance']
+      
+      # Silence OpenHAB job failures during maintenance periods
+      - source_match:
+          alertname: 'MaintenanceMode'
+          namespace: 'openhab'
+        target_match_re:
+          alertname: 'KubeJobFailed'
+          namespace: 'openhab'
+          job_name: 'openhab-backup.*'
+        equal: ['namespace']
+      
+      # Don't alert on CPU throttling for monitoring namespace
+      - source_match:
+          namespace: 'monitoring'
+        target_match:
+          alertname: 'CPUThrottlingHigh'
+          namespace: 'monitoring'
+        equal: ['namespace']
     
     receivers:
     - name: 'null'
