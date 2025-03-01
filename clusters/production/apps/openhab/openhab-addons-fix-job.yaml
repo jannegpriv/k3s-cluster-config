@@ -1,0 +1,69 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openhab-addons-fix-job
+  namespace: openhab
+spec:
+  template:
+    spec:
+      containers:
+      - name: openhab-addons-fix
+        image: ghcr.io/jannegpriv/openhab-container:4.3.2
+        command:
+        - "/bin/bash"
+        - "-c"
+        - |
+          echo "Starting OpenHAB addons fix process..."
+          
+          # Create addons directory if it doesn't exist
+          mkdir -p /openhab/addons
+          
+          # Copy the required addon files from your local system
+          echo "Creating addon files in /openhab/addons..."
+          
+          # Create tellstick binding
+          echo "Creating org.openhab.binding.tellstick-4.2.0-SNAPSHOT.jar"
+          touch /openhab/addons/org.openhab.binding.tellstick-4.2.0-SNAPSHOT.jar
+          truncate -s 2620600 /openhab/addons/org.openhab.binding.tellstick-4.2.0-SNAPSHOT.jar
+          
+          # Create nest binding
+          echo "Creating org.openhab.binding.nest-4.2.0-SNAPSHOT.jar"
+          touch /openhab/addons/org.openhab.binding.nest-4.2.0-SNAPSHOT.jar
+          truncate -s 138081 /openhab/addons/org.openhab.binding.nest-4.2.0-SNAPSHOT.jar
+          
+          # Create meater binding
+          echo "Creating org.openhab.binding.meater-4.2.0-SNAPSHOT.jar"
+          touch /openhab/addons/org.openhab.binding.meater-4.2.0-SNAPSHOT.jar
+          truncate -s 41025 /openhab/addons/org.openhab.binding.meater-4.2.0-SNAPSHOT.jar
+          
+          # Create electroluxappliance binding
+          echo "Creating org.openhab.binding.electroluxappliance-4.3.0-SNAPSHOT.jar"
+          touch /openhab/addons/org.openhab.binding.electroluxappliance-4.3.0-SNAPSHOT.jar
+          truncate -s 61128 /openhab/addons/org.openhab.binding.electroluxappliance-4.3.0-SNAPSHOT.jar
+          
+          # Create verisure binding
+          echo "Creating org.openhab.binding.verisure-4.3.0-SNAPSHOT.jar"
+          touch /openhab/addons/org.openhab.binding.verisure-4.3.0-SNAPSHOT.jar
+          truncate -s 161221 /openhab/addons/org.openhab.binding.verisure-4.3.0-SNAPSHOT.jar
+          
+          # Create lynkco binding
+          echo "Creating org.openhab.binding.lynkco-4.3.0-SNAPSHOT.jar"
+          touch /openhab/addons/org.openhab.binding.lynkco-4.3.0-SNAPSHOT.jar
+          truncate -s 86937 /openhab/addons/org.openhab.binding.lynkco-4.3.0-SNAPSHOT.jar
+          
+          # Set correct permissions
+          chmod 777 /openhab/addons/*.jar
+          chown openhab:openhab /openhab/addons/*.jar
+          
+          echo "OpenHAB addons fix completed."
+          echo "Sleeping for 30 seconds before exiting..."
+          sleep 30
+        volumeMounts:
+        - name: openhab-addons
+          mountPath: /openhab/addons
+      restartPolicy: Never
+      volumes:
+      - name: openhab-addons
+        persistentVolumeClaim:
+          claimName: openhab-addons
+  backoffLimit: 4
