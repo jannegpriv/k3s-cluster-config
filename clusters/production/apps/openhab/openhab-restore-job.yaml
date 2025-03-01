@@ -13,7 +13,7 @@ spec:
         image: ghcr.io/jannegpriv/openhab-container:4.3.2
         env:
         - name: BACKUP_FILE
-          value: "your-new-backup-filename.zip"  # Change this to your new backup filename
+          value: "openhab-backup-25_03_01-11_51_25.zip"  # Change this to your new backup filename
         command: 
         - "/bin/bash"
         - "-c"
