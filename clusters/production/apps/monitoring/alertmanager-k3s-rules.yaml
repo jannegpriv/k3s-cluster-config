@@ -1,0 +1,61 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: k3s-alert-rules
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+  - name: k3s.rules
+    rules:
+    # Silence K3s component alerts (they're expected to be "down" in K3s architecture)
+    - alert: KubeControllerManagerDown
+      expr: absent(up{job="kube-controller-manager"} == 1)
+      for: 15m
+      labels:
+        severity: none
+        silence: "true"
+      annotations:
+        summary: "Kube Controller Manager metrics not available (normal in K3s)"
+        description: "K3s runs control plane components embedded, so they don't expose metrics on standard ports. This is normal for K3s."
+    
+    - alert: KubeSchedulerDown
+      expr: absent(up{job="kube-scheduler"} == 1)
+      for: 15m
+      labels:
+        severity: none
+        silence: "true"
+      annotations:
+        summary: "Kube Scheduler metrics not available (normal in K3s)"
+        description: "K3s runs control plane components embedded, so they don't expose metrics on standard ports. This is normal for K3s."
+    
+    - alert: KubeProxyDown
+      expr: absent(up{job="kube-proxy"} == 1)
+      for: 15m
+      labels:
+        severity: none
+        silence: "true"
+      annotations:
+        summary: "Kube Proxy metrics not available (normal in K3s)"
+        description: "K3s runs control plane components embedded, so they don't expose metrics on standard ports. This is normal for K3s."
+    
+    # Tune CPU throttling alerts to be more specific
+    - alert: NodeCPUThrottlingHigh
+      expr: sum by(container, pod, namespace) (increase(container_cpu_cfs_throttled_periods_total[5m])) / sum by(container, pod, namespace) (increase(container_cpu_cfs_periods_total[5m])) > 0.25
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Container CPU throttling high ({{ $value | humanizePercentage }})"
+        description: "{{ $labels.container }} in pod {{ $labels.pod }} / {{ $labels.namespace }} is being throttled. This indicates resource constraints."
+    
+    # Add K3s specific health check
+    - alert: K3sServiceUnhealthy
+      expr: node_systemd_unit_state{name="k3s.service", state="active"} != 1
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "K3s service not active on node {{ $labels.instance }}"
+        description: "The k3s.service is not in active state on node {{ $labels.instance }}. This indicates a problem with the K3s service."
