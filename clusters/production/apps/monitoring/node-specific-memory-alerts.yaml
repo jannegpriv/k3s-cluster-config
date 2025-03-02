@@ -1,0 +1,30 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: node-specific-memory-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: NodeSpecificMemoryAlerts
+      rules:
+        # Higher threshold for k3s-w-2 (192.168.50.115) running openHAB
+        - alert: OpenHABNodeHighMemoryUsage
+          expr: instance:node_memory_utilisation:ratio{instance="192.168.50.115:9100"} * 100 > 92
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High memory usage on openHAB node"
+            description: "Node {{ $labels.instance }} memory usage is above 92% for more than 5 minutes. This node runs memory-intensive applications like openHAB."
+            
+        # Critical alert still needed for extreme cases
+        - alert: OpenHABNodeCriticalMemoryUsage
+          expr: instance:node_memory_utilisation:ratio{instance="192.168.50.115:9100"} * 100 > 97
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Critical memory usage on openHAB node"
+            description: "Node {{ $labels.instance }} memory usage is above 97% for more than 2 minutes. Immediate attention required."

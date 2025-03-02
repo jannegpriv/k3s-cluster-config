@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: openhab-node-silence
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: node-silence-rules
+      rules:
+        # This rule will match before the default NodeHighMemoryUsage alert and prevent it from firing for the openHAB node
+        - alert: NodeHighMemoryUsage
+          expr: instance:node_memory_utilisation:ratio{instance="192.168.50.115:9100"} * 100 > 85 and instance:node_memory_utilisation:ratio{instance="192.168.50.115:9100"} * 100 <= 92
+          for: 5m
+          labels:
+            severity: none
+            silenced: "true"
+          annotations:
+            summary: "Silenced memory alert for openHAB node"
+            description: "This alert is silenced for the openHAB node as it has a higher threshold configured."

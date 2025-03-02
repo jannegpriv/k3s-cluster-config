@@ -24,6 +24,8 @@ resources:
   - alertmanager-inhibit-rules.yaml
   - openhab-dashboard-configmap.yaml
   - maintenance-mode-rule.yaml
+  - node-specific-memory-alerts.yaml
+  - openhab-node-silence.yaml
 configMapGenerator:
   - name: alertmanager-values
     files:
