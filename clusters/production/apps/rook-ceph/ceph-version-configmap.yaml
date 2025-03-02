@@ -29,6 +29,8 @@ data:
   
   # Skip version check to avoid reconciliation
   ROOK_SKIP_CEPH_VERSION_CHECK: "true"
+  # Skip CSI version check to avoid issues with ARM64 architecture
+  ROOK_CSI_SKIP_VERSION_CHECK: "true"
   
   # Allow monitors to run on the same node
   CSI_FORCE_CEPHFS_KERNEL_CLIENT: "true"
