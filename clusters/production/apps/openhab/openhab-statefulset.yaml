@@ -28,11 +28,11 @@ spec:
         imagePullPolicy: Always
         resources:
           limits:
-            memory: "3000Mi"
-            cpu:    "2"
-          requests:
             memory: "2000Mi"
-            cpu:    "1"
+            cpu:    "1.5"
+          requests:
+            memory: "1500Mi"
+            cpu:    "0.5"
         env:  
         - name: EXTRA_JAVA_OPTS
           value: "-Xmx1500m -Duser.timezone=Europe/Stockholm"
