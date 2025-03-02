@@ -32,6 +32,9 @@ data:
   # Skip CSI version check to avoid issues with ARM64 architecture
   ROOK_CSI_SKIP_VERSION_CHECK: "true"
   
+  # Disable CSI version job reporter to prevent the cephcsi executable not found error
+  CSI_ENABLE_CEPHCSI_VERSION_JOB_REPORTER: "false"
+  
   # Allow monitors to run on the same node
   CSI_FORCE_CEPHFS_KERNEL_CLIENT: "true"
   CSI_VOLUME_MOUNT_ROOTPATH: "/var/lib/kubelet/pods"
