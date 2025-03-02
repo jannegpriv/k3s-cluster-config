@@ -21,7 +21,7 @@ spec:
     spec:
       serviceAccountName: default
       nodeSelector:
-        node-role.kubernetes.io/worker: worker
+        kubernetes.io/hostname: k3s-w-1
       containers:
       - name: openhab432
         image: ghcr.io/jannegpriv/openhab-container:4.3.2

@@ -66,10 +66,10 @@ spec:
     worker:
       # Configure EmptyDir size limit to prevent evictions
       emptyDir:
-        sizeLimit: "10Gi"
+        sizeLimit: "256Mi"
       # Node affinity to avoid running intensive components on master
       nodeSelector:
-        node-role.kubernetes.io/master: "false"
+        node-role.kubernetes.io/worker: "worker"
       tolerations:
         - key: "node-role.kubernetes.io/master"
           operator: "Exists"
