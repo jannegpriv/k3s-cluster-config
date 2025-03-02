@@ -32,6 +32,12 @@ spec:
           cpu: "50m"
           memory: "128Mi"
     
+    # Explicitly configure volume sizes
+    volumes:
+      data:
+        emptyDir:
+          sizeLimit: "256Mi"
+    
     # Enable Prometheus metrics
     metrics:
       enabled: true
