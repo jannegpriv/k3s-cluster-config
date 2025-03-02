@@ -33,11 +33,6 @@ spec:
           memory: "128Mi"
     
     # Explicitly configure volume sizes
-    worker:
-      volumes:
-        data:
-          emptyDir:
-            sizeLimit: "256Mi"
     
     # Enable Prometheus metrics
     metrics:
@@ -74,6 +69,11 @@ spec:
       # Configure EmptyDir size limit to prevent evictions
       emptyDir:
         sizeLimit: "256Mi"
+      # Configure volumes
+      volumes:
+        data:
+          emptyDir:
+            sizeLimit: "256Mi"
       # Node affinity to avoid running intensive components on master
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
