@@ -30,3 +30,11 @@ spec:
             memory: 128Mi
         securityContext:
           privileged: true
+        volumeMounts:
+        - name: rook-data
+          mountPath: /var/lib/rook
+      volumes:
+      - name: rook-data
+        hostPath:
+          path: /var/lib/rook
+          type: Directory
