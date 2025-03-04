@@ -13,3 +13,4 @@ resources:
 
 patchesStrategicMerge:
   - cephcluster-patch.yaml
+  - operator-patch.yaml
