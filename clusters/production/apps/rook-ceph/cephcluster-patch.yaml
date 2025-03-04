@@ -21,3 +21,16 @@ spec:
   # Disable crash collector
   crashCollector:
     disable: true
+  # Configure mgr modules
+  mgr:
+    modules:
+    - name: dashboard
+      enabled: true
+    - name: nfs
+      enabled: false
+  # Storage configuration
+  storage:
+    useAllNodes: false
+    useAllDevices: false
+    # Empty config to keep existing OSDs without adding new ones
+    nodes: []
