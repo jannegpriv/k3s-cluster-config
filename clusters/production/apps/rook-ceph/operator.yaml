@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: rook-ceph-operator
+  name: rook-ceph-operator
+  namespace: rook-ceph
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: rook-ceph-operator
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: rook-ceph-operator
+    spec:
+      containers:
+      - args:
+        - ceph
+        - operator
+        env:
+        - name: ROOK_HOST_PATH_OVERRIDE
+          value: "true"
+        - name: ROOK_MON_PATH_PREFIX_OVERRIDE
+          value: /var/lib/rook
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        image: rook/ceph:v1.14.8
+        imagePullPolicy: IfNotPresent
+        name: rook-ceph-operator
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          privileged: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: rook-ceph-system
+      serviceAccountName: rook-ceph-system
+      terminationGracePeriodSeconds: 30
+
