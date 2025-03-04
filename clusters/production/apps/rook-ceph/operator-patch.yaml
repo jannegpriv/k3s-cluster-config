@@ -8,6 +8,13 @@ spec:
     spec:
       containers:
       - name: rook-ceph-operator
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
         env:
         - name: ROOK_HOST_PATH_OVERRIDE
           value: "true"
