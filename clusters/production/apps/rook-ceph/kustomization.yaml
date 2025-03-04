@@ -10,8 +10,6 @@ resources:
   - ceph-log-pvc.yaml
   - ceph-mon-storageclass.yaml
   - create-mon-dirs-job.yaml
-  - operator.yaml
 
 patchesStrategicMerge:
   - cephcluster-patch.yaml
-  - operator-patch.yaml

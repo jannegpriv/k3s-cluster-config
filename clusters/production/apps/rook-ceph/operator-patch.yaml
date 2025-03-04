@@ -8,6 +8,11 @@ spec:
     spec:
       containers:
       - name: rook-ceph-operator
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
         resources:
           limits:
             cpu: 500m
