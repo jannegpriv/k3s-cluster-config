@@ -13,6 +13,14 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: ROOK_HOST_PATH_OVERRIDE
+          value: "true"
+        - name: ROOK_MON_PATH_PREFIX_OVERRIDE
+          value: /var/lib/rook
         resources:
           limits:
             cpu: 500m
@@ -20,8 +28,5 @@ spec:
           requests:
             cpu: 100m
             memory: 128Mi
-        env:
-        - name: ROOK_HOST_PATH_OVERRIDE
-          value: "true"
-        - name: ROOK_MON_PATH_PREFIX_OVERRIDE
-          value: "/var/lib/rook"
+        securityContext:
+          privileged: true
