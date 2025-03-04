@@ -181,15 +181,73 @@ Rook-Ceph provides distributed storage for the cluster, allowing persistent volu
 
 #### Configuration Files
 
+- `/clusters/production/apps/rook-ceph/operator.yaml`: Rook-Ceph operator deployment
+- `/clusters/production/apps/rook-ceph/operator-patch.yaml`: Patches for the operator deployment
 - `/clusters/production/apps/rook-ceph/cluster.yaml`: Ceph cluster configuration
 - `/clusters/production/apps/rook-ceph/ceph-mon-storageclass.yaml`: Storage class for Ceph monitors
 - `/clusters/production/apps/rook-ceph/dashboard.yaml`: Ceph dashboard configuration
+
+#### Operator Configuration
+
+The Rook-Ceph operator requires specific configuration to function properly:
+
+1. **Resource Limits**: To prevent excessive CPU usage and ensure stability
+   ```yaml
+   resources:
+     limits:
+       cpu: 500m
+       memory: 512Mi
+     requests:
+       cpu: 100m
+       memory: 128Mi
+   ```
+
+2. **Volume Mounts**: The operator needs access to the host's `/var/lib/rook` directory
+   ```yaml
+   volumeMounts:
+   - name: rook-data
+     mountPath: /var/lib/rook
+   volumes:
+   - name: rook-data
+     hostPath:
+       path: /var/lib/rook
+       type: Directory
+   ```
+
+3. **Security Context**: Privileged mode is required for directory operations
+   ```yaml
+   securityContext:
+     privileged: true
+   ```
+
+4. **Environment Variables**: Required for proper operation
+   ```yaml
+   env:
+   - name: POD_NAME
+     valueFrom:
+       fieldRef:
+         fieldPath: metadata.name
+   - name: POD_NAMESPACE
+     valueFrom:
+       fieldRef:
+         fieldPath: metadata.namespace
+   - name: ROOK_HOST_PATH_OVERRIDE
+     value: "true"
+   - name: ROOK_MON_PATH_PREFIX_OVERRIDE
+     value: "/var/lib/rook"
+   ```
 
 #### Common Commands
 
 ```bash
 # Check Ceph cluster status
 kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod -l app=rook-ceph-tools -o name) -- ceph status
+
+# Check Ceph health details
+kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod -l app=rook-ceph-tools -o name) -- ceph health detail
+
+# Archive Ceph crash reports
+kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod -l app=rook-ceph-tools -o name) -- ceph crash archive-all
 
 # Access Ceph dashboard
 kubectl -n rook-ceph port-forward svc/rook-ceph-mgr-dashboard 8443:8443
@@ -199,6 +257,9 @@ kubectl get pv
 
 # List Persistent Volume Claims
 kubectl get pvc -A
+
+# Check operator resource usage
+kubectl top pods -n rook-ceph | grep operator
 ```
 
 ## Applications
