@@ -25,6 +25,11 @@ spec:
       - name: rook-ceph-operator
         image: rook/ceph:v1.14.8
         args: ["ceph", "operator"]
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
         securityContext:
           runAsNonRoot: true
           runAsUser: 2016
