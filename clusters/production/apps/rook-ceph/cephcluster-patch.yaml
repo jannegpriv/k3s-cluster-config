@@ -28,9 +28,3 @@ spec:
       enabled: true
     - name: nfs
       enabled: false
-  # Storage configuration
-  storage:
-    useAllNodes: false
-    useAllDevices: false
-    # Empty config to keep existing OSDs without adding new ones
-    nodes: []
