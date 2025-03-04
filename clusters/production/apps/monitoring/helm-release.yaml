@@ -32,7 +32,7 @@ spec:
           cpu: 50m
           memory: 128Mi
         limits:
-          cpu: 100m
+          cpu: 200m  # Increased from 100m
           memory: 256Mi
       affinity:
         nodeAffinity:
@@ -62,13 +62,15 @@ spec:
             cpu: 200m
             memory: 512Mi
           limits:
-            cpu: 500m
+            cpu: 800m  # Increased from 500m
             memory: 1Gi
         # Performance optimizations
-        retention: 5d  # Reduce from default 10d
-        retentionSize: "10GB"
-        scrapeInterval: "60s"  # Increase from default 30s
-        evaluationInterval: "60s"  # Increase from default 30s
+        retention: 3d  # Reduced from 5d to decrease storage pressure
+        retentionSize: "8GB"  # Reduced from 10GB
+        scrapeInterval: "90s"  # Increased from 60s to reduce scrape frequency
+        evaluationInterval: "90s"  # Increased from 60s to reduce evaluation frequency
+        enableAdminAPI: false  # Disable admin API to reduce attack surface
+        walCompression: true  # Enable WAL compression to reduce disk I/O
         # Node affinity to keep off master node
         affinity:
           nodeAffinity:
@@ -94,7 +96,7 @@ spec:
             cpu: 10m
             memory: 64Mi
           limits:
-            cpu: 50m
+            cpu: 100m  # Increased from 50m
             memory: 128Mi
         affinity:
           nodeAffinity:
