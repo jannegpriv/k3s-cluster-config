@@ -1,0 +1,107 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: k3s-comprehensive-silence
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+    prometheus: kube-prometheus-stack-prometheus
+    app: kube-prometheus-stack
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/part-of: kube-prometheus-stack
+spec:
+  groups:
+  - name: k3s-component-silences
+    rules:
+    # This rule creates an inhibitor alert that will be used to inhibit other alerts
+    - alert: K3sComponentsInhibitor
+      annotations:
+        description: "This alert exists to inhibit alerts for components that are embedded in k3s or not applicable to a k3s environment"
+        summary: "Inhibitor for k3s embedded components"
+      expr: vector(1)
+      labels:
+        inhibit_k3s_components: "true"
+        severity: none
+
+  # Silence rules for controller manager
+  - name: k3s-controller-manager-silence
+    rules:
+    - alert: KubeControllerManagerDown
+      annotations:
+        description: "This alert is expected in k3s as the controller manager is embedded and not exposed as a separate target"
+        summary: "Expected state - KubeControllerManager is embedded in k3s"
+      expr: absent(up{job="kube-controller-manager"} == 1)
+      for: 0m
+      labels:
+        severity: none
+        inhibited_by_k3s: "true"
+        
+  # Silence rules for scheduler
+  - name: k3s-scheduler-silence
+    rules:
+    - alert: KubeSchedulerDown
+      annotations:
+        description: "This alert is expected in k3s as the scheduler is embedded and not exposed as a separate target"
+        summary: "Expected state - KubeScheduler is embedded in k3s"
+      expr: absent(up{job="kube-scheduler"} == 1)
+      for: 0m
+      labels:
+        severity: none
+        inhibited_by_k3s: "true"
+        
+  # Silence rules for kube-proxy
+  - name: k3s-kube-proxy-silence
+    rules:
+    - alert: KubeProxyDown
+      annotations:
+        description: "This alert is expected in k3s as kube-proxy is managed differently and not exposed as a separate target"
+        summary: "Expected state - KubeProxy is embedded in k3s"
+      expr: absent(up{job="kube-proxy"} == 1)
+      for: 0m
+      labels:
+        severity: none
+        inhibited_by_k3s: "true"
+        
+  # Silence rules for etcd-related alerts that might not be applicable to k3s
+  - name: k3s-etcd-silence
+    rules:
+    - alert: etcdMembersDown
+      annotations:
+        description: "This alert may not be applicable in a k3s environment where etcd is managed differently"
+        summary: "Modified for k3s - etcd members status"
+      expr: sum(up{job=~".*etcd.*"} == bool 0) without (instance) > 0
+      for: 10m
+      labels:
+        severity: warning
+        k3s_modified: "true"
+        
+    - alert: etcdInsufficientMembers
+      annotations:
+        description: "This alert may not be applicable in a k3s environment where etcd is managed differently"
+        summary: "Modified for k3s - etcd insufficient members"
+      expr: sum(up{job=~".*etcd.*"} == bool 1) without (instance) < ((count(up{job=~".*etcd.*"}) without (instance)) / 2 + 1)
+      for: 3m
+      labels:
+        severity: warning
+        k3s_modified: "true"
+        
+    - alert: etcdNoLeader
+      annotations:
+        description: "This alert may not be applicable in a k3s environment where etcd is managed differently"
+        summary: "Modified for k3s - etcd no leader"
+      expr: etcd_server_has_leader{job=~".*etcd.*"} == 0
+      for: 1m
+      labels:
+        severity: warning
+        k3s_modified: "true"
+        
+  # Add inhibition rules to prevent noisy alerts in k3s environment
+  - name: k3s-inhibit-rules
+    rules:
+    - alert: Watchdog
+      annotations:
+        description: "This is an alert meant to ensure that the entire alerting pipeline is functional. This alert is always firing, therefore it should always be firing in Alertmanager. The alert exists to ensure that Alertmanager and the take care of all alerts."
+        summary: "Alerting Watchdog"
+      expr: vector(1)
+      labels:
+        severity: none

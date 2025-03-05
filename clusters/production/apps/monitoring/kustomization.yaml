@@ -26,6 +26,7 @@ resources:
   - maintenance-mode-rule.yaml
   - node-specific-memory-alerts.yaml
   - openhab-node-silence.yaml
+  - k3s-comprehensive-silence.yaml
 configMapGenerator:
   - name: alertmanager-values
     files:

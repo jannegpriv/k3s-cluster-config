@@ -38,8 +38,15 @@ data:
       - source_match:
           inhibit_k3s_components: 'true'
         target_match_re:
-          alertname: 'KubeControllerManagerDown|KubeSchedulerDown|KubeProxyDown'
+          alertname: 'KubeControllerManagerDown|KubeSchedulerDown|KubeProxyDown|etcdMembersDown|etcdInsufficientMembers|etcdNoLeader'
         equal: []
+      
+      # Inhibit alerts for components that have been modified for K3s
+      - source_match:
+          k3s_modified: 'true'
+        target_match_re:
+          alertname: 'etcdMembersDown|etcdInsufficientMembers|etcdNoLeader'
+        equal: ['alertname']
       
       # Don't alert on NodeCPUThrottling if the node is already known to be under pressure
       - source_match:
