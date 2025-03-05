@@ -30,6 +30,12 @@ spec:
       enabled: false
   # Configure the Ceph CSI drivers
   csi:
+    # Enable RBD driver
+    rbd:
+      enabled: true
+    # Enable CephFS driver
+    cephfs:
+      enabled: true
     # Configure read affinity
     readAffinity:
       enabled: true
