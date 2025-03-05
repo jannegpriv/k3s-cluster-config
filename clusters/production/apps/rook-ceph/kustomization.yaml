@@ -11,9 +11,7 @@ resources:
   - ceph-mon-storageclass.yaml
   - create-mon-dirs-job.yaml
   - operator.yaml
-  - csi-version-configmap.yaml
-  - csi-rbd-version-configmap.yaml
-  - csi-cephfs-version-configmap.yaml
+  - csi-versions-configmap.yaml
 
 patchesStrategicMerge:
   - cephcluster-patch.yaml

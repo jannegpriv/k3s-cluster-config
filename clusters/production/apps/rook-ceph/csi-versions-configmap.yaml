@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rook-ceph-csi-detect-version
+  namespace: rook-ceph
+data:
+  stdout: v3.11.0
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: csi-rbd-version
+  namespace: rook-ceph
+data:
+  stdout: v3.11.0
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: csi-cephfs-version
+  namespace: rook-ceph
+data:
+  stdout: v3.11.0
