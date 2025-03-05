@@ -27,6 +27,12 @@ spec:
           label: grafana_dashboard
           labelValue: "1"
           searchNamespace: monitoring
+      persistence:
+        enabled: true
+        storageClassName: rook-ceph-block
+        accessModes:
+          - ReadWriteOnce
+        size: 5Gi
       resources:
         requests:
           cpu: 50m
@@ -64,9 +70,18 @@ spec:
           limits:
             cpu: 800m  # Increased from 500m
             memory: 1Gi
+        # Persistent storage configuration
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: rook-ceph-block
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 20Gi
         # Performance optimizations
-        retention: 3d  # Reduced from 5d to decrease storage pressure
-        retentionSize: "8GB"  # Reduced from 10GB
+        retention: 15d  # Increased from 3d since we now have persistent storage
+        retentionSize: "15GB"  # Increased from 8GB
         scrapeInterval: "90s"  # Increased from 60s to reduce scrape frequency
         evaluationInterval: "90s"  # Increased from 60s to reduce evaluation frequency
         enableAdminAPI: false  # Disable admin API to reduce attack surface
@@ -91,6 +106,15 @@ spec:
         externalUrl: http://alertmanager.local
         secrets:
           - alertmanager-notification-secret
+        # Persistent storage configuration
+        storage:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: rook-ceph-block
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 5Gi
         resources:
           requests:
             cpu: 10m
