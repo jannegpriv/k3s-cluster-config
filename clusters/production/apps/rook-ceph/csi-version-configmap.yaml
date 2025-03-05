@@ -4,4 +4,4 @@ metadata:
   name: rook-ceph-csi-detect-version
   namespace: rook-ceph
 data:
-  CSI_DRIVER_VERSION: v3.11.0
+  stdout: v3.11.0

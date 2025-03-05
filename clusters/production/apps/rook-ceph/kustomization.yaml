@@ -12,6 +12,8 @@ resources:
   - create-mon-dirs-job.yaml
   - operator.yaml
   - csi-version-configmap.yaml
+  - csi-rbd-version-configmap.yaml
+  - csi-cephfs-version-configmap.yaml
 
 patchesStrategicMerge:
   - cephcluster-patch.yaml

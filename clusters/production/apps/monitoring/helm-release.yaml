@@ -29,7 +29,7 @@ spec:
           searchNamespace: monitoring
       persistence:
         enabled: true
-        storageClassName: rook-ceph-block
+        storageClassName: local-path
         accessModes:
           - ReadWriteOnce
         size: 5Gi
@@ -74,7 +74,7 @@ spec:
         storageSpec:
           volumeClaimTemplate:
             spec:
-              storageClassName: rook-ceph-block
+              storageClassName: local-path
               accessModes: ["ReadWriteOnce"]
               resources:
                 requests:
@@ -110,7 +110,7 @@ spec:
         storage:
           volumeClaimTemplate:
             spec:
-              storageClassName: rook-ceph-block
+              storageClassName: local-path
               accessModes: ["ReadWriteOnce"]
               resources:
                 requests:
