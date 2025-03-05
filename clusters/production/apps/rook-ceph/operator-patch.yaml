@@ -13,6 +13,12 @@ spec:
           value: "true"
         - name: ROOK_CSI_ENABLE_CEPHFS  
           value: "true"
+        - name: ROOK_CSI_SKIP_VERSION_CHECK
+          value: "true"
+        - name: CSI_ENABLE_CEPHCSI_VERSION_JOB_REPORTER
+          value: "false"
+        - name: CSI_DISABLE_VERSION_JOB
+          value: "true"  
         - name: ROOK_CSI_CEPH_IMAGE
           value: "quay.io/cephcsi/cephcsi:v3.11.0"
         - name: ROOK_CSI_REGISTRAR_IMAGE
