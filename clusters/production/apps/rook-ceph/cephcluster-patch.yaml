@@ -30,12 +30,6 @@ spec:
       enabled: false
   # Configure the Ceph CSI drivers
   csi:
-    # Enable the CSI drivers
-    enabled: true
-    # Enable RBD driver
-    enableRbdDriver: true
-    # Enable CephFS driver
-    enableCephfsDriver: true
     # Configure provisioner
     provisionerTolerations:
     - key: node-role.kubernetes.io/control-plane
