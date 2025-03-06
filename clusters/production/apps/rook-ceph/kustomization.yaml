@@ -12,7 +12,6 @@ resources:
   - create-mon-dirs-job.yaml
   - operator.yaml
   - csi-versions-configmap.yaml
-  - csi-job-cleanup-cronjob.yaml
   - cluster.yaml
 
 patchesStrategicMerge:
