@@ -9,22 +9,23 @@ spec:
     allowUnsupported: false
   dataDirHostPath: /var/lib/rook
   mon:
-    count: 1
-    allowMultiplePerNode: false
+    count: 2
+    allowMultiplePerNode: true
   mgr:
     count: 1
     allowMultiplePerNode: false
     modules:
-    - name: pg_autoscaler
-      enabled: true
-    - name: balancer
-      enabled: true
     - name: dashboard
       enabled: true
   dashboard:
     enabled: true
     port: 8443
     ssl: true
+  # Add CSI configuration to match what's in the cluster
+  csi:
+    cephfs: {}
+    readAffinity:
+      enabled: true
   # cluster level storage configuration and selection
   storage:
     useAllNodes: true
