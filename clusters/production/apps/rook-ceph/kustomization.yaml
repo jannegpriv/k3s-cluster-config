@@ -12,8 +12,9 @@ resources:
   - create-mon-dirs-job.yaml
   - operator.yaml
   - csi-versions-configmap.yaml
+  - csi-version-job.yaml
   # Removed cluster.yaml to avoid conflicts with existing CephCluster resource
 
 patchesStrategicMerge:
   - operator-patch.yaml
-  - csi-version-job-patch.yaml
+  # Removed csi-version-job-patch.yaml as we now have a dedicated resource file

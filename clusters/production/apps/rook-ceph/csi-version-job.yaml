@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rook-ceph-csi-detect-version
+  namespace: rook-ceph
+spec:
+  ttlSecondsAfterFinished: 0
+  template:
+    spec:
+      containers:
+      - name: cmd-reporter
+        image: quay.io/cephcsi/cephcsi:v3.11.0
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          # Create directory if it doesn't exist
+          mkdir -p /etc/csi
+          # Properly detect the CSI version
+          /cephcsi --version > /etc/csi/csi-versions.txt
+          # Display the version
+          cat /etc/csi/csi-versions.txt
+          exit 0
+        volumeMounts:
+        - name: csi-detect-version-volume
+          mountPath: /etc/csi
+      volumes:
+      - name: csi-detect-version-volume
+        emptyDir: {}
+      restartPolicy: Never
+      terminationGracePeriodSeconds: 0
