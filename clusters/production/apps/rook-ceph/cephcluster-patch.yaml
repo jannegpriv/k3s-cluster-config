@@ -49,8 +49,3 @@ spec:
     # Configure read affinity
     readAffinity:
       enabled: true
-    # CSI driver settings
-    cephfs:
-      enabled: true
-    rbd:
-      enabled: true

@@ -42,15 +42,10 @@ spec:
   
   # Configure the Ceph CSI drivers
   csi:
-    # Enable the CSI driver for CephFS
-    cephfs:
-      enabled: true
-    # Enable the CSI driver for RBD
-    rbd:
-      enabled: true
     # Configure read affinity
     readAffinity:
       enabled: false
+    # Enable CSI drivers (controlled by operator env vars)
   
   # Security configuration
   security:
