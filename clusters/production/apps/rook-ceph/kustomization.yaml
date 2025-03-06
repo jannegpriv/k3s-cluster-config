@@ -16,4 +16,3 @@ resources:
 
 patchesStrategicMerge:
   - operator-patch.yaml
-  - csi-version-job-patch.yaml
