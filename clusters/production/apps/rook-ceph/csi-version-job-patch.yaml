@@ -8,14 +8,23 @@ spec:
   template:
     spec:
       containers:
-      - name: csi-detect-version
+      - name: cmd-reporter
         image: quay.io/cephcsi/cephcsi:v3.11.0
         command: ["/bin/sh", "-c"]
         args:
         - |
-          # Output the CSI version for detection
-          echo "v3.11.0" > /etc/csi/csi-versions.txt
+          # Create directory if it doesn't exist
+          mkdir -p /etc/csi
+          # Properly detect the CSI version
+          /cephcsi --version > /etc/csi/csi-versions.txt
+          # Display the version
           cat /etc/csi/csi-versions.txt
           exit 0
+        volumeMounts:
+        - name: csi-detect-version-volume
+          mountPath: /etc/csi
+      volumes:
+      - name: csi-detect-version-volume
+        emptyDir: {}
       restartPolicy: Never
       terminationGracePeriodSeconds: 0
