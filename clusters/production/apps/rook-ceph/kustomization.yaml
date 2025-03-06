@@ -15,6 +15,5 @@ resources:
   - cluster.yaml
 
 patchesStrategicMerge:
-  - cephcluster-patch.yaml
   - operator-patch.yaml
   - csi-version-job-patch.yaml
