@@ -4,11 +4,8 @@ metadata:
   name: rook-ceph-csi-detect-version
   namespace: rook-ceph
 spec:
-  ttlSecondsAfterFinished: 0
   template:
     spec:
-      # Remove the init container completely
-      initContainers: []
       containers:
       - name: cmd-reporter
         image: quay.io/cephcsi/cephcsi:v3.11.0
@@ -22,11 +19,3 @@ spec:
           # Display the version
           cat /etc/csi/csi-versions.txt
           exit 0
-        volumeMounts:
-        - name: csi-detect-version-volume
-          mountPath: /etc/csi
-      volumes:
-      - name: csi-detect-version-volume
-        emptyDir: {}
-      restartPolicy: Never
-      terminationGracePeriodSeconds: 0
