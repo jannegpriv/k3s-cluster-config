@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rook-ceph-csi-detect-version
+  namespace: rook-ceph
+spec:
+  ttlSecondsAfterFinished: 0
+  template:
+    spec:
+      containers:
+      - name: csi-detect-version
+        image: quay.io/cephcsi/cephcsi:v3.11.0
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          # Output the CSI version for detection
+          echo "v3.11.0" > /etc/csi/csi-versions.txt
+          cat /etc/csi/csi-versions.txt
+          exit 0
+      restartPolicy: Never
+      terminationGracePeriodSeconds: 0

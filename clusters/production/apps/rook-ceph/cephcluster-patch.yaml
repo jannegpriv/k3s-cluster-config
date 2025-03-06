@@ -30,6 +30,27 @@ spec:
       enabled: false
   # Configure the Ceph CSI drivers
   csi:
+    # Enable the CSI drivers
+    enabled: true
+    # Enable RBD driver
+    enableRbdDriver: true
+    # Enable CephFS driver
+    enableCephfsDriver: true
+    # Configure provisioner
+    provisionerTolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+    # Configure plugin
+    pluginTolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
     # Configure read affinity
     readAffinity:
+      enabled: true
+    # CSI driver settings
+    cephfs:
+      enabled: true
+    rbd:
       enabled: true

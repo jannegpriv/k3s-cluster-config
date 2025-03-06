@@ -19,11 +19,11 @@ spec:
         - name: ROOK_CSI_SKIP_VERSION_CHECK
           value: "true"
         - name: CSI_ENABLE_CEPHCSI_VERSION_JOB_REPORTER
-          value: "false"
+          value: "true"
         - name: CSI_DISABLE_VERSION_JOB
-          value: "true"
+          value: "false"
         - name: ROOK_CSI_DISABLE_VERSION_JOB
-          value: "true"
+          value: "false"
         - name: ROOK_DISABLE_DISCOVERY_DAEMON
           value: "true"
         - name: ROOK_CSI_CEPH_IMAGE
