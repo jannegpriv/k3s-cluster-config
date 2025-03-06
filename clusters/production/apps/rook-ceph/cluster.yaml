@@ -40,12 +40,7 @@ spec:
     # The mons should be on unique nodes
     allowMultiplePerNode: true
   
-  # Configure the Ceph CSI drivers
-  csi:
-    # Configure read affinity
-    readAffinity:
-      enabled: false
-    # Enable CSI drivers (controlled by operator env vars)
+  # CSI drivers are controlled by operator environment variables
   
   # Security configuration
   security:
