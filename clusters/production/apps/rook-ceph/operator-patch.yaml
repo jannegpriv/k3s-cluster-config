@@ -17,7 +17,7 @@ spec:
         - name: ROOK_CSI_ENABLE_CEPHFS  
           value: "true"
         - name: ROOK_CSI_SKIP_VERSION_CHECK
-          value: "true"
+          value: "false"
         - name: CSI_ENABLE_CEPHCSI_VERSION_JOB_REPORTER
           value: "true"
         - name: CSI_DISABLE_VERSION_JOB
@@ -25,19 +25,19 @@ spec:
         - name: ROOK_CSI_DISABLE_VERSION_JOB
           value: "false"
         - name: ROOK_DISABLE_DISCOVERY_DAEMON
-          value: "true"
-        - name: ROOK_CSI_CEPH_IMAGE
+          value: "false"
+        - name: ROOK_CSI_CEPHCSI_IMAGE
           value: "quay.io/cephcsi/cephcsi:v3.11.0"
         - name: ROOK_CSI_REGISTRAR_IMAGE
-          value: "registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.10.1"
+          value: "registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.13.0"
         - name: ROOK_CSI_RESIZER_IMAGE
-          value: "registry.k8s.io/sig-storage/csi-resizer:v1.10.1"
+          value: "registry.k8s.io/sig-storage/csi-resizer:v1.13.1"
         - name: ROOK_CSI_PROVISIONER_IMAGE
-          value: "registry.k8s.io/sig-storage/csi-provisioner:v4.0.1"
+          value: "registry.k8s.io/sig-storage/csi-provisioner:v5.1.0"
         - name: ROOK_CSI_SNAPSHOTTER_IMAGE
-          value: "registry.k8s.io/sig-storage/csi-snapshotter:v7.0.2"
+          value: "registry.k8s.io/sig-storage/csi-snapshotter:v8.2.0"
         - name: ROOK_CSI_ATTACHER_IMAGE
-          value: "registry.k8s.io/sig-storage/csi-attacher:v4.5.1"
+          value: "registry.k8s.io/sig-storage/csi-attacher:v4.8.0"
         - name: POD_NAME
           valueFrom:
             fieldRef:

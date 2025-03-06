@@ -9,13 +9,5 @@ spec:
       containers:
       - name: cmd-reporter
         image: quay.io/cephcsi/cephcsi:v3.11.0
-        command: ["/bin/sh", "-c"]
-        args:
-        - |
-          # Create directory if it doesn't exist
-          mkdir -p /etc/csi
-          # Properly detect the CSI version
-          /cephcsi --version > /etc/csi/csi-versions.txt
-          # Display the version
-          cat /etc/csi/csi-versions.txt
-          exit 0
+        command: ["/cephcsi"]
+        args: ["--version"]
