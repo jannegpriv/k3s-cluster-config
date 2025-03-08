@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: rook-ceph-csi-job-cleanup
+  namespace: rook-ceph
+spec:
+  schedule: "*/5 * * * *"  # Run every 5 minutes
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: rook-ceph-system
+          containers:
+          - name: kubectl
+            image: bitnami/kubectl:latest
+            command:
+            - /bin/sh
+            - -c
+            - |
+              # Delete any CSI version detection jobs that are running or failed
+              kubectl delete job rook-ceph-csi-detect-version -n rook-ceph --ignore-not-found
+              
+              # Ensure the ConfigMaps exist with the correct version
+              if ! kubectl get configmap csi-rbd-version -n rook-ceph &>/dev/null; then
+                kubectl create configmap csi-rbd-version -n rook-ceph --from-literal=stdout=v3.11.0
+              fi
+              
+              if ! kubectl get configmap csi-cephfs-version -n rook-ceph &>/dev/null; then
+                kubectl create configmap csi-cephfs-version -n rook-ceph --from-literal=stdout=v3.11.0
+              fi
+              
+              if ! kubectl get configmap rook-ceph-csi-detect-version -n rook-ceph &>/dev/null; then
+                kubectl create configmap rook-ceph-csi-detect-version -n rook-ceph --from-literal=stdout=v3.11.0
+              fi
+          restartPolicy: OnFailure

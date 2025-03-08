@@ -16,7 +16,7 @@ data:
   ROOK_CSI_SNAPSHOTTER_IMAGE: "registry.k8s.io/sig-storage/csi-snapshotter:v6.2.2"
   ROOK_CSI_ATTACHER_IMAGE: "registry.k8s.io/sig-storage/csi-attacher:v4.3.0"
   ROOK_CSI_RESIZER_IMAGE: "registry.k8s.io/sig-storage/csi-resizer:v1.8.0"
-  ROOK_CSI_CEPHCSI_IMAGE: "quay.io/cephcsi/cephcsi:v3.10.1"
+  ROOK_CSI_CEPHCSI_IMAGE: "quay.io/cephcsi/cephcsi:v3.11.0"
   
   # Host path configuration
   ROOK_DATA_DIR_HOST_PATH: "/var/lib/rook"

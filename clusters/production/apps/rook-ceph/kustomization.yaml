@@ -5,14 +5,4 @@ resources:
   - dashboard-password-secret.yaml
   - toolbox.yaml
   - ceph-ingressroute.yaml
-  - ceph-version-configmap.yaml
-  - hostpath-fix-configmap.yaml
-  - ceph-log-pvc.yaml
-  - ceph-mon-storageclass.yaml
-  - create-mon-dirs-job.yaml
-  - operator.yaml
-  - csi-versions-configmap.yaml
-  # Removed cluster.yaml to avoid conflicts with existing CephCluster resource
 
-patchesStrategicMerge:
-  - operator-patch.yaml
