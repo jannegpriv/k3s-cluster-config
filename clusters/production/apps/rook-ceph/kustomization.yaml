@@ -5,4 +5,5 @@ resources:
   - dashboard-password-secret.yaml
   - toolbox.yaml
   - ceph-ingressroute.yaml
-
+  - operator-config.yaml
+  
