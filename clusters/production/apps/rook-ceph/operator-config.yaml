@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rook-ceph-operator-config
+  namespace: rook-ceph
+data:
+  ROOK_MGR_HEALTHCHECK_TIMEOUT: "30"
+  ROOK_MON_HEALTHCHECK_TIMEOUT: "30"
+  ROOK_OSD_HEALTHCHECK_TIMEOUT: "30"
+  ROOK_MGR_HEALTHCHECK_INTERVAL: "60"
+  ROOK_MON_HEALTHCHECK_INTERVAL: "60"
+  ROOK_OSD_HEALTHCHECK_INTERVAL: "60"
