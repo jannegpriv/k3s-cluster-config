@@ -21,6 +21,10 @@ spec:
         ingressClassName: traefik
         hosts:
           - grafana.local
+      # Add this config section for timezone settings
+      grafana.ini:
+        default:
+          default_timezone: "Europe/Stockholm"    
       sidecar:
         dashboards:
           enabled: true
