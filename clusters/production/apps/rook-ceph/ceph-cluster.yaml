@@ -1,0 +1,78 @@
+apiVersion: ceph.rook.io/v1
+kind: CephCluster
+metadata:
+  name: rook-ceph
+  namespace: rook-ceph
+spec:
+  cephVersion:
+    image: quay.io/ceph/ceph:v18.2.2
+  continueUpgradeAfterChecksEvenIfNotHealthy: true
+  crashCollector:
+    disable: true
+  dashboard:
+    enabled: true
+    ssl: true
+  dataDirHostPath: /var/lib/rook
+  mgr:
+    modules:
+    - enabled: true
+      name: prometheus
+  mon:
+    allowMultiplePerNode: true
+    count: 3
+  skipUpgradeChecks: true
+  storage:
+    useAllDevices: true
+    useAllNodes: true
+  resources:
+    mgr:
+      limits:
+        cpu: "0.5"
+        memory: "600Mi"
+      requests:
+        cpu: "0.1"
+        memory: "400Mi"
+    mon:
+      limits:
+        cpu: "0.3"
+        memory: "100Mi"
+      requests:
+        cpu: "0.05"
+        memory: "50Mi"
+    osd:
+      limits:
+        cpu: "1"
+        memory: "4Gi"
+      requests:
+        cpu: "0.5"
+        memory: "2Gi"
+    # healthChecks
+  # Valid values for daemons are 'mon', 'osd', 'status'
+  healthCheck:
+    daemonHealth:
+      mon:
+        disabled: false
+        interval: 45s
+      osd:
+        disabled: false
+        interval: 60s
+      status:
+        disabled: false
+        interval: 60s
+    # Change pod liveness probe timing or threshold values. Works for all mon,mgr,osd daemons.
+    livenessProbe:
+      mon:
+        disabled: false
+        timeout: 30s
+        period: 60s
+        threshold: 5
+      mgr:
+        disabled: false
+        timeout: 30s
+        period: 60s
+        threshold: 5
+      osd:
+        disabled: false
+        timeout: 30s
+        period: 60s
+        threshold: 5    

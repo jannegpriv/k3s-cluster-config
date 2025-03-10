@@ -6,4 +6,4 @@ resources:
   - toolbox.yaml
   - ceph-ingressroute.yaml
   - operator-config.yaml
-  
+  - ceph-cluster.yaml
