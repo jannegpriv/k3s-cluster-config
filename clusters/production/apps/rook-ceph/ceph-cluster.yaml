@@ -28,7 +28,7 @@ spec:
     mgr:
       limits:
         cpu: "1.0"
-        memory: "800i"
+        memory: "800Mi"
       requests:
         cpu: "0.5"
         memory: "500Mi"
@@ -62,17 +62,23 @@ spec:
     # Change pod liveness probe timing or threshold values. Works for all mon,mgr,osd daemons.
     livenessProbe:
       mon:
-        disabled: false
-        timeout: 30s
-        period: 60s
-        threshold: 5
+        probe:
+          initialDelaySeconds: 10
+          timeoutSeconds: 30
+          periodSeconds: 60
+          successThreshold: 1
+          failureThreshold: 5
       mgr:
-        disabled: false
-        timeout: 30s
-        period: 60s
-        threshold: 5
+        probe:
+          initialDelaySeconds: 10
+          timeoutSeconds: 30
+          periodSeconds: 60
+          successThreshold: 1
+          failureThreshold: 5
       osd:
-        disabled: false
-        timeout: 30s
-        period: 60s
-        threshold: 5    
+        probe:
+          initialDelaySeconds: 10
+          timeoutSeconds: 30
+          periodSeconds: 60
+          successThreshold: 1
+          failureThreshold: 5
