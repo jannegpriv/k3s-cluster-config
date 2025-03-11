@@ -18,8 +18,17 @@ spec:
     - enabled: true
       name: prometheus
   mon:
-    allowMultiplePerNode: true
+    allowMultiplePerNode: false
     count: 3
+    placement:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: node-role.kubernetes.io/master
+              operator: In
+              values:
+              - "true"
   skipUpgradeChecks: true
   storage:
     useAllDevices: true
