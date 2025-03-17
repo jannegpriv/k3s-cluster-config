@@ -4,6 +4,5 @@ namespace: loki
 resources:
   - namespace.yaml
   - helm-release.yaml
-  - grafana-datasource.yaml
-  - loki-dashboard.yaml
   - loki-ingress.yaml
+  - grafana-integration
