@@ -14,6 +14,7 @@ spec:
     targetPort: 8080
   selector:
     app: rook-ceph-mgr
+    mgr_role: active
     rook_cluster: rook-ceph
   type: ClusterIP
 
