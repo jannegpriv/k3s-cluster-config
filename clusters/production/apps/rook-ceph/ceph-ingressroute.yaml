@@ -10,7 +10,7 @@ spec:
     - match: Host(`ceph.local`)
       kind: Rule
       services:
-        - name: rook-ceph-mgr-dashboard
+        - name: ceph-dashboard-http
           port: 7000
           scheme: http
   tls: {}
