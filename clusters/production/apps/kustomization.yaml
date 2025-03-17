@@ -8,3 +8,4 @@ resources:
   - monitoring
   - rook-ceph
   - kubeshark
+  - loki
