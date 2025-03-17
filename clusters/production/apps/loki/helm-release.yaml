@@ -46,12 +46,9 @@ spec:
                 operator: NotIn
                 values:
                 - "true"
-      # Ingress for direct Loki access if needed
+      # We'll use a separate ingress resource instead of the built-in one
       ingress:
-        enabled: true
-        ingressClassName: traefik
-        hosts:
-          - loki.local
+        enabled: false
       # Loki configuration
       config:
         auth_enabled: false
