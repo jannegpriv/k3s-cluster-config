@@ -11,8 +11,9 @@ spec:
       kind: Rule
       services:
         - name: rook-ceph-mgr-dashboard
-          port: 7000
-          scheme: http
+          port: 8443
+          scheme: https
+          serversTransport: ceph-insecure-transport
   tls: {}
 ---
 apiVersion: traefik.containo.us/v1alpha1
