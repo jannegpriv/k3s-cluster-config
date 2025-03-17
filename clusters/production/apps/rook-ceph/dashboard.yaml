@@ -8,7 +8,7 @@ metadata:
     rook_cluster: rook-ceph
 spec:
   ports:
-  - name: http-dashboard
+  - name: dashboard
     port: 8443
     protocol: TCP
     targetPort: 8443
