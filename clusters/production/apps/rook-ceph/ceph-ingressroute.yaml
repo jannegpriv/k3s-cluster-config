@@ -11,7 +11,7 @@ spec:
       kind: Rule
       services:
         - name: rook-ceph-mgr-dashboard
-          port: 8080
+          port: 8443
           scheme: http
           serversTransport: ceph-insecure-transport
   tls: {}
