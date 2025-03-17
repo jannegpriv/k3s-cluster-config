@@ -3,6 +3,9 @@ kind: Ingress
 metadata:
   name: loki-ingress
   namespace: loki
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: "default-strip-prefix@kubernetescrd"
 spec:
   ingressClassName: traefik
   rules:
