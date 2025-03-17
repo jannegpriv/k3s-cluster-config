@@ -12,7 +12,7 @@ spec:
       services:
         - name: rook-ceph-mgr-dashboard
           port: 8443
-          scheme: https
+          scheme: http
           serversTransport: ceph-insecure-transport
   tls: {}
 ---
