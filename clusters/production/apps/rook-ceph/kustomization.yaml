@@ -8,3 +8,4 @@ resources:
   - operator-config.yaml
   - ceph-cluster.yaml
   - ceph-dashboard-service.yaml
+  - ceph-ingress.yaml
