@@ -81,8 +81,12 @@ spec:
           ingestion_rate_mb: 8
           ingestion_burst_size_mb: 16
           max_entries_limit_per_query: 5000
-          # Add these two settings to fix query timeout issues
+          # Move these settings to server section
           max_query_parallelism: 8
+        server:
+          http_server_config:
+            http_listen_port: 3100
+          # Add query timeout here instead
           query_timeout: 3m
       # Add liveness and readiness probes with longer timeouts
       liveness_probe:
