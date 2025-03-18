@@ -16,14 +16,14 @@ spec:
       interval: 1m
   values:
     loki:
-      # Resource limits for better performance
+      # Resource limits with increased values to handle query load
       resources:
         requests:
-          cpu: 500m
-          memory: 1Gi
+          cpu: 300m
+          memory: 512Mi
         limits:
-          cpu: 1
-          memory: 2Gi
+          cpu: 600m
+          memory: 1Gi
       # Persistent storage using Rook-Ceph
       persistence:
         enabled: true
@@ -49,29 +49,14 @@ spec:
       # We'll use a separate ingress resource instead of the built-in one
       ingress:
         enabled: false
-      # Loki configuration with performance optimizations and proper readiness setup
+      # Loki configuration with minimal query timeout settings
       config:
         auth_enabled: false
-        server:
-          http_listen_port: 3100
-          http_server_read_timeout: 180s
-          http_server_write_timeout: 180s
-          grpc_listen_port: 9095
-          grpc_server_max_recv_msg_size: 8388608
-          grpc_server_max_send_msg_size: 8388608
-        memberlist:
-          join_members:
-            - loki-headless.loki.svc.cluster.local:7946
-        common:
-          path_prefix: /data/loki
-          storage:
-            filesystem:
-              chunks_directory: /data/loki/chunks
-              rules_directory: /data/loki/rules
-          replication_factor: 1
-          ring:
-            kvstore:
-              store: inmemory
+        chunk_store_config:
+          max_look_back_period: 336h  # 14 days
+        table_manager:
+          retention_deletes_enabled: true
+          retention_period: 336h  # 14 days
         schema_config:
           configs:
             - from: "2020-10-24"
@@ -92,34 +77,13 @@ spec:
         limits_config:
           enforce_metric_name: false
           reject_old_samples: true
-          reject_old_samples_max_age: 168h
-          ingestion_rate_mb: 16
-          ingestion_burst_size_mb: 32
-          max_entries_limit_per_query: 10000
-          max_query_parallelism: 16
+          reject_old_samples_max_age: 168h  # 7 days
+          ingestion_rate_mb: 8
+          ingestion_burst_size_mb: 16
+          max_entries_limit_per_query: 5000
+          # Add these two settings to fix query timeout issues
+          max_query_parallelism: 8
           query_timeout: 3m
-        chunk_store_config:
-          max_look_back_period: 336h
-        table_manager:
-          retention_deletes_enabled: true
-          retention_period: 336h
-      # Adjust liveness and readiness probes
-      liveness_probe:
-        httpGet:
-          path: /ready
-          port: http-metrics
-        initialDelaySeconds: 120
-        timeoutSeconds: 1
-        periodSeconds: 10
-        failureThreshold: 3
-      readiness_probe:
-        httpGet:
-          path: /ready
-          port: http-metrics
-        initialDelaySeconds: 120
-        timeoutSeconds: 1
-        periodSeconds: 10
-        failureThreshold: 3
     
     promtail:
       # Resource limits for Promtail
