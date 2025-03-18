@@ -74,7 +74,7 @@ spec:
               store: inmemory
         schema_config:
           configs:
-            - from: 2020-10-24
+            - from: "2020-10-24"
               store: boltdb-shipper
               object_store: filesystem
               schema: v11
