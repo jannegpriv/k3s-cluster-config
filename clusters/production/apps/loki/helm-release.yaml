@@ -69,7 +69,7 @@ spec:
           chunk_retain_period: 30s
         schema_config:
           configs:
-            - from: 2023-01-01
+            - from: "2023-01-01"
               store: tsdb
               object_store: filesystem
               schema: v13
