@@ -87,7 +87,6 @@ spec:
           ingestion_burst_size_mb: 16
           max_entries_limit_per_query: 5000
           max_query_parallelism: 8
-          query_timeout: 3m
     
     # Promtail configuration for log collection
     promtail:
