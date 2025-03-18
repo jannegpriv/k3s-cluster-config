@@ -8,64 +8,53 @@ spec:
   chart:
     spec:
       chart: loki
-      version: '5.41.0'
+      version: '6.28.0'
       sourceRef:
         kind: HelmRepository
         name: grafana
         namespace: flux-system
       interval: 1m
   values:
-    # Use monolithic deployment mode for simplicity
+    # Deployment mode - use SingleBinary for simplicity
+    deploymentMode: "SingleBinary"
+    
+    # Loki configuration
     loki:
+      # Structured configuration for Loki
       commonConfig:
         replication_factor: 1
-      
-      structuredConfig:
-        auth_enabled: false
-        server:
-          http_listen_port: 3100
-          grpc_listen_port: 9096
-        schema_config:
-          configs:
-            - from: "2023-01-01"
-              store: tsdb
-              object_store: filesystem
-              schema: v13
-              index:
-                prefix: loki_index_
-                period: 24h
-        storage_config:
-          filesystem:
-            directory: /var/loki/chunks
-        limits_config:
-          enforce_metric_name: false
-          reject_old_samples: true
-          reject_old_samples_max_age: 168h
-          ingestion_rate_mb: 8
-          ingestion_burst_size_mb: 16
-          max_entries_limit_per_query: 5000
-          max_query_parallelism: 8
-          query_timeout: 3m
-        
-        # Query frontend config
-        frontend:
-          max_outstanding_per_tenant: 200
-          compress_responses: true
-        
-        # Specify querier configuration
-        querier:
-          max_concurrent: 8
+      auth_enabled: false
+      # Configure schema and storage
+      schemaConfig:
+        configs:
+          - from: "2023-01-01"
+            store: tsdb
+            object_store: filesystem
+            schema: v13
+            index:
+              prefix: loki_index_
+              period: 24h
+      storageConfig:
+        filesystem:
+          directory: /var/loki/chunks
+      # Configure limits
+      limits_config:
+        enforce_metric_name: false
+        reject_old_samples: true
+        reject_old_samples_max_age: 168h
+        ingestion_rate_mb: 8
+        ingestion_burst_size_mb: 16
+        max_entries_limit_per_query: 5000
+        max_query_parallelism: 8
+        query_timeout: 3m
     
     # SingleBinary mode configuration
     singleBinary:
       replicas: 1
-      nodeSelector: {}
       persistence:
         enabled: true
         storageClassName: rook-ceph-block
         size: 10Gi
-        accessModes:
-        - ReadWriteOnce
       resources:
         requests:
           cpu: 300m
@@ -73,25 +62,21 @@ spec:
         limits:
           cpu: 600m
           memory: 1Gi
-    
-    # Pod affinity to avoid master nodes
-    affinity:
-      nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          preference:
-            matchExpressions:
-            - key: node-role.kubernetes.io/control-plane
-              operator: NotIn
-              values:
-              - "true"
-            - key: node-role.kubernetes.io/master
-              operator: NotIn
-              values:
-              - "true"
-    
-    # Deployment mode
-    deploymentMode: singleBinary
+      # Node affinity to avoid master nodes
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: NotIn
+                values:
+                - "true"
+              - key: node-role.kubernetes.io/master
+                operator: NotIn
+                values:
+                - "true"
     
     # Disable gateway (not needed in singleBinary mode)
     gateway:
@@ -136,6 +121,32 @@ spec:
       config:
         clients:
           - url: http://loki.loki.svc.cluster.local:3100/loki/api/v1/push
+        snippets:
+          extraScrapeConfigs: |
+            - job_name: kubernetes-pods
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_controller_name]
+                  regex: ([0-9a-z-.]+?)(-[0-9a-f]{8,10})?
+                  action: replace
+                  target_label: __tmp_controller_name
+                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name, __meta_kubernetes_pod_label_app, __tmp_controller_name, __meta_kubernetes_pod_name]
+                  regex: ^;*([^;]+)(;.*)?$
+                  action: replace
+                  target_label: app
+                - action: replace
+                  source_labels: [__meta_kubernetes_pod_node_name]
+                  target_label: node_name
+                - action: replace
+                  source_labels: [__meta_kubernetes_namespace]
+                  target_label: namespace
+                - action: replace
+                  source_labels: [__meta_kubernetes_pod_name]
+                  target_label: pod
+                - action: replace
+                  source_labels: [__meta_kubernetes_pod_container_name]
+                  target_label: container
 
     # Enable Grafana dashboards for Loki
     grafana:
