@@ -84,6 +84,23 @@ spec:
           # Add these two settings to fix query timeout issues
           max_query_parallelism: 8
           query_timeout: 3m
+      # Add liveness and readiness probes with longer timeouts
+      liveness_probe:
+        httpGet:
+          path: /ready
+          port: http-metrics
+        initialDelaySeconds: 120
+        timeoutSeconds: 1
+        periodSeconds: 10
+        failureThreshold: 3
+      readiness_probe:
+        httpGet:
+          path: /ready
+          port: http-metrics
+        initialDelaySeconds: 120
+        timeoutSeconds: 1
+        periodSeconds: 10
+        failureThreshold: 3
     
     promtail:
       # Resource limits for Promtail
