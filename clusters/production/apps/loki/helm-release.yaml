@@ -7,71 +7,27 @@ spec:
   interval: 5m
   chart:
     spec:
-      chart: loki
-      version: '6.28.0'
+      chart: loki-stack
+      version: '2.10.2'
       sourceRef:
         kind: HelmRepository
         name: grafana
         namespace: flux-system
       interval: 1m
   values:
-    # Deployment mode - use SingleBinary for simplicity
-    deploymentMode: "SingleBinary"
-    
     # Loki configuration
     loki:
-      # Structured configuration for Loki
-      commonConfig:
-        replication_factor: 1
-      
-      # Storage configuration to avoid nil pointer error
-      storage:
-        type: filesystem
-        bucketNames:
-          chunks: chunks
-          ruler: ruler
-          admin: admin
-      
-      structuredConfig:
-        auth_enabled: false
-        # Configure schema and storage
-        schema_config:
-          configs:
-            - from: "2023-01-01"
-              store: tsdb
-              object_store: filesystem
-              schema: v13
-              index:
-                prefix: loki_index_
-                period: 24h
-        
-        storage_config:
-          filesystem:
-            directory: /var/loki/chunks
-        
-        # Configure limits
-        limits_config:
-          enforce_metric_name: false
-          reject_old_samples: true
-          reject_old_samples_max_age: 168h
-          ingestion_rate_mb: 8
-          ingestion_burst_size_mb: 16
-          max_entries_limit_per_query: 5000
-          max_query_parallelism: 8
-          query_timeout: 3m
-        
-        # Server configuration
-        server:
-          http_listen_port: 3100
-          grpc_listen_port: 9096
-    
-    # SingleBinary mode configuration
-    singleBinary:
-      replicas: 1
+      # Enable persistence using PVCs
       persistence:
         enabled: true
         storageClassName: rook-ceph-block
         size: 10Gi
+      
+      # Configure service
+      service:
+        port: 3100
+      
+      # Configure resources
       resources:
         requests:
           cpu: 300m
@@ -79,7 +35,8 @@ spec:
         limits:
           cpu: 600m
           memory: 1Gi
-      # Node affinity to avoid master nodes
+      
+      # Configure node affinity to avoid master nodes
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -94,36 +51,43 @@ spec:
                 operator: NotIn
                 values:
                 - "true"
-    
-    # Disable gateway (not needed in singleBinary mode)
-    gateway:
-      enabled: false
-    
-    # Disable all other components (not needed in singleBinary mode)
-    backend:
-      enabled: false
-    read:
-      enabled: false
-    write:
-      enabled: false
-    ingester:
-      enabled: false
-    querier:
-      enabled: false
-    queryFrontend:
-      enabled: false
-    queryScheduler:
-      enabled: false
-    distributor:
-      enabled: false
-    compactor:
-      enabled: false
-    indexGateway:
-      enabled: false
-    
-    # Disable MinIO since we're using filesystem storage
-    minio:
-      enabled: false
+      
+      # Configure Loki with a simplified config
+      config:
+        auth_enabled: false
+        server:
+          http_listen_port: 3100
+        ingester:
+          lifecycler:
+            address: 127.0.0.1
+            ring:
+              kvstore:
+                store: inmemory
+              replication_factor: 1
+            final_sleep: 0s
+          chunk_idle_period: 5m
+          chunk_retain_period: 30s
+        schema_config:
+          configs:
+            - from: 2023-01-01
+              store: tsdb
+              object_store: filesystem
+              schema: v13
+              index:
+                prefix: index_
+                period: 24h
+        storage_config:
+          filesystem:
+            directory: /data/loki/chunks
+        limits_config:
+          enforce_metric_name: false
+          reject_old_samples: true
+          reject_old_samples_max_age: 168h
+          ingestion_rate_mb: 8
+          ingestion_burst_size_mb: 16
+          max_entries_limit_per_query: 5000
+          max_query_parallelism: 8
+          query_timeout: 3m
     
     # Promtail configuration for log collection
     promtail:
@@ -136,8 +100,7 @@ spec:
           cpu: 200m
           memory: 256Mi
       config:
-        clients:
-          - url: http://loki.loki.svc.cluster.local:3100/loki/api/v1/push
+        lokiAddress: http://loki.loki.svc.cluster.local:3100/loki/api/v1/push
         snippets:
           extraScrapeConfigs: |
             - job_name: kubernetes-pods
@@ -164,7 +127,7 @@ spec:
                 - action: replace
                   source_labels: [__meta_kubernetes_pod_container_name]
                   target_label: container
-
+    
     # Disable bundled Grafana as we already have one
     grafana:
       enabled: false
