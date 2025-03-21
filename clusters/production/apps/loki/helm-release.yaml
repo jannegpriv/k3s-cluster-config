@@ -203,7 +203,7 @@ spec:
                   target_label: __path__
                   
             # Samla specifika openHAB-loggar från userdata/logs katalogen
-            - job_name: openhab-logs
+            - job_name: openhab-main-logs
               kubernetes_sd_configs:
                 - role: pod
               relabel_configs:
@@ -223,7 +223,76 @@ spec:
                   source_labels: [__meta_kubernetes_pod_container_name]
                   target_label: container
                 - action: replace
-                  replacement: /var/lib/kubelet/pods/*$1/volumes/kubernetes.io~persistentvolumeclaim/openhab-production-userdata-claim/logs/*.log
+                  target_label: logfile
+                  replacement: openhab
+                - action: replace
+                  replacement: /var/lib/kubelet/pods/*$1/volumes/kubernetes.io~persistentvolumeclaim/openhab-production-userdata-claim/logs/openhab.log*
+                  separator: /
+                  source_labels:
+                  - __meta_kubernetes_pod_uid
+                  target_label: __path__
+              pipeline_stages:
+                - match:
+                    selector: '{logfile="openhab"}'  
+                    stages:
+                      - regex:
+                          expression: '(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}) \[(?P<level>[A-Z]+)\] \[(?P<component>.*?)\] - (?P<message>.*)'
+                      - labels:
+                          level:
+                          component:
+                          
+            # Samla events.log från openHAB
+            - job_name: openhab-events-logs
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - action: keep
+                  source_labels: [__meta_kubernetes_pod_label_app]
+                  regex: openhab-production
+                - action: replace
+                  source_labels: [__meta_kubernetes_pod_node_name]
+                  target_label: node_name
+                - action: replace
+                  source_labels: [__meta_kubernetes_namespace]
+                  target_label: namespace
+                - action: replace
+                  source_labels: [__meta_kubernetes_pod_name]
+                  target_label: pod
+                - action: replace
+                  source_labels: [__meta_kubernetes_pod_container_name]
+                  target_label: container
+                - action: replace
+                  target_label: logfile
+                  replacement: events
+                - action: replace
+                  replacement: /var/lib/kubelet/pods/*$1/volumes/kubernetes.io~persistentvolumeclaim/openhab-production-userdata-claim/logs/events.log*
+                  separator: /
+                  source_labels:
+                  - __meta_kubernetes_pod_uid
+                  target_label: __path__
+                  
+            # Samla update.log och audit.log från openHAB
+            - job_name: openhab-other-logs
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - action: keep
+                  source_labels: [__meta_kubernetes_pod_label_app]
+                  regex: openhab-production
+                - action: replace
+                  source_labels: [__meta_kubernetes_pod_node_name]
+                  target_label: node_name
+                - action: replace
+                  source_labels: [__meta_kubernetes_namespace]
+                  target_label: namespace
+                - action: replace
+                  source_labels: [__meta_kubernetes_pod_name]
+                  target_label: pod
+                - action: replace
+                  source_labels: [__meta_kubernetes_pod_container_name]
+                  target_label: container
+                - action: replace
+                  replacement: /var/lib/kubelet/pods/*$1/volumes/kubernetes.io~persistentvolumeclaim/openhab-production-userdata-claim/logs/update.log|/var/lib/kubelet/pods/*$1/volumes/kubernetes.io~persistentvolumeclaim/openhab-production-userdata-claim/logs/audit.log
                   separator: /
                   source_labels:
                   - __meta_kubernetes_pod_uid
