@@ -57,9 +57,9 @@ spec:
         schema_config:
           configs:
             - from: "2020-10-24"  # Enkel datum-sträng med citattecken
-              store: tsdb
+              store: boltdb-shipper
               object_store: filesystem
-              schema: v13
+              schema: v11
               index:
                 prefix: index_
                 period: 24h
