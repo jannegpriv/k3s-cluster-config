@@ -54,7 +54,7 @@ spec:
           http_listen_port: 3100
         schema_config:
           configs:
-            - from: 2020-10-24
+            - from: "2020-10-24"  # Enkel datum-sträng utan tid
               store: tsdb
               object_store: filesystem
               schema: v13
