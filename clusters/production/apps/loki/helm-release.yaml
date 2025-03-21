@@ -27,11 +27,9 @@ spec:
           cpu: 600m
           memory: 1Gi
       
-      # Persistent storage
+      # Persistent storage - tillfälligt inaktiverad för felsökning
       persistence:
-        enabled: true
-        storageClassName: rook-ceph-block
-        size: 10Gi
+        enabled: false
       
       # Node affinity to keep off master nodes
       affinity:
