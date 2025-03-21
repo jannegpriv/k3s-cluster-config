@@ -49,42 +49,8 @@ spec:
                 values:
                 - "true"
       
-      # Loki configuration
+      # Använd minimal Loki-konfiguration och låt Helm-diagrammet hantera standardvärden
       config:
-        auth_enabled: false
-        server:
-          http_listen_port: 3100
-        schema_config:
-          configs:
-            - from: "2020-10-24"  # Enkel datum-sträng med citattecken
-              store: boltdb-shipper
-              object_store: filesystem
-              schema: v11
-              index:
-                prefix: index_
-                period: 24h
-        storage_config:
-          filesystem:
-            directory: /data/loki/chunks
-        limits_config:
-          enforce_metric_name: false
-          reject_old_samples: true
-          reject_old_samples_max_age: 168h
-          ingestion_rate_mb: 8
-          ingestion_burst_size_mb: 16
-          max_entries_limit_per_query: 5000
-          max_query_parallelism: 8
-          # query_timeout borttagen för att undvika valideringsfel
-        ingester:
-          lifecycler:
-            address: 127.0.0.1
-            ring:
-              kvstore:
-                store: inmemory
-              replication_factor: 1
-            final_sleep: 0s
-          chunk_idle_period: 5m
-          chunk_retain_period: 30s
     
     # Promtail configuration
     promtail:
