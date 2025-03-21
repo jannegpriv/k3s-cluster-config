@@ -50,9 +50,9 @@ spec:
       # Använd standardkonfigurationen från Helm-diagrammet som fungerade tidigare
       config: {}
     
-    # Promtail configuration
+    # Promtail tillfälligt inaktiverad för att lösa problem med duplicerade volym-monteringar
     promtail:
-      enabled: true
+      enabled: false
       resources:
         requests:
           cpu: 100m
