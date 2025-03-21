@@ -4,3 +4,4 @@ namespace: monitoring
 resources:
   - resources/datasource.yaml
   - resources/dashboard.yaml
+  - resources/openhab-dashboard.yaml
