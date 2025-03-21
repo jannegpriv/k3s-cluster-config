@@ -52,9 +52,9 @@ spec:
       # Använd standardkonfigurationen från Helm-diagrammet som fungerade tidigare
       config: {}
     
-    # Promtail tillfälligt inaktiverad för att lösa problem med duplicerade volym-monteringar
+    # Promtail konfiguration för att samla loggar från specifika källor
     promtail:
-      enabled: false
+      enabled: true
       resources:
         requests:
           cpu: 100m
@@ -88,12 +88,12 @@ spec:
         successThreshold: 1
         timeoutSeconds: 1
       
-      # Volymmontering hanteras automatiskt av Helm-diagrammet
-          
+      # Anpassad konfiguration för Promtail
       config:
         lokiAddress: http://loki.loki.svc.cluster.local:3100/loki/api/v1/push
         snippets:
           extraScrapeConfigs: |
+            # Samla loggar från alla poddar i klustret
             - job_name: kubernetes-pods
               kubernetes_sd_configs:
                 - role: pod
@@ -106,6 +106,52 @@ spec:
                   regex: ^;*([^;]+)(;.*)?$
                   action: replace
                   target_label: app
+                - action: replace
+                  source_labels: [__meta_kubernetes_pod_node_name]
+                  target_label: node_name
+                - action: replace
+                  source_labels: [__meta_kubernetes_namespace]
+                  target_label: namespace
+                - action: replace
+                  source_labels: [__meta_kubernetes_pod_name]
+                  target_label: pod
+                - action: replace
+                  source_labels: [__meta_kubernetes_pod_container_name]
+                  target_label: container
+                - action: replace
+                  replacement: /var/log/pods/*$1/*.log
+                  separator: /
+                  source_labels:
+                  - __meta_kubernetes_pod_uid
+                  - __meta_kubernetes_pod_container_name
+                  target_label: __path__
+                  
+            # Samla systemloggar från noderna
+            - job_name: kubernetes-node-logs
+              static_configs:
+                - targets: [localhost]
+                  labels:
+                    job: node-logs
+                    __path__: /var/log/syslog
+              pipeline_stages:
+                - match:
+                    selector: '{job="node-logs"}'
+                    stages:
+                      - regex:
+                          expression: '(?P<timestamp>\w+\s+\d+\s+\d+:\d+:\d+)\s+(?P<host>[\w\-\.]+)\s+(?P<app>[\w\-\.]+)(?:\[(?P<pid>\d+)\])?:\s+(?P<message>.*)'
+                      - labels:
+                          host:
+                          app:
+                          pid:
+                          
+            # Samla loggar från specifika applikationer (exempel: nginx)
+            - job_name: kubernetes-pods-app-nginx
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - action: keep
+                  source_labels: [__meta_kubernetes_pod_label_app]
+                  regex: nginx
                 - action: replace
                   source_labels: [__meta_kubernetes_pod_node_name]
                   target_label: node_name
