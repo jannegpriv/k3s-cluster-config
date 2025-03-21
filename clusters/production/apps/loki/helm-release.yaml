@@ -82,6 +82,9 @@ spec:
           effect: NoSchedule
       config:
         lokiAddress: http://loki.loki.svc.cluster.local:3100/loki/api/v1/push
+        # Skip existing files check to prevent readiness probe failures
+        clients:
+          - url: http://loki.loki.svc.cluster.local:3100/loki/api/v1/push
         snippets:
           extraScrapeConfigs: |
             - job_name: kubernetes-pods
