@@ -5,7 +5,8 @@ metadata:
   namespace: loki
 spec:
   interval: 5m
-  timeout: 15m
+  # Lägg till ökad timeout
+  timeout: 30m
   chart:
     spec:
       chart: loki-stack
@@ -48,8 +49,42 @@ spec:
                 values:
                 - "true"
       
-      # Simplified Loki configuration
-      config: {}
+      # Loki configuration
+      config:
+        auth_enabled: false
+        server:
+          http_listen_port: 3100
+        schema_config:
+          configs:
+            - from: "2020-10-24"  # Enkel datum-sträng med citattecken
+              store: tsdb
+              object_store: filesystem
+              schema: v13
+              index:
+                prefix: index_
+                period: 24h
+        storage_config:
+          filesystem:
+            directory: /data/loki/chunks
+        limits_config:
+          enforce_metric_name: false
+          reject_old_samples: true
+          reject_old_samples_max_age: 168h
+          ingestion_rate_mb: 8
+          ingestion_burst_size_mb: 16
+          max_entries_limit_per_query: 5000
+          max_query_parallelism: 8
+          # query_timeout borttagen för att undvika valideringsfel
+        ingester:
+          lifecycler:
+            address: 127.0.0.1
+            ring:
+              kvstore:
+                store: inmemory
+              replication_factor: 1
+            final_sleep: 0s
+          chunk_idle_period: 5m
+          chunk_retain_period: 30s
     
     # Promtail configuration
     promtail:
@@ -61,8 +96,7 @@ spec:
         limits:
           cpu: 200m
           memory: 256Mi
-      # Disable readiness probe completely to avoid timeout issues
-      readinessProbe: null
+      
       # Tolerations för att köra på alla noder, inklusive master/control-plane
       tolerations:
         - key: node-role.kubernetes.io/control-plane
@@ -71,14 +105,48 @@ spec:
         - key: node-role.kubernetes.io/master
           operator: Exists
           effect: NoSchedule
+          
+      # SecurityContext för att ge rätt behörigheter
+      securityContext:
+        privileged: true
+        runAsUser: 0  # Kör som root
+        
+      # Lägg till readiness probe med längre timeout
+      readinessProbe:
+        failureThreshold: 5
+        httpGet:
+          path: /ready
+          port: http-metrics
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      
+      # Volymmontering för loggåtkomst
+      extraVolumes:
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: varlibdockercontainers
+          hostPath:
+            path: /var/lib/docker/containers
+        - name: varlogpods
+          hostPath:
+            path: /var/log/pods
+      
+      extraVolumeMounts:
+        - name: varlog
+          mountPath: /var/log
+          readOnly: true
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: varlogpods
+          mountPath: /var/log/pods
+          readOnly: true
+          
       config:
         lokiAddress: http://loki.loki.svc.cluster.local:3100/loki/api/v1/push
-        # Configure positions file and skip existing files check
-        positions:
-          filename: /run/promtail/positions.yaml
-        scrapeConfig:
-          # Skip checking for existing files on startup to avoid readiness probe failures
-          skipExistingFilesCheck: true
         snippets:
           extraScrapeConfigs: |
             - job_name: kubernetes-pods
@@ -105,6 +173,13 @@ spec:
                 - action: replace
                   source_labels: [__meta_kubernetes_pod_container_name]
                   target_label: container
+                - action: replace
+                  replacement: /var/log/pods/*$1/*.log
+                  separator: /
+                  source_labels:
+                  - __meta_kubernetes_pod_uid
+                  - __meta_kubernetes_pod_container_name
+                  target_label: __path__
     
     # Aktivera Loki dashboards för att användas med extern Grafana
     grafana:
