@@ -96,6 +96,10 @@ spec:
         limits:
           cpu: 200m
           memory: 256Mi
+      # Readiness probe configuration with increased timeout
+      readinessProbe:
+        failureThreshold: 30
+        initialDelaySeconds: 60
       # Tolerations för att köra på alla noder, inklusive master/control-plane
       tolerations:
         - key: node-role.kubernetes.io/control-plane
