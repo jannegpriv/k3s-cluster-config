@@ -19,6 +19,7 @@ resources:
   - alertmanager-config.yaml
   - k3s-silence-rules.yaml
   - alertmanager-config-configmap.yaml
+  - ../loki/grafana-integration
   - k3s-service-monitor.yaml
   - alertmanager-ingress.yaml
   - alertmanager-inhibit-rules.yaml

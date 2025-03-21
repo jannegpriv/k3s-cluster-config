@@ -5,4 +5,5 @@ resources:
   - namespace.yaml
   - helm-release.yaml
   - loki-ingress.yaml
-  - grafana-integration
+
+# Grafana-integration hanteras separat för att den ska hamna i monitoring-namnrymden
