@@ -15,19 +15,8 @@ spec:
         namespace: flux-system
       interval: 1m
   values:
-    # Loki configuration
     loki:
-      # Enable persistence using PVCs
-      persistence:
-        enabled: true
-        storageClassName: rook-ceph-block
-        size: 10Gi
-      
-      # Configure service
-      service:
-        port: 3100
-      
-      # Configure resources
+      # Resource limits
       resources:
         requests:
           cpu: 300m
@@ -36,7 +25,13 @@ spec:
           cpu: 600m
           memory: 1Gi
       
-      # Configure node affinity to avoid master nodes
+      # Persistent storage
+      persistence:
+        enabled: true
+        storageClassName: rook-ceph-block
+        size: 10Gi
+      
+      # Node affinity to keep off master nodes
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -52,24 +47,14 @@ spec:
                 values:
                 - "true"
       
-      # Configure Loki with a simplified config
+      # Loki configuration
       config:
         auth_enabled: false
         server:
           http_listen_port: 3100
-        ingester:
-          lifecycler:
-            address: 127.0.0.1
-            ring:
-              kvstore:
-                store: inmemory
-              replication_factor: 1
-            final_sleep: 0s
-          chunk_idle_period: 5m
-          chunk_retain_period: 30s
         schema_config:
           configs:
-            - from: 2020-10-24
+            - from: "2020-10-24T00:00:00Z"   # Korrekt ISO8601 format med citattecken
               store: tsdb
               object_store: filesystem
               schema: v13
@@ -87,8 +72,19 @@ spec:
           ingestion_burst_size_mb: 16
           max_entries_limit_per_query: 5000
           max_query_parallelism: 8
+          # query_timeout borttagen för att undvika valideringsfel
+        ingester:
+          lifecycler:
+            address: 127.0.0.1
+            ring:
+              kvstore:
+                store: inmemory
+              replication_factor: 1
+            final_sleep: 0s
+          chunk_idle_period: 5m
+          chunk_retain_period: 30s
     
-    # Promtail configuration for log collection
+    # Promtail configuration
     promtail:
       enabled: true
       resources:
@@ -98,6 +94,14 @@ spec:
         limits:
           cpu: 200m
           memory: 256Mi
+      # Tolerations för att köra på alla noder, inklusive master/control-plane
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
       config:
         lokiAddress: http://loki.loki.svc.cluster.local:3100/loki/api/v1/push
         snippets:
@@ -127,6 +131,22 @@ spec:
                   source_labels: [__meta_kubernetes_pod_container_name]
                   target_label: container
     
-    # Disable bundled Grafana as we already have one
+    # Aktivera Loki dashboards för att användas med extern Grafana
     grafana:
       enabled: false
+      sidecar:
+        dashboards:
+          enabled: true
+          label: grafana_dashboard
+          labelValue: "1"
+          searchNamespace: loki
+    
+    # Aktivera dashboards
+    dashboards:
+      config:
+        dashboards:
+          enabled: true
+          label: grafana_dashboard
+          labelValue: "1"
+          annotations: {}
+          namespace: loki
