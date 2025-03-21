@@ -47,21 +47,26 @@ spec:
                 values:
                 - "true"
       
-      # Loki configuration
+      # Loki configuration - simplified for compatibility
       config:
         auth_enabled: false
         server:
           http_listen_port: 3100
         schema_config:
           configs:
-            - from: "2020-10-24"  # Enkel datum-sträng utan tid
-              store: tsdb
+            - from: 2020-10-24
+              store: boltdb-shipper
               object_store: filesystem
-              schema: v12
+              schema: v11
               index:
                 prefix: index_
                 period: 24h
         storage_config:
+          boltdb_shipper:
+            active_index_directory: /data/loki/boltdb-shipper-active
+            cache_location: /data/loki/boltdb-shipper-cache
+            cache_ttl: 24h
+            shared_store: filesystem
           filesystem:
             directory: /data/loki/chunks
         limits_config:
@@ -72,15 +77,12 @@ spec:
           ingestion_burst_size_mb: 16
           max_entries_limit_per_query: 5000
           max_query_parallelism: 8
-          # query_timeout borttagen för att undvika valideringsfel
         ingester:
           lifecycler:
-            address: 127.0.0.1
             ring:
               kvstore:
                 store: inmemory
               replication_factor: 1
-            final_sleep: 0s
           chunk_idle_period: 5m
           chunk_retain_period: 30s
     
