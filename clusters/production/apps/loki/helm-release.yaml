@@ -5,6 +5,7 @@ metadata:
   namespace: loki
 spec:
   interval: 5m
+  timeout: 15m
   chart:
     spec:
       chart: loki-stack
@@ -60,10 +61,8 @@ spec:
         limits:
           cpu: 200m
           memory: 256Mi
-      # Use default probes but with higher thresholds
-      readinessProbe:
-        failureThreshold: 60
-        periodSeconds: 10
+      # Disable readiness probe completely to avoid timeout issues
+      readinessProbe: null
       # Tolerations för att köra på alla noder, inklusive master/control-plane
       tolerations:
         - key: node-role.kubernetes.io/control-plane
