@@ -57,7 +57,7 @@ spec:
             - from: "2020-10-24"  # Enkel datum-sträng utan tid
               store: tsdb
               object_store: filesystem
-              schema: v13
+              schema: v12
               index:
                 prefix: index_
                 period: 24h
