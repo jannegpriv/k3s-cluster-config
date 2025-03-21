@@ -60,18 +60,10 @@ spec:
         limits:
           cpu: 200m
           memory: 256Mi
-      # Disable readiness probe to prevent pods from failing when no logs are found initially
-      readinessProbe: null
-      # Set livenessProbe to ensure pods are considered alive
-      livenessProbe:
-        httpGet:
-          path: /ready
-          port: http-metrics
-        initialDelaySeconds: 10
-        timeoutSeconds: 1
+      # Use default probes but with higher thresholds
+      readinessProbe:
+        failureThreshold: 60
         periodSeconds: 10
-        successThreshold: 1
-        failureThreshold: 5
       # Tolerations för att köra på alla noder, inklusive master/control-plane
       tolerations:
         - key: node-role.kubernetes.io/control-plane
@@ -82,9 +74,12 @@ spec:
           effect: NoSchedule
       config:
         lokiAddress: http://loki.loki.svc.cluster.local:3100/loki/api/v1/push
-        # Skip existing files check to prevent readiness probe failures
-        clients:
-          - url: http://loki.loki.svc.cluster.local:3100/loki/api/v1/push
+        # Configure positions file and skip existing files check
+        positions:
+          filename: /run/promtail/positions.yaml
+        scrapeConfig:
+          # Skip checking for existing files on startup to avoid readiness probe failures
+          skipExistingFilesCheck: true
         snippets:
           extraScrapeConfigs: |
             - job_name: kubernetes-pods
