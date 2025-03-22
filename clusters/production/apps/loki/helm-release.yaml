@@ -226,7 +226,7 @@ spec:
                   target_label: logfile
                   replacement: openhab
                 - action: replace
-                  replacement: /var/lib/kubelet/pods/*$1/volumes/kubernetes.io~persistentvolumeclaim/openhab-production-userdata-claim/logs/openhab.log*
+                  replacement: /var/lib/kubelet/pods/*$1/volumes/kubernetes.io~persistentvolumeclaim/openhab-production-userdata-claim/openhab/userdata/logs/openhab.log*
                   separator: /
                   source_labels:
                   - __meta_kubernetes_pod_uid
@@ -265,7 +265,7 @@ spec:
                   target_label: logfile
                   replacement: events
                 - action: replace
-                  replacement: /var/lib/kubelet/pods/*$1/volumes/kubernetes.io~persistentvolumeclaim/openhab-production-userdata-claim/logs/events.log*
+                  replacement: /var/lib/kubelet/pods/*$1/volumes/kubernetes.io~persistentvolumeclaim/openhab-production-userdata-claim/openhab/userdata/logs/events.log*
                   separator: /
                   source_labels:
                   - __meta_kubernetes_pod_uid
@@ -292,7 +292,7 @@ spec:
                   source_labels: [__meta_kubernetes_pod_container_name]
                   target_label: container
                 - action: replace
-                  replacement: /var/lib/kubelet/pods/*$1/volumes/kubernetes.io~persistentvolumeclaim/openhab-production-userdata-claim/logs/update.log|/var/lib/kubelet/pods/*$1/volumes/kubernetes.io~persistentvolumeclaim/openhab-production-userdata-claim/logs/audit.log
+                  replacement: /var/lib/kubelet/pods/*$1/volumes/kubernetes.io~persistentvolumeclaim/openhab-production-userdata-claim/openhab/userdata/logs/update.log|/var/lib/kubelet/pods/*$1/volumes/kubernetes.io~persistentvolumeclaim/openhab-production-userdata-claim/openhab/userdata/logs/audit.log
                   separator: /
                   source_labels:
                   - __meta_kubernetes_pod_uid
