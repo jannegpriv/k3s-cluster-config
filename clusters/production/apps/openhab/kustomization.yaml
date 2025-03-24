@@ -10,6 +10,7 @@ resources:
   - openhab-middleware.yaml
   - backup-cronjob.yaml
   - backup-rbac.yaml
+  - promtail-sidecar-configmap.yaml
 
 configMapGenerator:
   - name: openhab-backup-script

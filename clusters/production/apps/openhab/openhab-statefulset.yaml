@@ -79,6 +79,33 @@ spec:
         - name: openhab-karaf
           mountPath: /openhab/.karaf
           readOnly: false
+      - name: promtail
+        image: grafana/promtail:2.9.2
+        imagePullPolicy: IfNotPresent
+        args:
+        - -config.file=/etc/promtail/promtail.yaml
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        ports:
+        - containerPort: 9080
+          name: http-metrics
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+        volumeMounts:
+        - name: promtail-config
+          mountPath: /etc/promtail
+        - name: openhab-userdata
+          mountPath: /logs
+          subPath: logs
+          readOnly: true
       volumes:
       - name: etc-localtime
         hostPath:
@@ -98,4 +125,7 @@ spec:
       - name: openhab-karaf
         persistentVolumeClaim:
           claimName: openhab-production-karaf-claim
+      - name: promtail-config
+        configMap:
+          name: promtail-sidecar-config
       terminationGracePeriodSeconds: 300

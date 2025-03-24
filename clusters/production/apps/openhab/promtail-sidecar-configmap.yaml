@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: promtail-sidecar-config
+  namespace: openhab
+data:
+  promtail.yaml: |
+    server:
+      http_listen_port: 9080
+      grpc_listen_port: 0
+
+    positions:
+      filename: /tmp/positions.yaml
+
+    clients:
+      - url: http://loki.loki.svc.cluster.local:3100/loki/api/v1/push
+
+    scrape_configs:
+      - job_name: openhab-logs
+        static_configs:
+          - targets:
+              - localhost
+            labels:
+              job: openhab-logs
+              namespace: openhab
+              pod: ${POD_NAME}
+              container: openhab432
+              __path__: /logs/openhab.log*
+        pipeline_stages:
+          - regex:
+              expression: '(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}) \[(?P<level>[A-Z]+)\] \[(?P<component>.*?)\] - (?P<message>.*)'
+          - labels:
+              level:
+              component:
+
+      - job_name: openhab-events
+        static_configs:
+          - targets:
+              - localhost
+            labels:
+              job: openhab-events
+              namespace: openhab
+              pod: ${POD_NAME}
+              container: openhab432
+              logfile: events
+              __path__: /logs/events.log*
+
+      - job_name: openhab-other
+        static_configs:
+          - targets:
+              - localhost
+            labels:
+              job: openhab-other
+              namespace: openhab
+              pod: ${POD_NAME}
+              container: openhab432
+              __path__: /logs/update.log,/logs/audit.log
