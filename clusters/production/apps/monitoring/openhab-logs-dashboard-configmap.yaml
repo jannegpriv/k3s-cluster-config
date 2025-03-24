@@ -279,7 +279,7 @@ data:
                 "uid": "loki"
               },
               "editorMode": "code",
-              "expr": "{namespace=\"openhab\", job=\"openhab-logs\"} | regexp \"org\\.openhab\\.binding\\.(?P<binding>[^.]+)\" | count by (binding) | sort | limit 10",
+              "expr": "{namespace=\"openhab\", job=\"openhab-logs\"} | regexp \"org\\.openhab\\.binding\\.(?P<binding>[^: .]+)\" | count by (binding) | sort | limit 10",
               "legendFormat": "{{binding}}",
               "queryType": "instant",
               "refId": "A"
@@ -377,7 +377,7 @@ data:
                 "uid": "loki"
               },
               "editorMode": "code",
-              "expr": "sum by(binding) (count_over_time({namespace=\"openhab\", job=\"openhab-logs\", level=\"ERROR\"} | regexp \"org\\.openhab\\.binding\\.(?P<binding>[^.]+)\"[5m]))",
+              "expr": "sum by(binding) (count_over_time({namespace=\"openhab\", job=\"openhab-logs\", level=\"ERROR\"} | regexp \"org\\.openhab\\.binding\\.(?P<binding>[^: .]+)\"[5m]))",
               "legendFormat": "{{binding}}",
               "queryType": "range",
               "refId": "A"
@@ -473,7 +473,7 @@ data:
                 "uid": "loki"
               },
               "editorMode": "code",
-              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=\"ERROR\"} | regexp \"org\\.openhab\\.binding\\.(?P<binding>[^.]+)\" | count by (binding, message) | sort | limit 10",
+              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=\"ERROR\"} | regexp \"org\\.openhab\\.binding\\.(?P<binding>[^: .]+)\" | count by (binding, message) | sort | limit 10",
               "legendFormat": "",
               "queryType": "instant",
               "refId": "A"
