@@ -24,6 +24,7 @@ resources:
   - alertmanager-ingress.yaml
   - alertmanager-inhibit-rules.yaml
   - openhab-dashboard-configmap.yaml
+  - openhab-logs-dashboard-configmap.yaml
   - maintenance-mode-rule.yaml
   - node-specific-memory-alerts.yaml
   - openhab-node-silence.yaml
