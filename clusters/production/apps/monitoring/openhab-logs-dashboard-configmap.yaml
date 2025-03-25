@@ -518,22 +518,22 @@ data:
       "templating": {
         "list": [
           {
+            "allValue": ".*",
             "current": {
               "selected": true,
               "text": "ALL",
               "value": ".*"
             },
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "definition": "",
             "hide": 0,
-            "includeAll": false,
+            "includeAll": true,
             "label": "Loggnivå",
             "multi": false,
             "name": "log_level",
-            "query": "",
-            "queryValue": "",
-            "refresh": 1,
-            "regex": "",
-            "skipUrlSync": false,
-            "type": "custom",
             "options": [
               {
                 "selected": true,
@@ -566,8 +566,10 @@ data:
                 "value": "TRACE"
               }
             ],
-            "query": "DEBUG,INFO,WARN,ERROR,TRACE",
+            "query": ".*,DEBUG,INFO,WARN,ERROR,TRACE",
             "queryValue": "",
+            "refresh": 1,
+            "regex": "",
             "skipUrlSync": false,
             "type": "custom"
           }
