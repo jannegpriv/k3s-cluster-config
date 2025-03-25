@@ -519,8 +519,8 @@ data:
         "list": [
           {
             "current": {
-              "selected": false,
-              "text": "All",
+              "selected": true,
+              "text": "ALL",
               "value": ".*"
             },
             "hide": 0,
@@ -528,7 +528,7 @@ data:
             "label": "Loggnivå",
             "multi": false,
             "name": "log_level",
-            "query": ".*|DEBUG|INFO|WARN|ERROR|TRACE",
+            "query": "",
             "queryValue": "",
             "refresh": 1,
             "regex": "",
@@ -537,8 +537,8 @@ data:
             "options": [
               {
                 "selected": true,
-                "text": "All",
-                "value": "$__all"
+                "text": "ALL",
+                "value": ".*"
               },
               {
                 "selected": false,
