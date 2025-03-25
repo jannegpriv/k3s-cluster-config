@@ -37,7 +37,7 @@ data:
             "uid": "loki"
           },
           "gridPos": {
-            "h": 8,
+            "h": 4,
             "w": 24,
             "x": 0,
             "y": 0
@@ -49,7 +49,7 @@ data:
               "showLineNumbers": false,
               "showMiniMap": false
             },
-            "content": "# openHAB Logs Dashboard\n\nDenna dashboard visar loggdata från openHAB med fokus på bindings och systemhälsa.\n\n## Paneler\n- **Loggvolym per nivå**: Visar antal loggar per nivå över tid\n- **Loggar per binding**: Visar antal loggar genererade av varje binding\n- **Topplista över felmeddelanden**: Visar de vanligaste felmeddelandena\n- **Senaste fel**: Visar de senaste felmeddelandena i realtid\n\n## Användning\nAnvänd tidsväljaren överst till höger för att justera tidsperioden för alla paneler.",
+            "content": "# openHAB Logs Dashboard\n\nDenna dashboard visar loggdata från openHAB med fokus på loggnivåer och Java-undantag.\n\n## Användning\n- Använd tidsväljaren överst till höger för att justera tidsperioden för alla paneler\n- Välj en loggnivå i variabelväljaren överst för att filtrera alla paneler efter den nivån\n- Använd panelerna för att övervaka loggvolym, Java-undantag och senaste loggar",
             "mode": "markdown"
           },
           "pluginVersion": "10.2.0",
@@ -174,14 +174,29 @@ data:
                     }
                   }
                 ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "TRACE"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
               }
             ]
           },
           "gridPos": {
             "h": 8,
-            "w": 12,
+            "w": 24,
             "x": 0,
-            "y": 8
+            "y": 4
           },
           "id": 2,
           "options": {
@@ -206,7 +221,7 @@ data:
                 "uid": "loki"
               },
               "editorMode": "code",
-              "expr": "sum by(level) (count_over_time({namespace=\"openhab\", job=\"openhab-logs\"}[5m]))",
+              "expr": "sum by(level) (count_over_time({namespace=\"openhab\", job=\"openhab-logs\"}[$__interval]))",
               "legendFormat": "{{level}}",
               "queryType": "range",
               "refId": "A"
@@ -220,80 +235,7 @@ data:
             "type": "loki",
             "uid": "loki"
           },
-          "description": "Visar antal loggar genererade av varje binding",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                }
-              },
-              "mappings": []
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 8
-          },
-          "id": 3,
-          "options": {
-            "displayLabels": [
-              "name",
-              "value"
-            ],
-            "legend": {
-              "displayMode": "table",
-              "placement": "right",
-              "showLegend": true,
-              "values": [
-                "value",
-                "percent"
-              ]
-            },
-            "pieType": "pie",
-            "reduceOptions": {
-              "calcs": [
-                "sum"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "pluginVersion": "10.2.0",
-          "targets": [
-            {
-              "datasource": {
-                "type": "loki",
-                "uid": "loki"
-              },
-              "editorMode": "code",
-              "expr": "{namespace=\"openhab\", job=\"openhab-logs\"} | regexp \"org\\.openhab\\.binding\\.(?P<binding>[^: .]+)\" | count by (binding) | sort | limit 10",
-              "legendFormat": "{{binding}}",
-              "queryType": "instant",
-              "refId": "A"
-            }
-          ],
-          "title": "Loggar per binding (Top 10)",
-          "type": "piechart"
-        },
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "description": "Visar antal fel per binding över tid",
+          "description": "Visar antal Java-undantag över tid",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -352,9 +294,9 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 16
+            "y": 12
           },
-          "id": 4,
+          "id": 3,
           "options": {
             "legend": {
               "calcs": [
@@ -377,13 +319,13 @@ data:
                 "uid": "loki"
               },
               "editorMode": "code",
-              "expr": "sum by(binding) (count_over_time({namespace=\"openhab\", job=\"openhab-logs\", level=\"ERROR\"} | regexp \"org\\.openhab\\.binding\\.(?P<binding>[^: .]+)\"[5m]))",
-              "legendFormat": "{{binding}}",
+              "expr": "count_over_time({namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"} |= \"Exception\" [$__interval])",
+              "legendFormat": "Exceptions",
               "queryType": "range",
               "refId": "A"
             }
           ],
-          "title": "Fel per binding över tid",
+          "title": "Java-undantag över tid",
           "type": "timeseries"
         },
         {
@@ -391,7 +333,7 @@ data:
             "type": "loki",
             "uid": "loki"
           },
-          "description": "Visar de vanligaste felmeddelandena",
+          "description": "Visar de vanligaste Java-undantagen",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -431,18 +373,6 @@ data:
                     "value": 100
                   }
                 ]
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "Binding"
-                },
-                "properties": [
-                  {
-                    "id": "custom.width",
-                    "value": 150
-                  }
-                ]
               }
             ]
           },
@@ -450,9 +380,9 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 16
+            "y": 12
           },
-          "id": 5,
+          "id": 4,
           "options": {
             "cellHeight": "sm",
             "footer": {
@@ -473,27 +403,25 @@ data:
                 "uid": "loki"
               },
               "editorMode": "code",
-              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=\"ERROR\"} | regexp \"org\\.openhab\\.binding\\.(?P<binding>[^: .]+)\" | count by (binding, message) | sort | limit 10",
+              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"} |= \"Exception\" | regexp \"(?P<exception_type>[a-zA-Z0-9_.]+Exception)\" | count by (exception_type) | sort | limit 10",
               "legendFormat": "",
               "queryType": "instant",
               "refId": "A"
             }
           ],
-          "title": "Vanligaste felmeddelandena per binding",
+          "title": "Vanligaste Java-undantagen",
           "transformations": [
             {
               "id": "organize",
               "options": {
                 "excludeByName": {},
                 "indexByName": {
-                  "binding": 0,
-                  "message": 2,
+                  "exception_type": 0,
                   "Value": 1
                 },
                 "renameByName": {
                   "Value": "Count",
-                  "binding": "Binding",
-                  "message": "Felmeddelande"
+                  "exception_type": "Exception-typ"
                 }
               }
             }
@@ -505,12 +433,51 @@ data:
             "type": "loki",
             "uid": "loki"
           },
-          "description": "Visar de senaste loggarna med ERROR-nivå",
+          "description": "Visar de senaste loggarna med vald nivå",
           "gridPos": {
             "h": 8,
             "w": 24,
             "x": 0,
-            "y": 24
+            "y": 20
+          },
+          "id": 5,
+          "options": {
+            "dedupStrategy": "none",
+            "enableLogDetails": true,
+            "prettifyLogMessage": false,
+            "showCommonLabels": false,
+            "showLabels": false,
+            "showTime": true,
+            "sortOrder": "Descending",
+            "wrapLogMessage": true
+          },
+          "pluginVersion": "10.2.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "loki",
+                "uid": "loki"
+              },
+              "editorMode": "code",
+              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"}",
+              "queryType": "range",
+              "refId": "A"
+            }
+          ],
+          "title": "Senaste loggar",
+          "type": "logs"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "description": "Visar de senaste Java-undantagen",
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 28
           },
           "id": 6,
           "options": {
@@ -531,51 +498,12 @@ data:
                 "uid": "loki"
               },
               "editorMode": "code",
-              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=\"ERROR\"}",
+              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"} |= \"Exception\"",
               "queryType": "range",
               "refId": "A"
             }
           ],
-          "title": "Senaste fel",
-          "type": "logs"
-        },
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "description": "Visar de senaste händelserna från events.log",
-          "gridPos": {
-            "h": 8,
-            "w": 24,
-            "x": 0,
-            "y": 32
-          },
-          "id": 7,
-          "options": {
-            "dedupStrategy": "none",
-            "enableLogDetails": true,
-            "prettifyLogMessage": false,
-            "showCommonLabels": false,
-            "showLabels": false,
-            "showTime": true,
-            "sortOrder": "Descending",
-            "wrapLogMessage": true
-          },
-          "pluginVersion": "10.2.0",
-          "targets": [
-            {
-              "datasource": {
-                "type": "loki",
-                "uid": "loki"
-              },
-              "editorMode": "code",
-              "expr": "{namespace=\"openhab\", job=\"openhab-events\"}",
-              "queryType": "range",
-              "refId": "A"
-            }
-          ],
-          "title": "Senaste händelser",
+          "title": "Senaste Java-undantag",
           "type": "logs"
         }
       ],
@@ -588,7 +516,60 @@ data:
         "monitoring"
       ],
       "templating": {
-        "list": []
+        "list": [
+          {
+            "current": {
+              "selected": true,
+              "text": [
+                "All"
+              ],
+              "value": [
+                "$__all"
+              ]
+            },
+            "hide": 0,
+            "includeAll": true,
+            "label": "Loggnivå",
+            "multi": true,
+            "name": "log_level",
+            "options": [
+              {
+                "selected": true,
+                "text": "All",
+                "value": "$__all"
+              },
+              {
+                "selected": false,
+                "text": "DEBUG",
+                "value": "DEBUG"
+              },
+              {
+                "selected": false,
+                "text": "INFO",
+                "value": "INFO"
+              },
+              {
+                "selected": false,
+                "text": "WARN",
+                "value": "WARN"
+              },
+              {
+                "selected": false,
+                "text": "ERROR",
+                "value": "ERROR"
+              },
+              {
+                "selected": false,
+                "text": "TRACE",
+                "value": "TRACE"
+              }
+            ],
+            "query": "DEBUG,INFO,WARN,ERROR,TRACE",
+            "queryValue": "",
+            "skipUrlSync": false,
+            "type": "custom"
+          }
+        ]
       },
       "time": {
         "from": "now-6h",
