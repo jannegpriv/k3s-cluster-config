@@ -319,8 +319,8 @@ data:
                 "uid": "loki"
               },
               "editorMode": "code",
-              "expr": "count_over_time({namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"} |= \"Exception\" [$__interval])",
-              "legendFormat": "Exceptions",
+              "expr": "sum by(exception_type) (count_over_time({namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"} |~ \"Exception|Error|Throwable\" | pattern `<timestamp> [<level>] [<component>] - <message>` | pattern `<message_part>.*(?P<exception_type>[a-zA-Z0-9_.]+Exception|Error).*` [$__interval]))",
+              "legendFormat": "{{exception_type}}",
               "queryType": "range",
               "refId": "A"
             }
@@ -403,7 +403,7 @@ data:
                 "uid": "loki"
               },
               "editorMode": "code",
-              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"} |= \"Exception\" | regexp \"(?P<exception_type>[a-zA-Z0-9_.]+Exception)\" | count by (exception_type) | sort | limit 10",
+              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"} |~ \"Exception|Error|Throwable\" | pattern `<timestamp> [<level>] [<component>] - <message>` | pattern `<message_part>.*(?P<exception_type>[a-zA-Z0-9_.]+Exception|Error).*` | count by (exception_type) | sort | limit 10",
               "legendFormat": "",
               "queryType": "instant",
               "refId": "A"
@@ -498,7 +498,7 @@ data:
                 "uid": "loki"
               },
               "editorMode": "code",
-              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"} |= \"Exception\"",
+              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"} |~ \"Exception|Error|Throwable\"",
               "queryType": "range",
               "refId": "A"
             }
