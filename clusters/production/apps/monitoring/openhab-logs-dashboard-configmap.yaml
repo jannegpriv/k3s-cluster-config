@@ -403,7 +403,7 @@ data:
                 "uid": "loki"
               },
               "editorMode": "code",
-              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"} |~ \"Exception|Error|Throwable\" | pattern `<timestamp> [<level>] [<component>] - <message>` | regexp `(?s).*?([a-zA-Z0-9_.]+(?:Exception|Error|Throwable)).*` | label_format exception_type=\"$1\" | count by (exception_type) | sort | limit 10",
+              "expr": "{namespace=\"openhab\", job=\"openhab-logs\"} |~ \"Exception|Error|Throwable\" | pattern `<timestamp> [<level>] [<component>] - <message>` | regexp `(?s).*?([a-zA-Z0-9_.]+(?:Exception|Error|Throwable)).*` | label_format exception_type=\"$1\" | count by (exception_type) | sort | limit 10",
               "legendFormat": "",
               "queryType": "instant",
               "refId": "A"
@@ -459,7 +459,7 @@ data:
                 "uid": "loki"
               },
               "editorMode": "code",
-              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"}",
+              "expr": "{namespace=\"openhab\", job=\"openhab-logs\"} | pattern `<timestamp> [<level>] [<component>] - <message>` | level=~\"${log_level:regex}\"",
               "queryType": "range",
               "refId": "A"
             }
@@ -498,7 +498,7 @@ data:
                 "uid": "loki"
               },
               "editorMode": "code",
-              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"} |~ \"Exception|Error|Throwable\"",
+              "expr": "{namespace=\"openhab\", job=\"openhab-logs\"} |~ \"Exception|Error|Throwable\" | pattern `<timestamp> [<level>] [<component>] - <message>` | level=~\"${log_level:regex}\"",
               "queryType": "range",
               "refId": "A"
             }
@@ -519,21 +519,21 @@ data:
         "list": [
           {
             "current": {
-              "selected": true,
-              "text": [
-                "All"
-              ],
-              "value": [
-                "$__all"
-              ]
+              "selected": false,
+              "text": "All",
+              "value": ".*"
             },
             "hide": 0,
-            "includeAll": true,
+            "includeAll": false,
             "label": "Loggnivå",
-            "multi": true,
+            "multi": false,
             "name": "log_level",
+            "query": ".*|DEBUG|INFO|WARN|ERROR|TRACE",
+            "queryValue": "",
             "refresh": 1,
+            "regex": "",
             "skipUrlSync": false,
+            "type": "custom",
             "options": [
               {
                 "selected": true,
