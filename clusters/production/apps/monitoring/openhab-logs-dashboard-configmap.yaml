@@ -403,7 +403,7 @@ data:
                 "uid": "loki"
               },
               "editorMode": "code",
-              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"} |~ \"Exception|Error|Throwable\" | pattern `<timestamp> [<level>] [<component>] - <message>` | pattern `<message_part>.*(?P<exception_type>[a-zA-Z0-9_.]+Exception|Error).*` | count by (exception_type) | sort | limit 10",
+              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"} |~ \"Exception|Error|Throwable\" | pattern `<timestamp> [<level>] [<component>] - <message>` | regexp `(?s).*?([a-zA-Z0-9_.]+(?:Exception|Error|Throwable)).*` | label_format exception_type=\"$1\" | count by (exception_type) | sort | limit 10",
               "legendFormat": "",
               "queryType": "instant",
               "refId": "A"
@@ -532,6 +532,8 @@ data:
             "label": "Loggnivå",
             "multi": true,
             "name": "log_level",
+            "refresh": 1,
+            "skipUrlSync": false,
             "options": [
               {
                 "selected": true,

@@ -23,12 +23,15 @@ data:
             labels:
               job: openhab-logs
               namespace: openhab
-              pod: ${POD_NAME}
+              pod: openhab-production-0
               container: openhab432
               __path__: /logs/openhab.log*
         pipeline_stages:
+          - multiline:
+              firstline: '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}'
+              max_wait_time: 3s
           - regex:
-              expression: '(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}) \[(?P<level>[A-Z]+)\s*\] \[(?P<component>.*?)\] - (?P<message>.*)'
+              expression: '(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}) \[(?P<level>[A-Z]+)\s*\] \[(?P<component>.*?)\] - (?P<message>(?s:.*)*)'
           - labels:
               level:
               component:
@@ -40,7 +43,7 @@ data:
             labels:
               job: openhab-events
               namespace: openhab
-              pod: ${POD_NAME}
+              pod: openhab-production-0
               container: openhab432
               logfile: events
               __path__: /logs/events.log*
@@ -52,6 +55,6 @@ data:
             labels:
               job: openhab-other
               namespace: openhab
-              pod: ${POD_NAME}
+              pod: openhab-production-0
               container: openhab432
               __path__: /logs/update.log,/logs/audit.log
