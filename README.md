@@ -4,6 +4,8 @@ This repository contains Kubernetes configurations for deploying home automation
 
 - OpenHAB - Home automation platform
 - Mosquitto - MQTT message broker
+- Loki - Log aggregation system
+- Promtail - Log collection agent
 
 ## Prerequisites
 
@@ -115,6 +117,18 @@ graph TD
    - Manages TLS for direct access
    - Uses middleware for security and routing
 
+4. **Loki**
+   - Centralized log aggregation system
+   - Stores and indexes logs from all applications
+   - Integrates with Grafana for visualization
+   - Supports LogQL for powerful log querying
+
+5. **Promtail**
+   - Runs as a sidecar container in the openHAB pod
+   - Collects and forwards logs to Loki
+   - Parses log formats using regex patterns
+   - Extracts metadata like log levels and component names
+
 ### Traefik Components
 
 ```mermaid
@@ -164,6 +178,25 @@ OpenHAB can be accessed in two ways:
    - Direct access within local network
    - Bypasses Cloudflare
    - Optional HTTPS available
+
+## Monitoring
+
+### OpenHAB Logs Dashboard
+
+A specialized Grafana dashboard has been created to monitor openHAB logs:
+
+1. **Features**:
+   - Visualizes log volume by log level (ERROR, WARN, INFO, DEBUG, TRACE)
+   - Tracks Java exceptions over time with breakdown by exception type
+   - Shows most common Java exceptions in a table view
+   - Displays recent logs and exceptions in real-time
+   - Supports filtering by log level across all panels
+
+2. **Implementation**:
+   - Uses Loki as the log data source
+   - Promtail sidecar container collects logs from openHAB
+   - LogQL queries extract metadata using regex patterns
+   - Configured via ConfigMap with Grafana dashboard JSON
 
 ## FluxCD Architecture
 
