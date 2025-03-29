@@ -70,10 +70,10 @@ spec:
         resources:
           requests:
             cpu: 200m
-            memory: 512Mi
+            memory: 768Mi
           limits:
             cpu: 800m  # Increased from 500m
-            memory: 1Gi
+            memory: 2Gi  # Increased from 1Gi to prevent OOMKilled
         # Persistent storage configuration
         storageSpec:
           volumeClaimTemplate:
