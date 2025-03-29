@@ -20,3 +20,7 @@ kubeconfig
 # Temporary files
 *.tmp
 *.bak
+
+# Sensitive files
+admin_token_salt.txt
+bitwarden-admin-token.txt

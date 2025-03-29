@@ -12,6 +12,7 @@ spec:
     - port: 8080
       protocol: TCP
       targetPort: 8080
+      nodePort: 30080
       name: openhab-http
     - port: 8443
       protocol: TCP
