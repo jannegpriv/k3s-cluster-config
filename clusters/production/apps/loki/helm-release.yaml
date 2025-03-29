@@ -21,10 +21,10 @@ spec:
       # Resource limits
       resources:
         requests:
-          cpu: 400m
+          cpu: 500m
           memory: 512Mi
         limits:
-          cpu: 1000m
+          cpu: 1500m
           memory: 1Gi
       
       # Persistent storage för långsiktig logglagring
@@ -57,10 +57,10 @@ spec:
       enabled: true
       resources:
         requests:
-          cpu: 150m
+          cpu: 200m
           memory: 128Mi
         limits:
-          cpu: 300m
+          cpu: 500m
           memory: 256Mi
       
       # Tolerations för att köra på alla noder, inklusive master/control-plane
@@ -291,7 +291,8 @@ spec:
                 - action: replace
                   source_labels: [__meta_kubernetes_pod_container_name]
                   target_label: container
-                - action: replace 
+                - action: replace %.
+                
                   replacement: /openhab/userdata/logs/update.log|/openhab/userdata/logs/audit.log
                   separator: /
                   source_labels:
