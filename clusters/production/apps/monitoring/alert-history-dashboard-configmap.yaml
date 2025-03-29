@@ -327,7 +327,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum by(alertname) (ALERTS{alertstate=\"firing\"})",
+              "expr": "sum by(alertname) (ALERTS)",
               "legendFormat": "{{alertname}}",
               "range": true,
               "refId": "A"
@@ -516,7 +516,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "ALERTS{alertstate=\"firing\"}",
+              "expr": "ALERTS or ALERTS{alertstate=\"firing\"}",
               "format": "table",
               "range": true,
               "refId": "A"
@@ -568,52 +568,56 @@ data:
       "templating": {
         "list": [
           {
+            "auto": false,
+            "auto_count": 30,
+            "auto_min": "10s",
             "current": {
               "selected": true,
-              "text": "1h",
-              "value": "1h"
+              "text": ["Last 24 hours"],
+              "value": ["now-24h"]
             },
             "hide": 0,
             "includeAll": false,
             "label": "Tidsperiod",
             "multi": false,
-            "name": "time_range",
+            "name": "timeRange",
             "options": [
               {
+                "selected": false,
+                "text": "Senaste timmen",
+                "value": "now-1h"
+              },
+              {
+                "selected": false,
+                "text": "Senaste 3 timmarna",
+                "value": "now-3h"
+              },
+              {
+                "selected": false,
+                "text": "Senaste 6 timmarna",
+                "value": "now-6h"
+              },
+              {
+                "selected": false,
+                "text": "Senaste 12 timmarna",
+                "value": "now-12h"
+              },
+              {
                 "selected": true,
-                "text": "1h",
-                "value": "1h"
-              },
-              {
-                "selected": false,
-                "text": "3h",
-                "value": "3h"
-              },
-              {
-                "selected": false,
-                "text": "6h",
-                "value": "6h"
-              },
-              {
-                "selected": false,
-                "text": "12h",
-                "value": "12h"
-              },
-              {
-                "selected": false,
-                "text": "24h",
-                "value": "24h"
+                "text": "Senaste 24 timmarna",
+                "value": "now-24h"
               }
             ],
-            "query": "1h,3h,6h,12h,24h",
+            "query": "now-1h,now-3h,now-6h,now-12h,now-24h",
             "queryValue": "",
+            "refresh": 2,
             "skipUrlSync": false,
             "type": "custom"
           }
         ]
       },
       "time": {
-        "from": "now-$time_range",
+        "from": "now-24h",
         "to": "now"
       },
       "timepicker": {
