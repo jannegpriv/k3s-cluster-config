@@ -13,7 +13,7 @@ spec:
       - receiver: "null"
         matchers:
           - name: alertname
-            value: KubeControllerManagerDown|KubeSchedulerDown|KubeProxyDown
+            value: KubeControllerManagerDown|KubeSchedulerDown|KubeProxyDown|K3sServiceDown|ApiServerHighLatency|ApiServerCriticalLatency
             regex: true
         continue: true
       # Silence CPU throttling alerts temporarily while new CPU limits take effect
