@@ -9,3 +9,4 @@ resources:
   - rook-ceph
   - kubeshark
   - loki
+  - uptime-kuma
