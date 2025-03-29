@@ -327,7 +327,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum by(alertname) (ALERTS)",
+              "expr": "sum by(alertname) (ALERTS{severity=~\"$severity\", alertname=~\"$alertname\"})",
               "legendFormat": "{{alertname}}",
               "range": true,
               "refId": "A"
@@ -516,7 +516,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "ALERTS or ALERTS{alertstate=\"firing\"}",
+              "expr": "ALERTS{severity=~\"$severity\", alertname=~\"$alertname\"} or ALERTS{alertstate=\"firing\", severity=~\"$severity\", alertname=~\"$alertname\"}",
               "format": "table",
               "range": true,
               "refId": "A"
@@ -568,51 +568,64 @@ data:
       "templating": {
         "list": [
           {
-            "auto": false,
-            "auto_count": 30,
-            "auto_min": "10s",
             "current": {
               "selected": true,
-              "text": ["Last 24 hours"],
-              "value": ["now-24h"]
+              "text": "All",
+              "value": ["$__all"]
             },
             "hide": 0,
-            "includeAll": false,
-            "label": "Tidsperiod",
-            "multi": false,
-            "name": "timeRange",
+            "includeAll": true,
+            "label": "Severity",
+            "multi": true,
+            "name": "severity",
             "options": [
               {
-                "selected": false,
-                "text": "Senaste timmen",
-                "value": "now-1h"
-              },
-              {
-                "selected": false,
-                "text": "Senaste 3 timmarna",
-                "value": "now-3h"
-              },
-              {
-                "selected": false,
-                "text": "Senaste 6 timmarna",
-                "value": "now-6h"
-              },
-              {
-                "selected": false,
-                "text": "Senaste 12 timmarna",
-                "value": "now-12h"
-              },
-              {
                 "selected": true,
-                "text": "Senaste 24 timmarna",
-                "value": "now-24h"
+                "text": "All",
+                "value": "$__all"
+              },
+              {
+                "selected": false,
+                "text": "critical",
+                "value": "critical"
+              },
+              {
+                "selected": false,
+                "text": "warning",
+                "value": "warning"
+              },
+              {
+                "selected": false,
+                "text": "info",
+                "value": "info"
               }
             ],
-            "query": "now-1h,now-3h,now-6h,now-12h,now-24h",
-            "queryValue": "",
-            "refresh": 2,
+            "query": "critical,warning,info",
             "skipUrlSync": false,
             "type": "custom"
+          },
+          {
+            "current": {
+              "selected": true,
+              "text": "All",
+              "value": ["$__all"]
+            },
+            "definition": "label_values(ALERTS, alertname)",
+            "hide": 0,
+            "includeAll": true,
+            "label": "Alert Name",
+            "multi": true,
+            "name": "alertname",
+            "options": [],
+            "query": {
+              "query": "label_values(ALERTS, alertname)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 2,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 1,
+            "type": "query"
           }
         ]
       },
