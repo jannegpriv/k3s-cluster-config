@@ -4,3 +4,4 @@ resources:
   - prometheus-community.yaml
   - grafana-helm-repository.yaml
   - k8s-at-home-repository.yaml
+  - truecharts-repository.yaml
