@@ -21,10 +21,10 @@ spec:
       # Resource limits
       resources:
         requests:
-          cpu: 300m
+          cpu: 400m
           memory: 512Mi
         limits:
-          cpu: 600m
+          cpu: 1000m
           memory: 1Gi
       
       # Persistent storage för långsiktig logglagring
@@ -57,10 +57,10 @@ spec:
       enabled: true
       resources:
         requests:
-          cpu: 100m
+          cpu: 150m
           memory: 128Mi
         limits:
-          cpu: 200m
+          cpu: 300m
           memory: 256Mi
       
       # Tolerations för att köra på alla noder, inklusive master/control-plane
@@ -202,7 +202,7 @@ spec:
                   - __meta_kubernetes_pod_container_name
                   target_label: __path__
                   
-            # Samla specifika openHAB-loggar från userdata/logs katalogen
+            # Samla specifika openHAB-loggar via Kubernetes pod-loggar
             - job_name: openhab-main-logs
               kubernetes_sd_configs:
                 - role: pod
@@ -226,14 +226,14 @@ spec:
                   target_label: logfile
                   replacement: openhab
                 - action: replace
-                  replacement: /openhab/userdata/logs/openhab.log*
+                  replacement: /var/log/pods/*$1/*/*.log
                   separator: /
                   source_labels:
                   - __meta_kubernetes_pod_uid
                   target_label: __path__
               pipeline_stages:
                 - match:
-                    selector: '{namespace="openhab"}'
+                    selector: '{namespace="openhab", container="openhab432"}'
                     stages:
                       - regex:
                           expression: '(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}) \[(?P<level>[A-Z]+)\] \[(?P<component>.*?)\] - (?P<message>.*)'
@@ -291,7 +291,7 @@ spec:
                 - action: replace
                   source_labels: [__meta_kubernetes_pod_container_name]
                   target_label: container
-                - action: replace
+                - action: replace 
                   replacement: /openhab/userdata/logs/update.log|/openhab/userdata/logs/audit.log
                   separator: /
                   source_labels:

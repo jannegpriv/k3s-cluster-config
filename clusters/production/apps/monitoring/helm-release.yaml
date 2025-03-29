@@ -39,10 +39,10 @@ spec:
         size: 5Gi
       resources:
         requests:
-          cpu: 50m
+          cpu: 100m
           memory: 128Mi
         limits:
-          cpu: 200m  # Increased from 100m
+          cpu: 400m  # Increased from 200m to reduce CPU throttling
           memory: 256Mi
       affinity:
         nodeAffinity:
