@@ -29,10 +29,10 @@ spec:
         resources:
           limits:
             memory: "2000Mi"
-            cpu:    "1.5"
+            cpu:    "2.5"
           requests:
             memory: "1500Mi"
-            cpu:    "0.5"
+            cpu:    "0.8"
         env:  
         - name: EXTRA_JAVA_OPTS
           value: "-Xmx1500m -Duser.timezone=Europe/Stockholm"
