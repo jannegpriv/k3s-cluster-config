@@ -16,6 +16,13 @@ spec:
             value: KubeControllerManagerDown|KubeSchedulerDown|KubeProxyDown
             regex: true
         continue: true
+      # Silence CPU throttling alerts temporarily while new CPU limits take effect
+      - receiver: "null"
+        matchers:
+          - name: alertname
+            value: NodeCPUThrottling
+            regex: false
+        continue: true
       # Route for critical alerts
       - receiver: "critical-alerts"
         matchers:
