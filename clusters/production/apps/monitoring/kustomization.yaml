@@ -19,6 +19,7 @@ resources:
   - alertmanager-config.yaml
   - k3s-silence-rules.yaml
   - alertmanager-config-configmap.yaml
+  - alert-history-dashboard.yaml
   - ../loki/grafana-integration
   - k3s-service-monitor.yaml
   - alertmanager-ingress.yaml
@@ -28,6 +29,7 @@ resources:
   - maintenance-mode-rule.yaml
   - node-specific-memory-alerts.yaml
   - openhab-node-silence.yaml
+  - k3s-ignore-rules.yaml
   - k3s-comprehensive-silence.yaml
 configMapGenerator:
   - name: alertmanager-values

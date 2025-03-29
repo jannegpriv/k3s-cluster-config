@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: k3s-ignore-rules
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+    app: kube-prometheus-stack
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/part-of: kube-prometheus-stack
+spec:
+  groups:
+    - name: k3s-ignore-rules
+      rules:
+        # This rule will override the default Kubernetes control plane alerts
+        # that don't apply to k3s, which embeds these components differently
+        - record: ALERTS
+          expr: ALERTS{alertname!~"KubeSchedulerDown|KubeControllerManagerDown|KubeProxyDown|K3sServiceDown"}
+          labels:
+            k3s_filtered: "false"
