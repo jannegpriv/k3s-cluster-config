@@ -28,3 +28,23 @@ spec:
           annotations:
             summary: "Critical memory usage on openHAB node"
             description: "Node {{ $labels.instance }} memory usage is above 97% for more than 2 minutes. Immediate attention required."
+
+        # Higher threshold for k3s-w-3 (192.168.50.108) running Prometheus, Loki, etc.
+        - alert: PrometheusNodeHighMemoryUsage
+          expr: instance:node_memory_utilisation:ratio{instance="192.168.50.108:9100"} * 100 > 90
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High memory usage on Prometheus node"
+            description: "Node {{ $labels.instance }} memory usage is above 90% for more than 5 minutes. This node runs memory-intensive applications like Prometheus, Loki, and Rook-Ceph OSD."
+            
+        # Critical alert for k3s-w-3
+        - alert: PrometheusNodeCriticalMemoryUsage
+          expr: instance:node_memory_utilisation:ratio{instance="192.168.50.108:9100"} * 100 > 95
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Critical memory usage on Prometheus node"
+            description: "Node {{ $labels.instance }} memory usage is above 95% for more than 2 minutes. Immediate attention required."
