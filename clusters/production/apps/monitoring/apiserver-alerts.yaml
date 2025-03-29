@@ -14,23 +14,23 @@ spec:
       rules:
         - alert: ApiServerHighLatency
           expr: |
-            histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{job="apiserver",verb=~"LIST|WATCH"}[5m])) by (le, verb)) > 5
-          for: 15m  # Increased to reduce noise
+            histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{job="apiserver",verb=~"LIST|WATCH"}[5m])) by (le, verb)) > 10
+          for: 30m  # Increased to reduce noise
           labels:
             severity: warning
           annotations:
             summary: "API server high latency"
-            description: "99th percentile of request latency is above 5 seconds for {{ $labels.verb }} requests. This may indicate k3s CPU pressure."
+            description: "99th percentile of request latency is above 10 seconds for {{ $labels.verb }} requests. This may indicate k3s CPU pressure."
 
         - alert: ApiServerCriticalLatency
           expr: |
-            histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{job="apiserver",verb=~"LIST|WATCH"}[5m])) by (le, verb)) > 15
-          for: 5m  # Increased to ensure it's not a temporary spike
+            histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{job="apiserver",verb=~"LIST|WATCH"}[5m])) by (le, verb)) > 30
+          for: 15m  # Increased to ensure it's not a temporary spike
           labels:
             severity: critical
           annotations:
             summary: "API server critical latency"
-            description: "99th percentile of request latency is above 15 seconds for {{ $labels.verb }} requests. Consider restarting k3s.service."
+            description: "99th percentile of request latency is above 30 seconds for {{ $labels.verb }} requests. Consider restarting k3s.service."
 
         - alert: ApiServerHighErrorRate
           expr: sum(rate(apiserver_request_total{code=~"5.."}[5m])) / sum(rate(apiserver_request_total[5m])) * 100 > 3
