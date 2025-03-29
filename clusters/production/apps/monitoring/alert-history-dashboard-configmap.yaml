@@ -354,7 +354,7 @@ data:
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "description": "List of all current alerts with details",
+          "description": "Lista över alerts från den valda tidsperioden, sorterade med nyaste först",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -363,7 +363,9 @@ data:
               "custom": {
                 "align": "auto",
                 "displayMode": "auto",
-                "inspect": false
+                "filterable": true,
+                "inspect": false,
+                "sortDescending": true
               },
               "mappings": [],
               "thresholds": {
@@ -399,6 +401,32 @@ data:
                   "options": "severity"
                 },
                 "properties": [
+                  {
+                    "id": "custom.displayMode",
+                    "value": "color-background"
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "critical": {
+                            "color": "red",
+                            "index": 0
+                          },
+                          "warning": {
+                            "color": "orange",
+                            "index": 1
+                          },
+                          "info": {
+                            "color": "blue",
+                            "index": 2
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
+                  },
                   {
                     "id": "custom.width",
                     "value": 100
@@ -538,10 +566,54 @@ data:
         "prometheus"
       ],
       "templating": {
-        "list": []
+        "list": [
+          {
+            "current": {
+              "selected": true,
+              "text": "1h",
+              "value": "1h"
+            },
+            "hide": 0,
+            "includeAll": false,
+            "label": "Tidsperiod",
+            "multi": false,
+            "name": "time_range",
+            "options": [
+              {
+                "selected": true,
+                "text": "1h",
+                "value": "1h"
+              },
+              {
+                "selected": false,
+                "text": "3h",
+                "value": "3h"
+              },
+              {
+                "selected": false,
+                "text": "6h",
+                "value": "6h"
+              },
+              {
+                "selected": false,
+                "text": "12h",
+                "value": "12h"
+              },
+              {
+                "selected": false,
+                "text": "24h",
+                "value": "24h"
+              }
+            ],
+            "query": "1h,3h,6h,12h,24h",
+            "queryValue": "",
+            "skipUrlSync": false,
+            "type": "custom"
+          }
+        ]
       },
       "time": {
-        "from": "now-24h",
+        "from": "now-$time_range",
         "to": "now"
       },
       "timepicker": {
