@@ -3,9 +3,6 @@ kind: HelmRelease
 metadata:
   name: loki
   namespace: loki
-  annotations:
-    # Tvinga Flux att uppdatera Helm-releasen
-    reconcile.fluxcd.io/requestedAt: "2025-03-30T12:05:00+02:00"
 spec:
   interval: 5m
   # Lägg till ökad timeout
