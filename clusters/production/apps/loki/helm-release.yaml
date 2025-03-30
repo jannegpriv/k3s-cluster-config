@@ -57,11 +57,11 @@ spec:
       enabled: true
       resources:
         requests:
-          cpu: 200m
-          memory: 128Mi
-        limits:
-          cpu: 500m
+          cpu: 250m
           memory: 256Mi
+        limits:
+          cpu: 750m
+          memory: 512Mi
       
       # Tolerations för att köra på alla noder, inklusive master/control-plane
       tolerations:
@@ -76,11 +76,7 @@ spec:
       securityContext:
         privileged: true
         runAsUser: 0  # Kör som root
-        
-      # Lägg till readiness probe med längre timeout
-      readinessProbe:
-        failureThreshold: 5
-        httpGet:
+         
           path: /ready
           port: http-metrics
         initialDelaySeconds: 10
