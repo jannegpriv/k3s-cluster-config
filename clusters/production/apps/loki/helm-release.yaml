@@ -72,6 +72,17 @@ spec:
           operator: Exists
           effect: NoSchedule
           
+      # Undvik att köra på den överbelastade noden k3s-w-2
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - k3s-w-2
+          
       # SecurityContext för att ge rätt behörigheter
       securityContext:
         privileged: true
