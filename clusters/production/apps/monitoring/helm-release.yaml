@@ -46,18 +46,13 @@ spec:
           memory: 256Mi
       affinity:
         nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            preference:
-              matchExpressions:
-              - key: node-role.kubernetes.io/control-plane
-                operator: NotIn
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
                 values:
-                - "true"
-              - key: node-role.kubernetes.io/master
-                operator: NotIn
-                values:
-                - "true"
+                - k3s-w-3
     
     prometheus:
       ingress:
