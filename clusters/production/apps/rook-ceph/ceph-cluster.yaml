@@ -17,7 +17,15 @@ spec:
     modules:
     - enabled: true
       name: prometheus
-    placement:
+  mon:
+    allowMultiplePerNode: false
+    count: 3
+  skipUpgradeChecks: true
+  storage:
+    useAllDevices: true
+    useAllNodes: true
+  placement:
+    mgr:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
@@ -26,13 +34,6 @@ spec:
               operator: In
               values:
               - k3s-m-1
-  mon:
-    allowMultiplePerNode: false
-    count: 3
-  skipUpgradeChecks: true
-  storage:
-    useAllDevices: true
-    useAllNodes: true
   resources:
     mgr:
       limits:
