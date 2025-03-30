@@ -76,7 +76,10 @@ spec:
       securityContext:
         privileged: true
         runAsUser: 0  # Kör som root
-         
+      
+      # Lägg till readiness probe med längre timeout
+      readinessProbe:
+        httpGet:
           path: /ready
           port: http-metrics
         initialDelaySeconds: 10
