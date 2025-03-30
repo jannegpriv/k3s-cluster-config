@@ -14,7 +14,7 @@ spec:
       rules:
         # This rule will override the default Kubernetes control plane alerts
         # that don't apply to k3s, which embeds these components differently
-        - record: ALERTS
+        - record: ALERTS_K3S_FILTERED
           expr: ALERTS{alertname!~"KubeSchedulerDown|KubeControllerManagerDown|KubeProxyDown|K3sServiceDown"}
           labels:
             k3s_filtered: "false"
