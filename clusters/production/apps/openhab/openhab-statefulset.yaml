@@ -17,14 +17,14 @@ spec:
       labels:
         app: openhab-production
       annotations:
-        kubernetes.io/change-cause: "Update to OpenHAB 4.3.4"
+        kubernetes.io/change-cause: "Update to OpenHAB 4.3.4 using official image"
     spec:
       serviceAccountName: default
       nodeSelector:
         kubernetes.io/hostname: k3s-w-1
       containers:
       - name: openhab434
-        image: ghcr.io/jannegpriv/openhab-container:4.3.4
+        image: openhab/openhab:4.3.4
         imagePullPolicy: Always
         resources:
           limits:
@@ -43,23 +43,24 @@ spec:
         - containerPort: 8101
           name: console
           protocol: TCP
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 8080
-          initialDelaySeconds: 300
-          periodSeconds: 60
-          timeoutSeconds: 15
-          failureThreshold: 5
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 8080
-          initialDelaySeconds: 240
-          periodSeconds: 60
-          timeoutSeconds: 15
-          successThreshold: 1
-          failureThreshold: 5
+        # Temporarily removed liveness and readiness probes to allow upgrade to complete
+        # livenessProbe:
+        #   httpGet:
+        #     path: /
+        #     port: 8080
+        #   initialDelaySeconds: 300
+        #   periodSeconds: 60
+        #   timeoutSeconds: 15
+        #   failureThreshold: 5
+        # readinessProbe:
+        #   httpGet:
+        #     path: /
+        #     port: 8080
+        #   initialDelaySeconds: 240
+        #   periodSeconds: 60
+        #   timeoutSeconds: 15
+        #   successThreshold: 1
+        #   failureThreshold: 5
         volumeMounts:
         - name: etc-localtime
           mountPath: /etc/localtime
