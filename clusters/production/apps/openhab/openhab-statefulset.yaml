@@ -17,14 +17,14 @@ spec:
       labels:
         app: openhab-production
       annotations:
-        kubernetes.io/change-cause: "Update to OpenHAB 4.3.2"
+        kubernetes.io/change-cause: "Update to OpenHAB 4.3.4"
     spec:
       serviceAccountName: default
       nodeSelector:
         kubernetes.io/hostname: k3s-w-1
       containers:
-      - name: openhab432
-        image: ghcr.io/jannegpriv/openhab-container:4.3.2
+      - name: openhab434
+        image: ghcr.io/jannegpriv/openhab-container:4.3.4
         imagePullPolicy: Always
         resources:
           limits:
