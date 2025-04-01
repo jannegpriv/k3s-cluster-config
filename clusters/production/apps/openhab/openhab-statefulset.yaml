@@ -43,24 +43,12 @@ spec:
         - containerPort: 8101
           name: console
           protocol: TCP
-        # Temporarily removed liveness and readiness probes to allow upgrade to complete
-        # livenessProbe:
-        #   httpGet:
-        #     path: /
-        #     port: 8080
-        #   initialDelaySeconds: 300
-        #   periodSeconds: 60
-        #   timeoutSeconds: 15
-        #   failureThreshold: 5
-        # readinessProbe:
-        #   httpGet:
-        #     path: /
-        #     port: 8080
-        #   initialDelaySeconds: 240
-        #   periodSeconds: 60
-        #   timeoutSeconds: 15
-        #   successThreshold: 1
-        #   failureThreshold: 5
+        # Liveness and readiness probes are intentionally omitted for openHAB
+        # This prevents Kubernetes from restarting the container during:
+        # - Long upgrade processes
+        # - Database migrations
+        # - Add-on updates and other maintenance operations
+        # External monitoring is handled by Prometheus/Grafana instead
         volumeMounts:
         - name: etc-localtime
           mountPath: /etc/localtime
