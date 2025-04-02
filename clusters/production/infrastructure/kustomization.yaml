@@ -9,3 +9,4 @@ resources:
   - repositories
   - secrets
   - monitoring/k3s-metrics
+  - monitoring/k3s-components
