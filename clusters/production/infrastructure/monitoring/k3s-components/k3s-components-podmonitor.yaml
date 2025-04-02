@@ -1,0 +1,54 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: k3s-components
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  podMetricsEndpoints:
+  - interval: 30s
+    path: /metrics
+    port: metrics
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true
+  - interval: 30s
+    path: /metrics/scheduler
+    port: metrics
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true
+    metricRelabelings:
+    - action: replace
+      sourceLabels: [__name__]
+      targetLabel: job
+      replacement: kube-scheduler
+  - interval: 30s
+    path: /metrics/controller-manager
+    port: metrics
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true
+    metricRelabelings:
+    - action: replace
+      sourceLabels: [__name__]
+      targetLabel: job
+      replacement: kube-controller-manager
+  - interval: 30s
+    path: /metrics/proxy
+    port: metrics
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true
+    metricRelabelings:
+    - action: replace
+      sourceLabels: [__name__]
+      targetLabel: job
+      replacement: kube-proxy
+  selector:
+    matchLabels:
+      app: k3s
+  namespaceSelector:
+    matchNames:
+    - kube-system

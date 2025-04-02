@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: k3s-metrics
+  namespace: kube-system
+  labels:
+    app: k3s
+spec:
+  hostNetwork: true
+  containers:
+  - name: k3s-metrics
+    image: rancher/k3s:v1.31.5-k3s1
+    command: ["sh", "-c", "sleep infinity"]
+    ports:
+    - name: metrics
+      containerPort: 10250
+      protocol: TCP
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: "true"
+  tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: NoSchedule

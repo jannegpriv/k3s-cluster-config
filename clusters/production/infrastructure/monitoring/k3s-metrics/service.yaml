@@ -8,6 +8,7 @@ metadata:
     k8s-app: kubelet
     release: kube-prometheus-stack
 spec:
+  type: ClusterIP
   ports:
   - name: https
     port: 10250
