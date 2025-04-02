@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: k3s-metrics
+  namespace: kube-system
+  labels:
+    app: k3s
+spec:
+  ports:
+  - name: https
+    port: 10250
+    protocol: TCP
+    targetPort: 10250
+  selector:
+    node-role.kubernetes.io/control-plane: "true"

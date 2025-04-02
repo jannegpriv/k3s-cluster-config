@@ -8,3 +8,4 @@ resources:
   - cloudflare
   - repositories
   - secrets
+  - monitoring/k3s-metrics
