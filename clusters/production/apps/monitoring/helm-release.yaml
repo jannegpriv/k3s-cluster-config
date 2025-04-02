@@ -39,10 +39,10 @@ spec:
         size: 5Gi
       resources:
         requests:
-          cpu: 150m
+          cpu: 300m
           memory: 128Mi
         limits:
-          cpu: 600m  # Increased from 400m to reduce CPU throttling
+          cpu: 800m  # Increased from 600m to reduce CPU throttling
           memory: 256Mi
       affinity:
         nodeAffinity:
@@ -144,19 +144,19 @@ spec:
     prometheusOperator:
       resources:
         requests:
-          cpu: 100m
+          cpu: 200m
           memory: 128Mi
         limits:
-          cpu: 300m
+          cpu: 500m  # Increased from 300m to reduce CPU throttling
           memory: 256Mi
     
     kube-state-metrics:
       resources:
         requests:
-          cpu: 50m
+          cpu: 100m
           memory: 64Mi
         limits:
-          cpu: 200m
+          cpu: 300m  # Increased from 200m to reduce CPU throttling
           memory: 128Mi
     
     nodeExporter:
