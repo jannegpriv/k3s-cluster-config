@@ -5,6 +5,8 @@ metadata:
   namespace: kube-system
   labels:
     app: k3s
+    k8s-app: kubelet
+    release: kube-prometheus-stack
 spec:
   ports:
   - name: https
