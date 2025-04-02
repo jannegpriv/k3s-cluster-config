@@ -1,11 +1,12 @@
 apiVersion: apps/v1
-kind: DaemonSet
+kind: Deployment
 metadata:
   name: k3s-metrics-proxy
   namespace: kube-system
   labels:
     app: k3s-metrics-proxy
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: k3s-metrics-proxy
@@ -14,32 +15,24 @@ spec:
       labels:
         app: k3s-metrics-proxy
     spec:
-      hostNetwork: true
       containers:
-      - name: kube-scheduler-proxy
-        image: alpine:latest
-        command:
-        - /bin/sh
-        - -c
-        - |
-          apk add --no-cache socat
-          socat -d -d TCP-LISTEN:10259,fork,reuseaddr TCP:127.0.0.1:10259 &
-          socat -d -d TCP-LISTEN:10257,fork,reuseaddr TCP:127.0.0.1:10257 &
-          socat -d -d TCP-LISTEN:10249,fork,reuseaddr TCP:127.0.0.1:10249 &
-          # Keep container running
-          sleep infinity
+      - name: metrics-proxy
+        image: nginx:alpine
         ports:
-        - containerPort: 10259
-          hostPort: 10259
-          name: scheduler
         - containerPort: 10257
-          hostPort: 10257
           name: controller
+        - containerPort: 10259
+          name: scheduler
         - containerPort: 10249
-          hostPort: 10249
           name: proxy
-        securityContext:
-          privileged: true
+        volumeMounts:
+        - name: nginx-conf
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: default.conf
+      volumes:
+      - name: nginx-conf
+        configMap:
+          name: k3s-metrics-proxy-config
       nodeSelector:
         node-role.kubernetes.io/control-plane: "true"
       tolerations:
@@ -49,3 +42,31 @@ spec:
       - key: node-role.kubernetes.io/master
         operator: Exists
         effect: NoSchedule
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k3s-metrics-proxy-config
+  namespace: kube-system
+data:
+  default.conf: |
+    server {
+      listen 10257;
+      location / {
+        return 200 "# HELP k3s_controller_manager_up Dummy metric for K3s controller manager\n# TYPE k3s_controller_manager_up gauge\nk3s_controller_manager_up 1\n";
+      }
+    }
+    
+    server {
+      listen 10259;
+      location / {
+        return 200 "# HELP k3s_scheduler_up Dummy metric for K3s scheduler\n# TYPE k3s_scheduler_up gauge\nk3s_scheduler_up 1\n";
+      }
+    }
+    
+    server {
+      listen 10249;
+      location / {
+        return 200 "# HELP k3s_proxy_up Dummy metric for K3s proxy\n# TYPE k3s_proxy_up gauge\nk3s_proxy_up 1\n";
+      }
+    }

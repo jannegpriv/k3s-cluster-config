@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: metrics-test
+  namespace: kube-system
+spec:
+  containers:
+  - name: curl
+    image: curlimages/curl:latest
+    command:
+    - "/bin/sh"
+    - "-c"
+    - "sleep 3600"
+  restartPolicy: Never

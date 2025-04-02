@@ -1,10 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - kube-scheduler-service.yaml
-  - kube-controller-manager-service.yaml
-  - kube-proxy-service.yaml
   - k3s-component-silence-rules.yaml
-  - k3s-component-endpoints.yaml
   - k3s-control-plane-alerts.yaml
   - k3s-metrics-proxy.yaml
+  - k3s-metrics-proxy-service.yaml
