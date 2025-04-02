@@ -167,3 +167,43 @@ spec:
         limits:
           cpu: 50m
           memory: 64Mi
+          
+    # K3s component monitoring configuration
+    kubeControllerManager:
+      endpoints:
+        - 192.168.50.75  # Your k3s-m-1 IP
+      service:
+        port: 10257
+        targetPort: 10257
+      serviceMonitor:
+        https: true
+        insecureSkipVerify: true
+
+    kubeScheduler:
+      endpoints:
+        - 192.168.50.75  # Your k3s-m-1 IP
+      service:
+        port: 10259
+        targetPort: 10259
+      serviceMonitor:
+        https: true
+        insecureSkipVerify: true
+
+    kubeProxy:
+      service:
+        port: 10249
+        targetPort: 10249
+        selector:
+          k8s-app: pushprox-kube-proxy-client
+      serviceMonitor:
+        proxyUrl: http://pushprox-kube-proxy-proxy.kube-system.svc:8080
+        https: false
+        relabelings:
+          - action: replace
+            sourceLabels:
+              - __meta_kubernetes_pod_ip
+            targetLabel: pod_ip
+          - action: replace
+            sourceLabels:
+              - __meta_kubernetes_pod_node_name
+            targetLabel: instance

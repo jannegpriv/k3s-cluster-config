@@ -8,5 +8,5 @@ resources:
   - cloudflare
   - repositories
   - secrets
-  - monitoring/k3s-metrics
-  - monitoring/k3s-components
+  - monitoring/pushprox
+  - k3s
