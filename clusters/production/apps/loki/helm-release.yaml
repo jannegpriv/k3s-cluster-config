@@ -31,7 +31,7 @@ spec:
       persistence:
         enabled: true
         storageClassName: rook-ceph-block
-        size: 10Gi
+        size: 20Gi
       
       # Node affinity to keep off master nodes
       affinity:
@@ -49,8 +49,13 @@ spec:
                 values:
                 - "true"
       
-      # Använd standardkonfigurationen från Helm-diagrammet som fungerade tidigare
-      config: {}
+      # Konfiguration med retention policy för att hantera diskutrymme
+      config:
+        limits_config:
+          retention_period: 168h  # 7 days retention
+        table_manager:
+          retention_deletes_enabled: true
+          retention_period: 168h  # 7 days retention
     
     # Promtail konfiguration för att samla loggar från specifika källor
     promtail:
