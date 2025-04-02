@@ -1,0 +1,35 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: k3s-control-plane-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+  - name: k3s-components
+    rules:
+    - alert: K3sControllerManagerDown
+      expr: absent(up{job="kube-controller-manager"}) == 1
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "K3s Controller Manager is down"
+        description: "K3s Controller Manager has been down for more than 5 minutes."
+    - alert: K3sSchedulerDown
+      expr: absent(up{job="kube-scheduler"}) == 1
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "K3s Scheduler is down"
+        description: "K3s Scheduler has been down for more than 5 minutes."
+    - alert: K3sKubeProxyDown
+      expr: absent(up{job="kube-proxy"}) == 1
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "K3s Kube Proxy is down"
+        description: "K3s Kube Proxy has been down for more than 5 minutes."

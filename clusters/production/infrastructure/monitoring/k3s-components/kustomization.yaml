@@ -5,3 +5,5 @@ resources:
   - kube-controller-manager-service.yaml
   - kube-proxy-service.yaml
   - k3s-component-silence-rules.yaml
+  - k3s-component-endpoints.yaml
+  - k3s-control-plane-alerts.yaml
