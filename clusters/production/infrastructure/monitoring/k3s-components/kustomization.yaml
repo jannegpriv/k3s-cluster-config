@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - kube-scheduler-service.yaml
   - kube-controller-manager-service.yaml
+  - kube-proxy-service.yaml
