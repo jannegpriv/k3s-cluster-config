@@ -4,7 +4,8 @@ metadata:
   name: kube-scheduler-metrics
   namespace: kube-system
   labels:
-    k8s-app: kube-scheduler
+    app: kube-prometheus-stack-kube-scheduler
+    release: kube-prometheus-stack
 spec:
   ports:
   - name: http-metrics

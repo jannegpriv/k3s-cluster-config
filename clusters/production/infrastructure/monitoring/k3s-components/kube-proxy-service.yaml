@@ -4,7 +4,8 @@ metadata:
   name: kube-proxy-metrics
   namespace: kube-system
   labels:
-    k8s-app: kube-proxy
+    app: kube-prometheus-stack-kube-proxy
+    release: kube-prometheus-stack
 spec:
   ports:
   - name: http-metrics
