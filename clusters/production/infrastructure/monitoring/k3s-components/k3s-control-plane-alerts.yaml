@@ -10,7 +10,7 @@ spec:
   - name: k3s-components
     rules:
     - alert: K3sControllerManagerDown
-      expr: absent(up{job="kube-controller-manager"}) == 1
+      expr: absent(up{job="kube-controller-manager"})
       for: 5m
       labels:
         severity: critical
@@ -18,7 +18,7 @@ spec:
         summary: "K3s Controller Manager is down"
         description: "K3s Controller Manager has been down for more than 5 minutes."
     - alert: K3sSchedulerDown
-      expr: absent(up{job="kube-scheduler"}) == 1
+      expr: absent(up{job="kube-scheduler"})
       for: 5m
       labels:
         severity: critical
@@ -26,7 +26,7 @@ spec:
         summary: "K3s Scheduler is down"
         description: "K3s Scheduler has been down for more than 5 minutes."
     - alert: K3sKubeProxyDown
-      expr: absent(up{job="kube-proxy"}) == 1
+      expr: absent(up{job="kube-proxy"})
       for: 5m
       labels:
         severity: critical

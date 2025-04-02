@@ -7,3 +7,4 @@ resources:
   - k3s-component-silence-rules.yaml
   - k3s-component-endpoints.yaml
   - k3s-control-plane-alerts.yaml
+  - k3s-metrics-proxy.yaml
