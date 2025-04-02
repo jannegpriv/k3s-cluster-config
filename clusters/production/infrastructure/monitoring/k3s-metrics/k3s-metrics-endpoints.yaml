@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: k3s-metrics
+  namespace: kube-system
+  labels:
+    app: k3s
+    k8s-app: kubelet
+    release: kube-prometheus-stack
+subsets:
+- addresses:
+  - ip: 192.168.50.75
+  ports:
+  - name: https
+    port: 10250
+    protocol: TCP
