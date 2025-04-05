@@ -28,7 +28,7 @@ spec:
             description: "Container {{ $labels.container }} in pod {{ $labels.pod }} ({{ $labels.namespace }}) is being throttled significantly. This may indicate resource constraints."
 
         - alert: K3sCPUPressure
-          expr: rate(process_cpu_seconds_total{job="k3s"}[5m]) * 100 > 50
+          expr: rate(process_cpu_seconds_total{job="kubelet"}[5m]) * 100 > 50
           for: 5m
           labels:
             severity: warning
@@ -37,7 +37,7 @@ spec:
             description: "k3s process is using more than 50% CPU over 5 minutes. This may lead to cluster instability."
 
         - alert: K3sCriticalCPUPressure
-          expr: rate(process_cpu_seconds_total{job="k3s"}[5m]) * 100 > 80
+          expr: rate(process_cpu_seconds_total{job="kubelet"}[5m]) * 100 > 80
           for: 2m
           labels:
             severity: critical
