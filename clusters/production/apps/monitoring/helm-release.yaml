@@ -142,7 +142,8 @@ spec:
             - alertmanager.local
     
     prometheusOperator:
-      replicas: 1
+     enabled: true
+      replicas: 1 
       resources:
         requests:
           cpu: 200m
