@@ -10,7 +10,7 @@ resources:
   - alertmanager-secret.yaml
   - alertmanager-email-config.yaml
   - alertmanager-crd.yaml
-  #- k3s-alert-rules.yaml
+  - k3s-alert-rules.yaml
   - silence-rules.yaml
   - kubeshark-rules.yaml
   - kubeshark-dashboard-configmap.yaml
