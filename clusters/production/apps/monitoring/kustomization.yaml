@@ -19,8 +19,10 @@ resources:
   - alertmanager-config.yaml
   - k3s-silence-rules.yaml
   - alertmanager-config-configmap.yaml
+  - kube-proxy-target-rules.yaml
   - ../loki/grafana-integration
   - k3s-service-monitor.yaml
+  - k3s-metrics-endpoints.yaml
   - alertmanager-ingress.yaml
   - alertmanager-inhibit-rules.yaml
   - openhab-dashboard-configmap.yaml
@@ -30,6 +32,9 @@ resources:
   - openhab-node-silence.yaml
   - k3s-ignore-rules.yaml
   - k3s-comprehensive-silence.yaml
+  - k3s-endpoints.yaml
+  - k3s-kubelet-servicemonitor.yaml
+  - k3s-servicemonitor.yaml
 configMapGenerator:
   - name: alertmanager-values
     files:

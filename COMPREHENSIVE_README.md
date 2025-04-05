@@ -479,7 +479,7 @@ kubectl create -f /Users/janne/git/k3s-cluster-config/clusters/production/apps/o
 
 #### Bitwarden Backup
 
-Bitwarden backups are also created automatically. The process is similar to OpenHAB.
+Bitwarden backups are also created automatically. The process is similar to 4.3.2.
 
 ### Troubleshooting
 

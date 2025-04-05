@@ -50,13 +50,13 @@ spec:
     - name: K3sAlerts
       rules:
         - alert: K3sServiceDown
-          expr: up{job="k3s"} == 0 or absent(up{job="k3s"} == 1)
+          expr: up{job="kubelet"} == 0 or absent(up{job="kubelet"} == 1)q
           for: 5m
           labels:
             severity: critical
           annotations:
-            summary: "K3s service is down"
-            description: "K3s service has been down for more than 5 minutes."
+            summary: "K3s service is down on control plane"
+            description: "The control plane node (192.168.50.75) appears to be down for more than 5 minutes. This indicates a potential issue with the K3s service."
 
         - alert: ApiServerHighLatency
           expr: histogram_quantile(0.99, sum by(le, verb) (rate(apiserver_request_duration_seconds_bucket{job="apiserver",verb=~"LIST|WATCH"}[5m]))) > 5

@@ -1,0 +1,31 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: k3s-kubelet
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  endpoints:
+  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    port: https-metrics
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true
+    honorLabels: true
+    relabelings:
+    - action: replace
+      targetLabel: instance
+      replacement: "192.168.50.75:10250"
+    - action: replace
+      targetLabel: job
+      replacement: "kubelet"
+    - action: replace
+      targetLabel: node
+      replacement: "k3s-m-1"
+  namespaceSelector:
+    matchNames:
+    - kube-system
+  selector:
+    matchLabels:
+      k8s-app: kubelet
