@@ -99,6 +99,10 @@ spec:
                   operator: NotIn
                   values:
                   - "true"
+                - key: custom-node
+          operator: In
+          values:
+          - "true"  
     
     alertmanager:
       alertmanagerSpec:
