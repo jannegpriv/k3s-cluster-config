@@ -50,7 +50,7 @@ spec:
     - name: K3sAlerts
       rules:
         - alert: K3sServiceDown
-          expr: up{job="kubelet"} == 0 or absent(up{job="kubelet"} == 1)q
+          expr: up{job="kubelet"} == 0 or absent(up{job="kubelet"} == 1)
           for: 5m
           labels:
             severity: critical
@@ -77,7 +77,7 @@ spec:
             description: "99th percentile of request latency is above 15 seconds for {{ $labels.verb }} requests. Consider restarting k3s.service."
 
         - alert: K3sHighCPU
-          expr: rate(process_cpu_seconds_total{job="k3s"}[5m]) * 100 > 80
+          expr: rate(process_cpu_seconds_total{job="kubelet"}[5m]) * 100 > 80
           for: 15m
           labels:
             severity: warning
@@ -86,7 +86,7 @@ spec:
             description: "K3s is using more than 80% CPU for over 15 minutes."
 
         - alert: K3sHighMemory
-          expr: process_resident_memory_bytes{job="k3s"} / (1024 * 1024 * 1024) > 2
+          expr: process_resident_memory_bytes{job="kubelet"} / (1024 * 1024 * 1024) > 2
           for: 15m
           labels:
             severity: warning
