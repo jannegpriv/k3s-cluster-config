@@ -1,0 +1,86 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: k3s-alert-rules
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+    prometheus: kube-prometheus-stack-prometheus
+    app: kube-prometheus-stack
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/part-of: kube-prometheus-stack
+spec:
+  groups:
+    - name: kubernetes-system-controller-manager
+      rules:
+        - alert: KubeControllerManagerDown
+          expr: absent(up{job="kube-controller-manager"} == 1)
+          for: 15m
+          labels:
+            severity: none
+            silent: "true"
+          annotations:
+            description: "This alert is disabled for k3s as the controller manager is embedded"
+            summary: "Expected state - KubeControllerManager is embedded in k3s"
+
+    - name: kubernetes-system-scheduler
+      rules:
+        - alert: KubeSchedulerDown
+          expr: absent(up{job="kube-scheduler"} == 1)
+          for: 15m
+          labels:
+            severity: none
+            silent: "true"
+          annotations:
+            description: "This alert is disabled for k3s as the scheduler is embedded"
+            summary: "Expected state - KubeScheduler is embedded in k3s"
+
+    - name: kubernetes-system-kube-proxy
+      rules:
+        - alert: KubeProxyDown
+          expr: absent(up{job="kube-proxy"} == 1)
+          for: 15m
+          labels:
+            severity: none
+            silent: "true"
+          annotations:
+            description: "This alert is disabled for k3s as kube-proxy is managed differently"
+            summary: "Expected state - KubeProxy is embedded in k3s"
+
+    - name: K3sAlerts
+      rules:
+        - alert: K3sServiceDown
+          expr: up{job="kubelet"} == 0 or absent(up{job="kubelet"} == 1)
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "K3s service is down on control plane"
+            description: "The control plane node (192.168.50.75) appears to be down for more than 5 minutes. This indicates a potential issue with the K3s service."
+       
+        - alert: K3sHighCPU
+          expr: rate(process_cpu_seconds_total{job="kubelet"}[5m]) * 100 > 80
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "K3s high CPU usage"
+            description: "K3s is using more than 80% CPU for over 15 minutes."
+
+        - alert: K3sHighMemory
+          expr: process_resident_memory_bytes{job="kubelet"} / (1024 * 1024 * 1024) > 2
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "K3s high memory usage"
+            description: "K3s is using more than 2GB of memory for over 15 minutes."
+
+        - alert: K3sEtcdHighLatency
+          expr: histogram_quantile(0.99, sum(rate(etcd_request_duration_seconds_bucket[5m])) by (le)) > 1
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "K3s etcd high latency"
+            description: "99th percentile of etcd request latency is above 1 second. This may cause API server performance issues."
