@@ -19,7 +19,6 @@ resources:
   - alertmanager-config.yaml
   - k3s-silence-rules.yaml
   - alertmanager-config-configmap.yaml
-  - kube-proxy-target-rules.yaml
   - ../loki/grafana-integration
   - k3s-service-monitor.yaml
   - k3s-metrics-endpoints.yaml
