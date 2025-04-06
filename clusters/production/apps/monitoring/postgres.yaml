@@ -66,6 +66,15 @@ spec:
           limits:
             memory: 512Mi
             cpu: 500m
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - k3s-w-2
       volumes:
       - name: postgres-data
         persistentVolumeClaim:
