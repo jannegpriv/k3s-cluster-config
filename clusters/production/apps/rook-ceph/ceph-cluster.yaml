@@ -18,7 +18,7 @@ spec:
     - enabled: true
       name: prometheus
   mon:
-    allowMultiplePerNode: false
+    allowMultiplePerNode: true
     count: 3
     volumeClaimTemplate:
       spec:
@@ -42,14 +42,16 @@ spec:
               - k3s-m-1
     mon:
       podAntiAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-        - labelSelector:
-            matchExpressions:
-            - key: app
-              operator: In
-              values:
-              - rook-ceph-mon
-          topologyKey: kubernetes.io/hostname
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - rook-ceph-mon
+            topologyKey: kubernetes.io/hostname
   resources:
     mgr:
       limits:
