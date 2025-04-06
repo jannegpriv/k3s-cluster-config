@@ -1,0 +1,86 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-postgres-secret
+  namespace: monitoring
+type: Opaque
+stringData:
+  POSTGRES_USER: grafana
+  POSTGRES_PASSWORD: grafana-secure-password
+  POSTGRES_DB: grafana
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-postgres-data
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-postgres
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana-postgres
+  template:
+    metadata:
+      labels:
+        app: grafana-postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15.5-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: grafana-postgres-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: grafana-postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: grafana-postgres-secret
+              key: POSTGRES_DB
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            memory: 256Mi
+            cpu: 100m
+          limits:
+            memory: 512Mi
+            cpu: 500m
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: grafana-postgres-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-postgres
+  namespace: monitoring
+spec:
+  selector:
+    app: grafana-postgres
+  ports:
+  - port: 5432
+    targetPort: 5432

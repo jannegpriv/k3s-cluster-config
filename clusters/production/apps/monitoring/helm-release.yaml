@@ -21,15 +21,18 @@ spec:
         ingressClassName: traefik
         hosts:
           - grafana.local
-      # Add this config section for timezone settings and database optimization
+      # Add this config section for timezone settings and database configuration
       grafana.ini:
         default:
           default_timezone: "Europe/Stockholm"
         database:
-          # Optimize SQLite settings to reduce locking issues
-          cache_mode: shared
-          wal: true
-          busy_timeout: 30000
+          # Use PostgreSQL instead of SQLite to eliminate database locking issues
+          type: postgres
+          host: grafana-postgres:5432
+          name: grafana
+          user: grafana
+          password: grafana-secure-password
+          ssl_mode: disable
       sidecar:
         dashboards:
           enabled: true
