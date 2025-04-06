@@ -21,10 +21,15 @@ spec:
         ingressClassName: traefik
         hosts:
           - grafana.local
-      # Add this config section for timezone settings
+      # Add this config section for timezone settings and database optimization
       grafana.ini:
         default:
-          default_timezone: "Europe/Stockholm"    
+          default_timezone: "Europe/Stockholm"
+        database:
+          # Optimize SQLite settings to reduce locking issues
+          cache_mode: shared
+          wal: true
+          busy_timeout: 30000
       sidecar:
         dashboards:
           enabled: true
