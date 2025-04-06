@@ -21,18 +21,32 @@ spec:
         ingressClassName: traefik
         hosts:
           - grafana.local
-      # Add this config section for timezone settings
+      # Add this config section for timezone and database settings
       grafana.ini:
         default:
           default_timezone: "Europe/Stockholm"
-      # Use environment variables for database configuration
-      env:
-        GF_DATABASE_TYPE: postgres
-        GF_DATABASE_HOST: grafana-postgres:5432
-        GF_DATABASE_NAME: grafana
-        GF_DATABASE_USER: grafana
-        GF_DATABASE_PASSWORD: grafana-secure-password
-        GF_DATABASE_SSL_MODE: disable
+        database:
+          type: postgres
+          host: grafana-postgres:5432
+          name: grafana
+          user: grafana
+          password: grafana-secure-password
+          ssl_mode: disable
+      # Add environment variables for database configuration as backup
+      extraEnvFrom: []
+      extraEnv:
+        - name: GF_DATABASE_TYPE
+          value: postgres
+        - name: GF_DATABASE_HOST
+          value: grafana-postgres:5432
+        - name: GF_DATABASE_NAME
+          value: grafana
+        - name: GF_DATABASE_USER
+          value: grafana
+        - name: GF_DATABASE_PASSWORD
+          value: grafana-secure-password
+        - name: GF_DATABASE_SSL_MODE
+          value: disable
       sidecar:
         dashboards:
           enabled: true
