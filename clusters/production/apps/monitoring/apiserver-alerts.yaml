@@ -14,7 +14,7 @@ spec:
       rules:
         - alert: ApiServerHighLatency
           expr: |
-            histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{job="apiserver",verb=~"LIST|WATCH"}[5m])) by (le, verb)) > 10
+            histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{job="apiserver",verb="LIST"}[5m])) by (le, verb)) > 10
           for: 30m  # Increased to reduce noise
           labels:
             severity: warning
@@ -24,7 +24,7 @@ spec:
 
         - alert: ApiServerCriticalLatency
           expr: |
-            histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{job="apiserver",verb=~"LIST|WATCH"}[5m])) by (le, verb)) > 30
+            histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{job="apiserver",verb="LIST"}[5m])) by (le, verb)) > 30
           for: 15m  # Increased to ensure it's not a temporary spike
           labels:
             severity: critical
