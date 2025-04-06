@@ -65,10 +65,10 @@ spec:
         resources:
           requests:
             cpu: 1000m
-            memory: 1Gi  # Increased from 512Mi to prevent OOMKilled
+            memory: 2Gi  # Increased from 1Gi to prevent OOMKilled
           limits:
             cpu: 2000m  # Increased from 1500m to reduce CPU throttling
-            memory: 2Gi  # Increased from 1Gi to prevent OOMKilled
+            memory: 3Gi  # Increased from 2Gi to prevent OOMKilled
         # Persistent storage configuration
         storageSpec:
           volumeClaimTemplate:
@@ -85,24 +85,16 @@ spec:
         evaluationInterval: "90s"  # Increased from 60s to reduce evaluation frequency
         enableAdminAPI: false  # Disable admin API to reduce attack surface
         walCompression: true  # Enable WAL compression to reduce disk I/O
-        # Node affinity to keep off master node
+        # Node affinity to target k3s-w-3 node with custom-node=true label
         affinity:
           nodeAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
               nodeSelectorTerms:
               - matchExpressions:
-                - key: node-role.kubernetes.io/control-plane
-                  operator: NotIn
-                  values:
-                  - "true"
-                - key: node-role.kubernetes.io/master
-                  operator: NotIn
-                  values:
-                  - "true"
                 - key: custom-node
-          operator: In
-          values:
-          - "true"  
+                  operator: In
+                  values:
+                  - "true"
     
     alertmanager:
       alertmanagerSpec:
