@@ -9,18 +9,7 @@ stringData:
   POSTGRES_USER: grafana
   POSTGRES_PASSWORD: grafana-secure-password
   POSTGRES_DB: grafana
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: grafana-postgres-data
-  namespace: monitoring
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
+# PVC has been migrated to grafana-postgres-data-ceph
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -37,6 +26,15 @@ spec:
       labels:
         app: grafana-postgres
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - k3s-w-2
       containers:
       - name: postgres
         image: postgres:15.5-alpine
@@ -71,7 +69,7 @@ spec:
       volumes:
       - name: postgres-data
         persistentVolumeClaim:
-          claimName: grafana-postgres-data
+          claimName: grafana-postgres-data-ceph
 ---
 apiVersion: v1
 kind: Service

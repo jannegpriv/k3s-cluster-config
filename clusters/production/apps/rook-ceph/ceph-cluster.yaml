@@ -20,6 +20,12 @@ spec:
   mon:
     allowMultiplePerNode: false
     count: 3
+    volumeClaimTemplate:
+      spec:
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 10Gi
   skipUpgradeChecks: true
   storage:
     useAllDevices: true
@@ -34,6 +40,16 @@ spec:
               operator: In
               values:
               - k3s-m-1
+    mon:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - rook-ceph-mon
+          topologyKey: kubernetes.io/hostname
   resources:
     mgr:
       limits:

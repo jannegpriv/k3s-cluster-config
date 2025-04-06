@@ -1,0 +1,40 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-postgres-data-ceph
+  namespace: monitoring
+spec:
+  storageClassName: rook-ceph-block
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgres-data-migration
+  namespace: monitoring
+spec:
+  template:
+    spec:
+      containers:
+      - name: data-migration
+        image: busybox
+        command: ["sh", "-c", "cp -av /source/* /destination/ && echo 'Data migration completed successfully'"]
+        volumeMounts:
+        - name: source-data
+          mountPath: /source
+        - name: destination-data
+          mountPath: /destination
+      volumes:
+      - name: source-data
+        persistentVolumeClaim:
+          claimName: grafana-postgres-data
+      - name: destination-data
+        persistentVolumeClaim:
+          claimName: grafana-postgres-data-ceph
+      restartPolicy: Never
+  backoffLimit: 1
