@@ -64,7 +64,7 @@ spec:
         # Resource limits
         resources:
           requests:
-            cpu: 1000m
+            cpu: 500m  # Reduced from 1000m to fit on k3s-w-3 node
             memory: 2Gi  # Increased from 1Gi to prevent OOMKilled
           limits:
             cpu: 2000m  # Increased from 1500m to reduce CPU throttling
