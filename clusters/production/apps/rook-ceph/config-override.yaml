@@ -7,6 +7,13 @@ data:
   config: |
     [mon]
     auth_allow_insecure_global_id_reclaim = true
+    debug_mon = 1/5
+    debug_paxos = 1/5
+    debug_auth = 1/5
     
     [mgr]
     mgr/prometheus/rbd_stats_pools = replicapool
+    debug_mgr = 1/5
+    
+    [osd]
+    debug_osd = 1/5
