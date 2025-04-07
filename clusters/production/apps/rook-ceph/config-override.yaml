@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rook-config-override
+  namespace: rook-ceph
+data:
+  config: |
+    [mon]
+    auth_allow_insecure_global_id_reclaim = true
+    
+    [mgr]
+    mgr/prometheus/rbd_stats_pools = replicapool
