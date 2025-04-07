@@ -1,0 +1,13 @@
+apiVersion: ceph.rook.io/v1
+kind: CephBlockPool
+metadata:
+  name: replicapool
+  namespace: rook-ceph
+spec:
+  failureDomain: osd
+  replicated:
+    requireSafeReplicaSize: true
+    size: 3
+  statusCheck:
+    mirror:
+      disabled: true  # Disable the mirror status check to prevent Prometheus metrics collection issues

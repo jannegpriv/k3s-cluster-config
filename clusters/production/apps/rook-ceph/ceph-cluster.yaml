@@ -13,6 +13,13 @@ spec:
     enabled: true
     ssl: false
   dataDirHostPath: /var/lib/rook
+  cephConfig:
+    global:
+      # Any existing global config would go here
+    mon:
+      auth_allow_insecure_global_id_reclaim: "true"
+    mgr:
+      mgr/prometheus/rbd_stats_pools: "replicapool"
   mgr:
     modules:
     - enabled: true
@@ -63,10 +70,10 @@ spec:
     mon:
       limits:
         cpu: "1000m"
-        memory: "1Gi"
+        memory: "768Mi"
       requests:
-        cpu: "500m"
-        memory: "1Gi"
+        cpu: "300m"
+        memory: "512Mi"
     osd:
       limits:
         cpu: "3"
