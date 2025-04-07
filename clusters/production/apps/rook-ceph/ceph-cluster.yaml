@@ -13,17 +13,19 @@ spec:
     enabled: true
     ssl: false
   dataDirHostPath: /var/lib/rook
+  # Using the proper Rook-Ceph API structure for configuration
   cephConfig:
-    global:
-      dummy_key: ""  # Adding a dummy key to ensure this is a valid object
+    global: {}
     mon:
       auth_allow_insecure_global_id_reclaim: "true"
     mgr:
       mgr/prometheus/rbd_stats_pools: "replicapool"
+  
   mgr:
     modules:
     - enabled: true
       name: prometheus
+  
   mon:
     allowMultiplePerNode: true
     count: 3
