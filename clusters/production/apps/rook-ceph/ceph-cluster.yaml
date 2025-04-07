@@ -15,7 +15,7 @@ spec:
   dataDirHostPath: /var/lib/rook
   cephConfig:
     global:
-      # Any existing global config would go here
+      dummy_key: ""  # Adding a dummy key to ensure this is a valid object
     mon:
       auth_allow_insecure_global_id_reclaim: "true"
     mgr:
