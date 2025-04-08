@@ -17,3 +17,7 @@ data:
     
     [osd]
     debug_osd = 1/5
+    
+    [global]
+    ms_client_mode = crc secure
+    auth_allow_insecure_global_id_reclaim = true
