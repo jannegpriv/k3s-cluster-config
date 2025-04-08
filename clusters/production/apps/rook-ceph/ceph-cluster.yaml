@@ -18,6 +18,15 @@ spec:
     global:
       auth_allow_insecure_global_id_reclaim: "true"
       ms_client_mode: "crc secure"
+    mon:
+      debug_mon: "1/5"
+      debug_paxos: "1/5"
+      debug_auth: "1/5"
+    mgr:
+      debug_mgr: "1/5"
+      mgr/prometheus/rbd_stats_pools: "replicapool"
+    osd:
+      debug_osd: "1/5"
   
   mgr:
     modules:
