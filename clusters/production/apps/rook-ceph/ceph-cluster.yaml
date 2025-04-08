@@ -18,6 +18,8 @@ spec:
     global:
       auth_allow_insecure_global_id_reclaim: "true"
       ms_client_mode: "crc secure"
+      ms_cluster_mode: "crc secure"
+      ms_service_mode: "crc secure"
     mon:
       debug_mon: "1/5"
       debug_paxos: "1/5"
