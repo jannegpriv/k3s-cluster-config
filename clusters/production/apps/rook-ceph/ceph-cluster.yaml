@@ -73,21 +73,21 @@ spec:
   resources:
     mgr:
       limits:
-        cpu: "1000m"
+        cpu: "1500m"
         memory: "1Gi"
       requests:
         cpu: "500m"
         memory: "512Mi"
     mon:
       limits:
-        cpu: "1000m"
+        cpu: "1500m"
         memory: "768Mi"
       requests:
         cpu: "300m"
         memory: "512Mi"
     osd:
       limits:
-        cpu: "3"
+        cpu: "4"
         memory: "4Gi"
       requests:
         cpu: "1"
