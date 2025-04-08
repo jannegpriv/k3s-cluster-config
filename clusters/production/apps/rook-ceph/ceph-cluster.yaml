@@ -13,7 +13,11 @@ spec:
     enabled: true
     ssl: false
   dataDirHostPath: /var/lib/rook
-  # Configuration moved to config-override.yaml ConfigMap
+  # Configuration settings
+  cephConfig:
+    global:
+      auth_allow_insecure_global_id_reclaim: "true"
+      ms_client_mode: "crc secure"
   
   mgr:
     modules:
