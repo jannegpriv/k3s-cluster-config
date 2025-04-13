@@ -20,9 +20,10 @@ spec:
       ms_client_mode: "crc secure"
       mon_allow_pool_delete: "true"
       mon_max_pg_per_osd: "300"
-      mon_osd_full_ratio: "0.95"
-      mon_osd_backfillfull_ratio: "0.90"
-      mon_osd_nearfull_ratio: "0.85"
+      # Note: The following settings are managed directly via Ceph tools
+      # mon_osd_full_ratio: "0.95"
+      # mon_osd_backfillfull_ratio: "0.90"
+      # mon_osd_nearfull_ratio: "0.85"
     mon:
       debug_mon: "1/5"
       debug_paxos: "1/5"
