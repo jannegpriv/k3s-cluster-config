@@ -9,3 +9,5 @@ resources:
   - ceph-cluster.yaml
   - ceph-dashboard-service.yaml
   - ceph-ingress.yaml
+  - ceph-block-pool.yaml
+  - ceph-servicemonitor.yaml
