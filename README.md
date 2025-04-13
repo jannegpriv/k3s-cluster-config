@@ -329,7 +329,51 @@ This repository uses plain Kubernetes secrets for simplicity. Before deploying, 
 
 **Note:** Since this is not a production system, we're using plain Kubernetes secrets committed to the repository. In a production environment, you should use a proper secrets management solution like SOPS, Sealed Secrets, or Vault.
 
-## Troubleshooting
+## Rook-Ceph Storage
+
+This cluster uses Rook to manage Ceph storage for persistent volumes. The configuration includes:
+
+- 4 OSDs distributed across worker nodes
+- CephFS for file-based storage
+- RBD (Ceph Block Device) for block storage
+- Replication factor of 2 for data protection while optimizing storage efficiency
+
+### Key Components
+
+1. **CephCluster**
+   - Defined in `clusters/production/apps/rook-ceph/ceph-cluster.yaml`
+   - Configures the core Ceph cluster settings
+   - Includes monitor placement, network settings, and resource limits
+
+2. **CephBlockPool**
+   - Defined in `clusters/production/apps/rook-ceph/ceph-block-pool.yaml`
+   - Configures the replicapool with a replication factor of 2
+   - Used for RWO (ReadWriteOnce) persistent volumes
+
+3. **StorageClass**
+   - Provides the interface between Kubernetes PVCs and Ceph storage
+   - Automatically provisions storage when PVCs are created
+
+### Storage Management
+
+- **PG Autoscaling**: Enabled by default, automatically manages placement groups
+- **Monitoring**: Integrated with Prometheus for storage metrics
+- **Data Placement**: Uses CRUSH rules to distribute data across OSDs
+
+### Troubleshooting Ceph
+
+```bash
+# Check Ceph cluster status
+kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- ceph status
+
+# Check OSD usage
+kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- ceph osd df
+
+# Check pool details
+kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- ceph osd pool ls detail
+```
+
+## General Troubleshooting
 
 1. Check Flux logs:
 ```bash

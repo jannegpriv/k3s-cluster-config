@@ -178,12 +178,14 @@ Rook-Ceph provides distributed storage for the cluster, allowing persistent volu
 - **Rook Operator**: Manages Ceph clusters
 - **Ceph Cluster**: Distributed storage system
 - **Storage Classes**: Define storage profiles for PVCs
+- **CephBlockPool**: Defines the replication factor and failure domain for block storage
 
 #### Configuration Files
 
 - `/clusters/production/apps/rook-ceph/operator.yaml`: Rook-Ceph operator deployment
 - `/clusters/production/apps/rook-ceph/operator-patch.yaml`: Patches for the operator deployment
-- `/clusters/production/apps/rook-ceph/cluster.yaml`: Ceph cluster configuration
+- `/clusters/production/apps/rook-ceph/ceph-cluster.yaml`: Ceph cluster configuration
+- `/clusters/production/apps/rook-ceph/ceph-block-pool.yaml`: Block pool configuration with replication factor
 - `/clusters/production/apps/rook-ceph/ceph-mon-storageclass.yaml`: Storage class for Ceph monitors
 - `/clusters/production/apps/rook-ceph/dashboard.yaml`: Ceph dashboard configuration
 
@@ -237,6 +239,36 @@ The Rook-Ceph operator requires specific configuration to function properly:
      value: "/var/lib/rook"
    ```
 
+#### Storage Configuration
+
+1. **Replication Factor**: The cluster uses a replication factor of 2 for the `replicapool` to balance data protection with storage efficiency.
+   ```yaml
+   # In ceph-block-pool.yaml
+   spec:
+     failureDomain: osd
+     replicated:
+       requireSafeReplicaSize: true
+       size: 2
+   ```
+
+2. **Ceph Configuration**: Important settings are configured directly in the CephCluster resource:
+   ```yaml
+   # In ceph-cluster.yaml
+   spec:
+     cephConfig:
+       global:
+         auth_allow_insecure_global_id_reclaim: "true"
+         ms_client_mode: "crc secure"
+   ```
+
+3. **Placement Groups**: PG autoscaling is enabled by default, allowing Ceph to automatically manage the number of placement groups based on cluster usage.
+
+4. **OSD Weighting**: The CRUSH map can be adjusted to control data distribution across OSDs:
+   ```yaml
+   # In ceph-cluster.yaml
+   crushInitialWeight: "0.7"
+   ```
+
 #### Common Commands
 
 ```bash
@@ -246,11 +278,43 @@ kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod -l app=rook-ceph-to
 # Check Ceph health details
 kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod -l app=rook-ceph-tools -o name) -- ceph health detail
 
+# Check OSD usage
+kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod -l app=rook-ceph-tools -o name) -- ceph osd df
+
+# Check pool details
+kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod -l app=rook-ceph-tools -o name) -- ceph osd pool ls detail
+
 # Archive Ceph crash reports
 kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod -l app=rook-ceph-tools -o name) -- ceph crash archive-all
 
+# Manually adjust OSD weight (if needed)
+kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod -l app=rook-ceph-tools -o name) -- ceph osd crush reweight osd.2 0.7
+
 # Access Ceph dashboard
 kubectl -n rook-ceph port-forward svc/rook-ceph-mgr-dashboard 8443:8443
+```
+
+#### Troubleshooting Common Issues
+
+1. **OSD Near Full Warnings**
+   - **Symptoms**: `HEALTH_WARN` status with messages about OSDs being near full
+   - **Solution**: Reduce replication factor, adjust OSD weights, or add more storage
+   - **Example**: Reducing replication factor from 3 to 2 in `ceph-block-pool.yaml`
+
+2. **Reconciliation Errors**
+   - **Symptoms**: `ReconcileFailed` errors related to msgr2 encryption settings
+   - **Solution**: Set `ms_client_mode: "crc secure"` in the CephCluster resource
+   - **Note**: Always place configuration settings directly in the CephCluster resource rather than using ConfigMaps
+
+3. **Prometheus Metrics Collection Issues**
+   - **Symptoms**: CephBlockPool "Failure" status with error "failed to get config setting mgr/prometheus/rbd_stats_pools"
+   - **Solution**: Configure `mgr/prometheus/rbd_stats_pools` with the pools you want to monitor
+   - **Alternative**: Disable problematic status checks in the CephBlockPool resource
+
+4. **Slow Operations**
+   - **Symptoms**: `HEALTH_WARN` status with messages about slow operations
+   - **Solution**: Check for OSD imbalance, network issues, or resource constraints
+   - **Commands**: Monitor with `ceph health detail` and `ceph osd perf`
 
 # List Persistent Volumes
 kubectl get pv
