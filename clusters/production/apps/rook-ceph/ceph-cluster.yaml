@@ -56,7 +56,7 @@ spec:
     useAllDevices: true
     useAllNodes: true
     # Note: Manual CRUSH weight adjustments have been made:
-    # - OSD.2 weight reduced to 0.5 (2025-04-13) to address storage imbalance
+    # - OSD.2 weight reduced to 0.25 (2025-04-13) to address storage imbalance and nearfull warnings
   
   placement:
     mgr:
