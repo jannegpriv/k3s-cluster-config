@@ -7,7 +7,7 @@ spec:
   failureDomain: osd
   replicated:
     requireSafeReplicaSize: true
-    size: 3
+    size: 2
   statusCheck:
     mirror:
       disabled: true  # Disable the mirror status check to prevent Prometheus metrics collection issues
