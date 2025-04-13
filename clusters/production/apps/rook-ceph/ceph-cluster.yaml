@@ -18,17 +18,23 @@ spec:
     global:
       auth_allow_insecure_global_id_reclaim: "true"
       ms_client_mode: "crc secure"
-      ms_cluster_mode: "crc secure"
-      ms_service_mode: "crc secure"
+      mon_allow_pool_delete: "true"
+      mon_max_pg_per_osd: "300"
     mon:
       debug_mon: "1/5"
       debug_paxos: "1/5"
       debug_auth: "1/5"
+      mon_osd_full_ratio: "0.95"
+      mon_osd_backfillfull_ratio: "0.90"
+      mon_osd_nearfull_ratio: "0.85"
     mgr:
       debug_mgr: "1/5"
       mgr/prometheus/rbd_stats_pools: "replicapool"
     osd:
       debug_osd: "1/5"
+      osd_max_backfills: "1"
+      osd_recovery_max_active: "1"
+      osd_recovery_op_priority: "1"
   
   mgr:
     modules:
@@ -40,25 +46,19 @@ spec:
     count: 3  
     volumeClaimTemplate:
       spec:
-        storageClassName: rook-ceph-block
+        storageClassName: local-path  # Changed from rook-ceph-block to local-path
         resources:
           requests:
             storage: 25Gi
-  skipUpgradeChecks: true
-  storage:
-    useAllDevices: true
-    useAllNodes: true
-  placement:
-    mgr:
+    placement:  # Combined placement rules for monitors
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
           - matchExpressions:
             - key: kubernetes.io/hostname
-              operator: In
+              operator: NotIn
               values:
-              - k3s-m-1
-    mon:
+              - k3s-w-2
       podAntiAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 100
@@ -70,30 +70,43 @@ spec:
                 values:
                 - rook-ceph-mon
             topologyKey: kubernetes.io/hostname
+  
+  skipUpgradeChecks: true
+  storage:
+    useAllDevices: true
+    useAllNodes: true
+  
+  placement:
+    mgr:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+              - k3s-m-1
+  
   resources:
     mgr:
       limits:
-        cpu: "1500m"
-        memory: "1Gi"
+        memory: "1Gi"    # Kept memory limit, removed CPU limit
       requests:
-        cpu: "500m"
+        cpu: "500m"      # Kept CPU request
         memory: "512Mi"
     mon:
       limits:
-        cpu: "1500m"
-        memory: "768Mi"
+        memory: "768Mi"  # Kept memory limit, removed CPU limit
       requests:
-        cpu: "300m"
+        cpu: "300m"      # Kept CPU request
         memory: "512Mi"
     osd:
       limits:
-        cpu: "4"
-        memory: "4Gi"
+        memory: "4Gi"    # Kept memory limit, removed CPU limit
       requests:
-        cpu: "1"
+        cpu: "1"         # Kept CPU request
         memory: "2Gi"
-    # healthChecks
-  # Valid values for daemons are 'mon', 'osd', 'status'
+  
   healthCheck:
     daemonHealth:
       mon:
@@ -105,7 +118,6 @@ spec:
       status:
         disabled: false
         interval: 60s
-    # Change pod liveness probe timing or threshold values. Works for all mon,mgr,osd daemons.
     livenessProbe:
       mon:
         probe:
