@@ -630,13 +630,13 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "time() - max(kube_pod_start_time{namespace=\"openhab\", pod=~\"openhab-.*\"})",
-              "legendFormat": "Uptime",
+              "expr": "time() - max(container_start_time_seconds{namespace=\"openhab\", pod=~\"openhab-.*\", container=\"openhab434\"})",
+              "legendFormat": "Container Uptime",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "OpenHAB Uptime",
+          "title": "OpenHAB Container Uptime",
           "type": "stat"
         }
       ],
