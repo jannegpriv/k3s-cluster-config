@@ -11,43 +11,43 @@ spec:
   - name: ceph.rules
     rules:
     - alert: CephOSDNearFull
-      expr: ceph_osd_utilization > 80
+      expr: ceph_osd_utilization > 85
       for: 5m
       labels:
         severity: warning
       annotations:
         summary: "Ceph OSD Near Full"
-        description: "Ceph OSD {{ $labels.ceph_daemon }} on {{ $labels.instance }} is at {{ $value }}% capacity. Consider rebalancing data or adding more storage."
+        description: "Ceph OSD {{ $labels.ceph_daemon }} on {{ $labels.instance }} is at {{ $value }}% capacity (above 85%). Consider rebalancing data or adding more storage."
         runbook_url: "https://github.com/jannegpriv/k3s-cluster-config/blob/main/COMPREHENSIVE_README.md#troubleshooting-common-issues"
     
     - alert: CephOSDCriticallyFull
-      expr: ceph_osd_utilization > 90
+      expr: ceph_osd_utilization > 95
       for: 5m
       labels:
         severity: critical
       annotations:
         summary: "Ceph OSD Critically Full"
-        description: "Ceph OSD {{ $labels.ceph_daemon }} on {{ $labels.instance }} is at {{ $value }}% capacity. Immediate action required!"
+        description: "Ceph OSD {{ $labels.ceph_daemon }} on {{ $labels.instance }} is at {{ $value }}% capacity (above 95%). Immediate action required!"
         runbook_url: "https://github.com/jannegpriv/k3s-cluster-config/blob/main/COMPREHENSIVE_README.md#troubleshooting-common-issues"
     
     - alert: CephPoolNearFull
-      expr: ceph_pool_stored / ceph_pool_max_avail > 0.75
+      expr: ceph_pool_percent_used > 0.85
       for: 5m
       labels:
         severity: warning
       annotations:
         summary: "Ceph Pool Near Full"
-        description: "Ceph Pool {{ $labels.pool_id }} ({{ $labels.name }}) is at {{ $value | humanizePercentage }} capacity. Consider reducing replication factor or adding more storage."
+        description: "Ceph Pool {{ $labels.pool_id }} ({{ $labels.name }}) is at {{ $value | humanizePercentage }} capacity (above 85%). Consider reducing replication factor or adding more storage."
         runbook_url: "https://github.com/jannegpriv/k3s-cluster-config/blob/main/COMPREHENSIVE_README.md#troubleshooting-common-issues"
     
     - alert: CephClusterNearFull
-      expr: ceph_cluster_total_used_bytes / ceph_cluster_total_bytes > 0.75
+      expr: ceph_cluster_total_used_bytes / ceph_cluster_total_bytes > 0.85
       for: 5m
       labels:
         severity: warning
       annotations:
         summary: "Ceph Cluster Near Full"
-        description: "Ceph cluster is at {{ $value | humanizePercentage }} capacity. Consider adding more storage or cleaning up unused data."
+        description: "Ceph cluster is at {{ $value | humanizePercentage }} capacity (above 85%). Consider adding more storage or cleaning up unused data."
         runbook_url: "https://github.com/jannegpriv/k3s-cluster-config/blob/main/COMPREHENSIVE_README.md#troubleshooting-common-issues"
     
     - alert: CephOSDDown
