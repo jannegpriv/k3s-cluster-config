@@ -64,6 +64,7 @@ spec:
           retention_deletes_enabled: true
           retention_period: 168h  # 7 days retention
         compactor:
+          enabled: true
           shared_store: filesystem
           working_directory: /data/loki/boltdb-shipper-compactor
           compaction_interval: 10m  # More frequent compaction
