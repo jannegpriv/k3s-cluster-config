@@ -24,7 +24,7 @@ spec:
         kubernetes.io/hostname: k3s-w-1
       containers:
       - name: openhab434
-        image: openhab/openhab:4.3.4
+        image: openhab/openhab:4.3.5
         imagePullPolicy: Always
         resources:
           limits:
@@ -82,9 +82,6 @@ spec:
         - containerPort: 9080
           name: http-metrics
         resources:
-          limits:
-            cpu: 100m
-            memory: 128Mi
           requests:
             cpu: 50m
             memory: 64Mi
