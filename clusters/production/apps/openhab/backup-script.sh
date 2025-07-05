@@ -1,70 +1,78 @@
 #!/bin/sh
+set -o pipefail
+set -u
+export PS4='+ $(date "+%Y-%m-%dT%H:%M:%S%z") [${BASH_SOURCE}:${LINENO}] '
+
+log() {
+  echo "[$(date '+%Y-%m-%dT%H:%M:%S%z')] $*"
+  # flush output
+  sync
+}
+
+trap 'log "ERROR: Script failed at line $LINENO with exit code $?"' ERR
 
 # NAS details
 NAS_USER="jannenasadm"
 NAS_HOST="192.168.50.25"
 NAS_PATH="/volume1/k3s_backups/openhab"
 
-# Get pod name
+log "[STEP] Detecting OpenHAB pod..."
 OPENHAB_POD=$(kubectl get pods -n openhab -l app=openhab-production -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
 if [ -z "$OPENHAB_POD" ]; then
-    echo "Error: Could not find OpenHAB pod"
+    log "Error: Could not find OpenHAB pod"
     exit 1
 fi
-echo "Found OpenHAB pod: ${OPENHAB_POD}"
+log "Found OpenHAB pod: ${OPENHAB_POD}"
 
-# Cleanup old backups in pod
-echo "Cleaning up old backups in pod..."
-kubectl exec -n openhab ${OPENHAB_POD} -- find /openhab/userdata/backup -name "openhab-backup-*.zip" -type f -mtime +5 -delete
+log "[STEP] Cleaning up old backups in pod (older than 5 days)..."
+kubectl exec -n openhab ${OPENHAB_POD} -- find /openhab/userdata/backup -name "openhab-backup-*.zip" -type f -mtime +5 -delete || log "Warning: Cleanup of old backups in pod failed"
 
-# Get NAS password from environment
+log "[STEP] Retrieving NAS password from environment..."
 NAS_PASS="${NAS_PASSWORD}"
 
-# Create backup using official OpenHAB backup script
-echo "Creating backup in OpenHAB pod..."
+log "[STEP] Creating backup in OpenHAB pod..."
 kubectl exec -n openhab ${OPENHAB_POD} -- /openhab/runtime/bin/backup --full || {
-    echo "Error: Backup failed"
-    exit 1
+    log "Error: Backup failed (exit code $?)";
+    exit 1;
 }
 
-# Create temporary directory for the transfer
+log "[STEP] Creating temporary directory for transfer..."
 TMP_DIR=$(mktemp -d)
-echo "Created temporary directory: ${TMP_DIR}"
+log "Created temporary directory: ${TMP_DIR}"
 
-# Find the latest backup file
+log "[STEP] Finding latest backup file in pod..."
 LATEST_BACKUP=$(kubectl exec -n openhab ${OPENHAB_POD} -- bash -c 'ls -t /openhab/userdata/backup/openhab-backup-*.zip | head -1')
 if [ -z "${LATEST_BACKUP}" ]; then
-    echo "Error: No backup file found in pod"
+    log "Error: No backup file found in pod"
     rm -rf "${TMP_DIR}"
     exit 1
 fi
-echo "Found backup file: ${LATEST_BACKUP}"
+log "Found backup file: ${LATEST_BACKUP}"
 
-# Copy backup from pod
-echo "Copying backup from pod..."
+log "[STEP] Copying backup from pod to local temp dir..."
 BACKUP_NAME=$(basename "${LATEST_BACKUP}")
-echo "Debug: LATEST_BACKUP=${LATEST_BACKUP}"
-echo "Debug: BACKUP_NAME=${BACKUP_NAME}"
-echo "Debug: Copying from openhab/${OPENHAB_POD}:${LATEST_BACKUP} to ${TMP_DIR}/${BACKUP_NAME}"
+log "Debug: LATEST_BACKUP=${LATEST_BACKUP}"
+log "Debug: BACKUP_NAME=${BACKUP_NAME}"
+log "Debug: Copying from openhab/${OPENHAB_POD}:${LATEST_BACKUP} to ${TMP_DIR}/${BACKUP_NAME}"
 kubectl cp "openhab/${OPENHAB_POD}:${LATEST_BACKUP}" "${TMP_DIR}/${BACKUP_NAME}" || {
-    echo "Failed to copy backup from pod. Check if backup was created successfully."
+    log "Failed to copy backup from pod. Check if backup was created successfully."
     rm -rf "${TMP_DIR}"
     exit 1
 }
-echo "Debug: Contents of ${TMP_DIR}:"
+log "Debug: Contents of ${TMP_DIR}:"
 ls -la "${TMP_DIR}"
 
-# Create backup directory and cleanup old backups on NAS
-echo "Creating backup directory and cleaning up old backups on NAS..."
+log "[STEP] Creating backup directory and cleaning up old backups on NAS..."
 export SSHPASS="${NAS_PASS}"
-sshpass -e ssh -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "mkdir -p '${NAS_PATH}' && find '${NAS_PATH}' -name 'openhab-backup-*.zip' -type f -mtime +5 -delete" || {
-    echo "Failed to create backup directory on NAS"
+# Add timeout and verbose output for SSH
+if ! timeout 60 sshpass -e ssh -vvv -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "mkdir -p '${NAS_PATH}' && find '${NAS_PATH}' -name 'openhab-backup-*.zip' -type f -mtime +5 -delete"; then
+    log "Failed to create backup directory or cleanup old backups on NAS (exit code $?)"
+fi
     rm -rf "${TMP_DIR}"
     exit 1
 }
 
-# Create SSH config to force port 4711
-echo "Creating SSH config..."
+log "[STEP] Creating SSH config for port 4711..."
 SSH_CONFIG_DIR="/root/.ssh"
 SSH_CONFIG_FILE="${SSH_CONFIG_DIR}/config"
 mkdir -p "${SSH_CONFIG_DIR}"
@@ -73,46 +81,45 @@ cat > "${SSH_CONFIG_FILE}" << EOF
 Host ${NAS_HOST}
     Port 4711
 EOF
+log "Debug: Running command: chmod 600 \"${SSH_CONFIG_FILE}\""
 chmod 600 "${SSH_CONFIG_FILE}"
-echo "Debug: SSH config created at ${SSH_CONFIG_FILE}"
+log "Debug: SSH config created at ${SSH_CONFIG_FILE}"
 ls -la "${SSH_CONFIG_FILE}"
 cat "${SSH_CONFIG_FILE}"
 
-# Copy to NAS using sshpass
-echo "Copying backup to NAS..."
-echo "Debug: Using sshpass version:"
-sshpass -V
-echo "Debug: Command variables:"
-echo "TMP_DIR=${TMP_DIR}"
-echo "BACKUP_NAME=${BACKUP_NAME}"
-echo "NAS_USER=${NAS_USER}"
-echo "NAS_HOST=${NAS_HOST}"
-echo "NAS_PATH=${NAS_PATH}"
-echo "Debug: Full command:"
-echo "sshpass -e scp -rv -O -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -F ${SSH_CONFIG_FILE} \"${TMP_DIR}/${BACKUP_NAME}\" ${NAS_USER}@${NAS_HOST}:${NAS_PATH}"
-echo "Debug: Attempting to copy file using scp..."
+log "[STEP] Copying backup to NAS via SCP..."
+log "Debug: Using sshpass version: $(sshpass -V 2>&1)"
+log "Debug: Command variables: TMP_DIR=${TMP_DIR}, BACKUP_NAME=${BACKUP_NAME}, NAS_USER=${NAS_USER}, NAS_HOST=${NAS_HOST}, NAS_PATH=${NAS_PATH}"
+log "Debug: Full SCP command: sshpass -e scp -rv -O -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -F ${SSH_CONFIG_FILE} \"${TMP_DIR}/${BACKUP_NAME}\" ${NAS_USER}@${NAS_HOST}:${NAS_PATH}"
 export SSHPASS="${NAS_PASS}"
-sshpass -e scp -rv -O -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -F "${SSH_CONFIG_FILE}" "${TMP_DIR}/${BACKUP_NAME}" ${NAS_USER}@${NAS_HOST}:${NAS_PATH} || {
-    echo "Failed to copy backup to NAS"
-    echo "Debug: Testing SSH connection..."
+if ! timeout 120 sshpass -e scp -rv -O -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -F "${SSH_CONFIG_FILE}" "${TMP_DIR}/${BACKUP_NAME}" ${NAS_USER}@${NAS_HOST}:${NAS_PATH}; then
+    log "Failed to copy backup to NAS (exit code $?)"
+    log "Debug: Testing SSH connection..."
     sshpass -e ssh -v -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "ls -la \"${NAS_PATH}\""
     rm -rf "${TMP_DIR}"
     exit 1
-}
+fi
+log "Debug: Contents of ${TMP_DIR}:"
+ls -la "${TMP_DIR}"
 
-# Clean up temporary directory
-echo "Backup completed successfully. Cleaning up..."
+log "[STEP] Cleaning up temporary directory..."
+log "Debug: Running command: rm -rf \"${TMP_DIR}\""
 rm -rf "${TMP_DIR}"
 
-# Keep only the 5 most recent backups in the pod
-echo "Cleaning up old backups..."
-kubectl exec -n openhab ${OPENHAB_POD} -- bash -c 'cd /openhab/userdata/backup && ls -t *.zip | tail -n +6 | xargs -r rm --'
+# Always clean up old backups in pod (keep only 5 most recent), even if NAS transfer fails
+log "[STEP] Cleaning up old backups in pod (keep only 5 most recent)..."
+log "Debug: Running command: kubectl exec -n openhab ${OPENHAB_POD} -- bash -c 'cd /openhab/userdata/backup && ls -t *.zip | tail -n +6 | xargs -r rm --'"
+start_time=$(date +%s)
+kubectl exec -n openhab ${OPENHAB_POD} -- bash -c 'cd /openhab/userdata/backup && ls -t *.zip | tail -n +6 | xargs -r rm --' || log "Warning: Post-backup cleanup in pod failed"
+end_time=$(date +%s)
+log "Debug: Command took $(($end_time - $start_time)) seconds to complete"
 
-# Keep only the 5 most recent backups on NAS
-echo "Cleaning up old backups on NAS..."
-sshpass -e ssh -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "cd '${NAS_PATH}' && ls -t *.zip | tail -n +6 | xargs -r rm --" || {
-    echo "Warning: Failed to clean up old backups on NAS"
+log "[STEP] Cleaning up old backups on NAS (keep only 5 most recent)..."
+log "Debug: Running command: timeout 60 sshpass -e ssh -o StrictHostKeyChecking=no -p 4711 \"${NAS_USER}@${NAS_HOST}\" \"cd '${NAS_PATH}' && ls -t *.zip | tail -n +6 | xargs -r rm --\""
+start_time=$(date +%s)
+if ! timeout 60 sshpass -e ssh -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "cd '${NAS_PATH}' && ls -t *.zip | tail -n +6 | xargs -r rm --"; then
+    log "Warning: Failed to clean up old backups on NAS"
     # Don't exit with error as the backup was successful
-}
+fi
 
-echo "Backup successfully copied to NAS: ${NAS_PATH}/${BACKUP_NAME}.zip"
+log "Backup successfully copied to NAS: ${NAS_PATH}/${BACKUP_NAME}.zip"
