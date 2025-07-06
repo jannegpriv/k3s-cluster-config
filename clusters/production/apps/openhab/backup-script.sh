@@ -116,6 +116,9 @@ fi
 rm -f "$SCP_LOG"
 log "Debug: Contents of ${TMP_DIR}:"
 ls -la "${TMP_DIR}"
+# Ensure all logs are flushed to Loki before pod exit to prevent missing final log lines
+sync
+sleep 5
 
 log "[STEP] Cleaning up temporary directory..."
 log "Debug: Running command: rm -rf \"${TMP_DIR}\""
