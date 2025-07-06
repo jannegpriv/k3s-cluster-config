@@ -75,10 +75,9 @@ export SSHPASS="${NAS_PASS}"
 # Add timeout and verbose output for SSH
 if ! timeout 60 sshpass -e ssh -vvv -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "mkdir -p '${NAS_PATH}' && find '${NAS_PATH}' -name 'openhab-backup-*.zip' -type f -mtime +5 -delete"; then
     log "Failed to create backup directory or cleanup old backups on NAS (exit code $?)"
-fi
     rm -rf "${TMP_DIR}"
     exit 1
-}
+fi
 
 log "[STEP] Creating SSH config for port 4711..."
 SSH_CONFIG_DIR="/root/.ssh"
