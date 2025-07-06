@@ -30,11 +30,16 @@ kubectl exec -n openhab ${OPENHAB_POD} -- find /openhab/userdata/backup -name "o
 log "[STEP] Retrieving NAS password from environment..."
 NAS_PASS="${NAS_PASSWORD}"
 
-log "[STEP] Creating backup in OpenHAB pod..."
-kubectl exec -n openhab ${OPENHAB_POD} -- /openhab/runtime/bin/backup --full || {
+TODAY=$(date '+%y_%m_%d')
+if kubectl exec -n openhab ${OPENHAB_POD} -- ls /openhab/userdata/backup/openhab-backup-${TODAY}-*.zip 1>/dev/null 2>&1; then
+  log "A backup for today already exists. Skipping creation."
+else
+  log "[STEP] Creating backup in OpenHAB pod..."
+  kubectl exec -n openhab ${OPENHAB_POD} -- /openhab/runtime/bin/backup --full || {
     log "Error: Backup failed (exit code $?)";
     exit 1;
-}
+  }
+fi
 
 log "[STEP] Creating temporary directory for transfer..."
 TMP_DIR=$(mktemp -d)
