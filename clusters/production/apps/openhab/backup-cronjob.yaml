@@ -3,15 +3,29 @@ kind: CronJob
 metadata:
   name: openhab-backup
   namespace: openhab
+  labels:
+    app: openhab-backup
+  annotations:
+    promtail.grafana.com/scrape: "true"
 spec:
   schedule: "0 2 * * *"  # Run at 2 AM every day
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   concurrencyPolicy: Forbid
   jobTemplate:
+    metadata:
+      labels:
+        app: openhab-backup
+      annotations:
+        promtail.grafana.com/scrape: "true"
     spec:
       backoffLimit: 1
       template:
+        metadata:
+          labels:
+            app: openhab-backup
+          annotations:
+            promtail.grafana.com/scrape: "true"
         spec:
           serviceAccountName: openhab-backup
           containers:
@@ -42,4 +56,4 @@ spec:
             configMap:
               name: openhab-backup-script
               defaultMode: 0777
-          restartPolicy: OnFailure
+          restartPolicy: Never
