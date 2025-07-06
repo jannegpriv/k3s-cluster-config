@@ -9,6 +9,9 @@ log() {
   sync
 }
 
+log "Running backup script version $(date '+%Y-%m-%dT%H:%M')"
+sync
+
 trap 'log "ERROR: Script failed at line $LINENO with exit code $?"' ERR
 
 # NAS details
@@ -97,13 +100,20 @@ log "Debug: Using sshpass version: $(sshpass -V 2>&1)"
 log "Debug: Command variables: TMP_DIR=${TMP_DIR}, BACKUP_NAME=${BACKUP_NAME}, NAS_USER=${NAS_USER}, NAS_HOST=${NAS_HOST}, NAS_PATH=${NAS_PATH}"
 log "Debug: Full SCP command: sshpass -e scp -rv -O -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -F ${SSH_CONFIG_FILE} \"${TMP_DIR}/${BACKUP_NAME}\" ${NAS_USER}@${NAS_HOST}:${NAS_PATH}"
 export SSHPASS="${NAS_PASS}"
-if ! timeout 120 sshpass -e scp -rv -O -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -F "${SSH_CONFIG_FILE}" "${TMP_DIR}/${BACKUP_NAME}" ${NAS_USER}@${NAS_HOST}:${NAS_PATH}; then
-    log "Failed to copy backup to NAS (exit code $?)"
+SCP_LOG=$(mktemp)
+if ! timeout 300 sshpass -e scp -rv -O -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -F "${SSH_CONFIG_FILE}" "${TMP_DIR}/${BACKUP_NAME}" ${NAS_USER}@${NAS_HOST}:${NAS_PATH} 2>&1 | tee "$SCP_LOG"; then
+    log "Failed to copy backup to NAS (exit code $?). SCP output:"
+    cat "$SCP_LOG"
     log "Debug: Testing SSH connection..."
     sshpass -e ssh -v -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -p 4711 "${NAS_USER}@${NAS_HOST}" "ls -la \"${NAS_PATH}\""
     rm -rf "${TMP_DIR}"
+    rm -f "$SCP_LOG"
     exit 1
+else
+    log "Backup file successfully transferred to NAS. SCP output:"
+    cat "$SCP_LOG"
 fi
+rm -f "$SCP_LOG"
 log "Debug: Contents of ${TMP_DIR}:"
 ls -la "${TMP_DIR}"
 
