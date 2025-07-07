@@ -6,7 +6,7 @@ metadata:
    app: openhab-production
 spec:
   serviceName: openhab-production
-  replicas: 0
+  replicas: 1
   selector:
     matchLabels:
       app: openhab-production
