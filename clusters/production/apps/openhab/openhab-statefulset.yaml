@@ -17,14 +17,14 @@ spec:
       labels:
         app: openhab-production
       annotations:
-        kubernetes.io/change-cause: "Update to OpenHAB 5.0.0.M3 using official image"
+        kubernetes.io/change-cause: "Update to OpenHAB 5.0.0 final release"
     spec:
       serviceAccountName: default
       nodeSelector:
         kubernetes.io/hostname: k3s-w-1
       containers:
-      - name: openhab500m3
-        image: openhab/openhab:5.0.0.M3
+      - name: openhab500
+        image: openhab/openhab:5.0.0
         imagePullPolicy: Always
         resources:
           limits:
