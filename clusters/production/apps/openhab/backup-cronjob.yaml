@@ -28,6 +28,8 @@ spec:
             promtail.grafana.com/scrape: "true"
         spec:
           serviceAccountName: openhab-backup
+          nodeSelector:
+            kubernetes.io/hostname: k3s-w-1
           containers:
           - name: backup
             image: alpine:3.18
