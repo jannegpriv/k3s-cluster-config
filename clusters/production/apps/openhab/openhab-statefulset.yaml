@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: openhab-production
+  namespace: openhab
   labels:
    app: openhab-production
 spec:
@@ -24,10 +25,40 @@ spec:
       serviceAccountName: default
       nodeSelector:
         kubernetes.io/hostname: k3s-w-1
+      initContainers:
+      - name: install-ffmpeg
+        image: openhab/openhab:5.0.0-debian
+        command: ['sh', '-c']
+        args:
+        - |
+          echo "Installing FFmpeg and dependencies..."
+          apt update && apt install -y ffmpeg
+          echo "Copying FFmpeg to shared volume..."
+          cp /usr/bin/ffmpeg /shared/ffmpeg
+          chmod +x /shared/ffmpeg
+          echo "Creating startup script for symbolic link..."
+          cat > /shared/setup-ffmpeg.sh << 'EOF'
+          #!/bin/bash
+          if [ ! -f /usr/bin/ffmpeg ]; then
+            ln -sf /usr/local/bin/ffmpeg /usr/bin/ffmpeg
+          fi
+          EOF
+          chmod +x /shared/setup-ffmpeg.sh
+          echo "FFmpeg installation completed successfully!"
+        volumeMounts:
+        - name: ffmpeg-shared
+          mountPath: /shared
       containers:
       - name: openhab500
-        image: openhab/openhab:5.0.0
+        image: openhab/openhab:5.0.0-debian
         imagePullPolicy: Always
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          # Setup FFmpeg symbolic link
+          /usr/local/bin/setup-ffmpeg.sh
+          # Start openHAB normally
+          exec /entrypoint.sh
         resources:
           limits:
             memory: "2000Mi"
@@ -38,6 +69,10 @@ spec:
         env:  
         - name: EXTRA_JAVA_OPTS
           value: "-Xmx1500m -Duser.timezone=Europe/Stockholm"
+        - name: PATH
+          value: "/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin"
+        - name: LD_LIBRARY_PATH
+          value: "/usr/local/bin/lib:/usr/lib/aarch64-linux-gnu:/lib/aarch64-linux-gnu"
         ports:
         - containerPort: 8443
           name: https
@@ -52,6 +87,8 @@ spec:
         # - Add-on updates and other maintenance operations
         # External monitoring is handled by Prometheus/Grafana instead
         volumeMounts:
+        - name: ffmpeg-shared
+          mountPath: /usr/local/bin
         - name: etc-localtime
           mountPath: /etc/localtime
           readOnly: true
@@ -116,4 +153,6 @@ spec:
       - name: promtail-config
         configMap:
           name: promtail-sidecar-config
+      - name: ffmpeg-shared
+        emptyDir: {}
       terminationGracePeriodSeconds: 300
