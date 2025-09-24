@@ -29,6 +29,10 @@ spec:
       - name: openhab500
         image: openhab/openhab:5.0.0-debian
         imagePullPolicy: Always
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "apt update && apt install -y ffmpeg"]
         resources:
           limits:
             memory: "2000Mi"
@@ -53,9 +57,6 @@ spec:
         # - Add-on updates and other maintenance operations
         # External monitoring is handled by Prometheus/Grafana instead
         volumeMounts:
-        - name: host-ffmpeg
-          mountPath: /usr/bin/ffmpeg
-          readOnly: true
         - name: etc-localtime
           mountPath: /etc/localtime
           readOnly: true
@@ -120,8 +121,4 @@ spec:
       - name: promtail-config
         configMap:
           name: promtail-sidecar-config
-      - name: host-ffmpeg
-        hostPath:
-          path: /usr/bin/ffmpeg
-          type: File
       terminationGracePeriodSeconds: 300
