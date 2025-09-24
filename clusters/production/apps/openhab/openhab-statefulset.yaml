@@ -25,20 +25,6 @@ spec:
       serviceAccountName: default
       nodeSelector:
         kubernetes.io/hostname: k3s-w-1
-      initContainers:
-      - name: install-ffmpeg
-        image: openhab/openhab:5.0.0-debian
-        command: ['sh', '-c']
-        args:
-        - |
-          echo "Installing FFmpeg and copying to shared volume..."
-          apt update && apt install -y ffmpeg
-          cp /usr/bin/ffmpeg /shared/ffmpeg
-          chmod +x /shared/ffmpeg
-          echo "FFmpeg installation completed!"
-        volumeMounts:
-        - name: ffmpeg-volume
-          mountPath: /shared
       containers:
       - name: openhab500
         image: openhab/openhab:5.0.0-debian
@@ -67,9 +53,9 @@ spec:
         # - Add-on updates and other maintenance operations
         # External monitoring is handled by Prometheus/Grafana instead
         volumeMounts:
-        - name: ffmpeg-volume
+        - name: host-ffmpeg
           mountPath: /usr/bin/ffmpeg
-          subPath: ffmpeg
+          readOnly: true
         - name: etc-localtime
           mountPath: /etc/localtime
           readOnly: true
@@ -134,6 +120,8 @@ spec:
       - name: promtail-config
         configMap:
           name: promtail-sidecar-config
-      - name: ffmpeg-volume
-        emptyDir: {}
+      - name: host-ffmpeg
+        hostPath:
+          path: /usr/bin/ffmpeg
+          type: File
       terminationGracePeriodSeconds: 300
