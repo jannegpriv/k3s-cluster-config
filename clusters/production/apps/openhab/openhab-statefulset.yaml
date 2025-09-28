@@ -35,10 +35,10 @@ spec:
               command: ["/bin/sh", "-c", "apt update && apt install -y ffmpeg"]
         resources:
           limits:
-            memory: "2000Mi"
+            memory: "3000Mi"
             cpu:    "2.5"
           requests:
-            memory: "1500Mi"
+            memory: "2000Mi"
             cpu:    "0.8"
         env:  
         - name: EXTRA_JAVA_OPTS
