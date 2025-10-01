@@ -319,7 +319,7 @@ data:
                 "uid": "loki"
               },
               "editorMode": "code",
-              "expr": "sum by(component) (count_over_time({namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"} |~ \"Exception|Error|Throwable\" [$__interval]))",
+              "expr": "sum by(component) (count_over_time({namespace=\"openhab\", job=\"openhab-logs\"} |~ \"Exception|Error|Throwable\" [$__interval]))",
               "legendFormat": "{{component}}",
               "queryType": "range",
               "refId": "A"
@@ -459,7 +459,7 @@ data:
                 "uid": "loki"
               },
               "editorMode": "code",
-              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"}",
+              "expr": "{namespace=\"openhab\", job=\"openhab-logs\"}",
               "queryType": "range",
               "refId": "A"
             }
@@ -498,7 +498,7 @@ data:
                 "uid": "loki"
               },
               "editorMode": "code",
-              "expr": "{namespace=\"openhab\", job=\"openhab-logs\", level=~\"${log_level:regex}\"} |~ \"Exception|Error|Throwable\"",
+              "expr": "{namespace=\"openhab\", job=\"openhab-logs\"} |~ \"Exception|Error|Throwable\"",
               "queryType": "range",
               "refId": "A"
             }
