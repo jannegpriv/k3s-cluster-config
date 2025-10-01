@@ -237,6 +237,9 @@ spec:
                   source_labels: [__meta_kubernetes_pod_container_name]
                   target_label: container
                 - action: replace
+                  target_label: job
+                  replacement: openhab-logs
+                - action: replace
                   target_label: logfile
                   replacement: openhab
                 - action: replace
@@ -276,6 +279,9 @@ spec:
                   source_labels: [__meta_kubernetes_pod_container_name]
                   target_label: container
                 - action: replace
+                  target_label: job
+                  replacement: openhab-events
+                - action: replace
                   target_label: logfile
                   replacement: events
                 - action: replace
@@ -305,6 +311,9 @@ spec:
                 - action: replace
                   source_labels: [__meta_kubernetes_pod_container_name]
                   target_label: container
+                - action: replace
+                  target_label: job
+                  replacement: openhab-logs
                 - action: replace
                   replacement: /openhab/userdata/logs/update.log
                   target_label: __path__
