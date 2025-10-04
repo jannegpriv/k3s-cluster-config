@@ -31,7 +31,7 @@ spec:
       persistence:
         enabled: true
         storageClassName: rook-ceph-block
-        size: 100Gi
+        size: 50Gi
       
       # Node affinity to keep off master nodes
       affinity:
