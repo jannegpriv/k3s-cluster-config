@@ -57,6 +57,14 @@ spec:
           ingestion_rate_mb: 10  # Overall ingestion rate limit
           ingestion_burst_size_mb: 20
           max_cache_freshness_per_query: 10m
+          retention_period: 168h  # 7 days retention
+        compactor:
+          working_directory: /data/compactor
+          shared_store: filesystem
+          compaction_interval: 10m
+          retention_enabled: true
+          retention_delete_delay: 2h
+          retention_delete_worker_count: 150
     
     # Promtail konfiguration för att samla loggar från specifika källor
     promtail:
