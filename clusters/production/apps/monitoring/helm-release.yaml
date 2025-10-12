@@ -101,8 +101,8 @@ spec:
                 requests:
                   storage: 20Gi
         # Performance optimizations
-        retention: 15d  # Increased from 3d since we now have persistent storage
-        retentionSize: "15GB"  # Increased from 8GB
+        retention: 7d  # Reduced to 7d to save storage space
+        retentionSize: "10GB"  # Reduced to 10GB to save storage space
         scrapeInterval: "90s"  # Increased from 60s to reduce scrape frequency
         evaluationInterval: "90s"  # Increased from 60s to reduce evaluation frequency
         enableAdminAPI: false  # Disable admin API to reduce attack surface
