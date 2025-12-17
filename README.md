@@ -186,7 +186,7 @@ OpenHAB can be accessed in two ways:
 All services are accessible via `.local` domains. Add the following to your `/etc/hosts`:
 
 ```
-192.168.50.75  grafana.local prometheus.local alertmanager.local ceph.local kuma.local loki.local headlamp.local weave.local openhab.local
+192.168.50.75  grafana.local prometheus.local alertmanager.local ceph.local kuma.local loki.local headlamp.local weave.local openhab.local n8n.local
 ```
 
 | Service | URL | Description |
@@ -199,6 +199,7 @@ All services are accessible via `.local` domains. Add the following to your `/et
 | **Loki** | http://loki.local | Log queries |
 | **Headlamp** | http://headlamp.local | Kubernetes UI |
 | **Weave GitOps** | http://weave.local | Flux/GitOps UI |
+| **n8n** | http://n8n.local | Workflow automation |
 
 ### OpenHAB Logs Dashboard
 

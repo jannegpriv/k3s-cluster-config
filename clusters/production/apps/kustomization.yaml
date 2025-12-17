@@ -9,3 +9,4 @@ resources:
   - rook-ceph
   - loki
   - uptime-kuma
+  - n8n
