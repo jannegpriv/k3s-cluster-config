@@ -26,7 +26,7 @@ spec:
           mountPath: /home/node/.n8n
       containers:
       - name: n8n
-        image: n8nio/n8n:1.70.1
+        image: n8nio/n8n:1.120.0
         ports:
         - containerPort: 5678
         env:
