@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n
+  namespace: n8n
+  labels:
+    app: n8n
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: n8n
+  template:
+    metadata:
+      labels:
+        app: n8n
+    spec:
+      containers:
+      - name: n8n
+        image: n8nio/n8n:1.70.1
+        ports:
+        - containerPort: 5678
+        env:
+        - name: N8N_PROTOCOL
+          value: "http"
+        - name: N8N_HOST
+          value: "n8n.local"
+        - name: WEBHOOK_URL
+          value: "http://n8n.local/"
+        - name: GENERIC_TIMEZONE
+          value: "Europe/Stockholm"
+        - name: TZ
+          value: "Europe/Stockholm"
+        - name: N8N_ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: n8n-secrets
+              key: encryption-key
+        - name: EXECUTIONS_DATA_PRUNE
+          value: "true"
+        - name: EXECUTIONS_DATA_MAX_AGE
+          value: "168"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            memory: 512Mi
+        volumeMounts:
+        - name: data
+          mountPath: /home/node/.n8n
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: n8n-data
