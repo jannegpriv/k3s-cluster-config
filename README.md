@@ -392,6 +392,52 @@ kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- ceph osd df
 kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- ceph osd pool ls detail
 ```
 
+## Backup Jobs
+
+Automated backup CronJobs are configured for critical applications. Backups are stored on a NAS via SSH/SCP.
+
+| Application | Schedule | Namespace | Destination |
+|-------------|----------|-----------|-------------|
+| **openHAB** | 02:00 daily | openhab | NAS via SCP |
+| **Bitwarden** | 03:00 daily | bitwarden | NAS via SCP |
+
+### Configuration
+
+Both backup jobs:
+- Run on `k3s-w-1` (nodeSelector)
+- Use `nas-credentials` secret for NAS authentication
+- Keep 3 successful job history entries
+
+### Monitoring Backups
+
+```bash
+# Check backup CronJobs status
+kubectl get cronjobs -A | grep backup
+
+# Check recent backup jobs for openHAB
+kubectl -n openhab get jobs | grep backup | tail -5
+
+# Check recent backup jobs for Bitwarden
+kubectl -n bitwarden get jobs | grep backup | tail -5
+
+# View logs from last backup job
+kubectl -n openhab logs job/$(kubectl -n openhab get jobs --sort-by=.metadata.creationTimestamp | grep backup | tail -1 | awk '{print $1}')
+```
+
+### Manual Backup Trigger
+
+```bash
+# Trigger openHAB backup manually
+kubectl -n openhab create job --from=cronjob/openhab-backup openhab-backup-manual
+
+# Trigger Bitwarden backup manually
+kubectl -n bitwarden create job --from=cronjob/bitwarden-backup bitwarden-backup-manual
+```
+
+### Restore
+
+For openHAB restore instructions, see `clusters/production/apps/openhab/restore-backup.sh`.
+
 ## General Troubleshooting
 
 1. Check Flux logs:
