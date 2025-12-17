@@ -181,6 +181,25 @@ OpenHAB can be accessed in two ways:
 
 ## Monitoring
 
+### Web Interfaces
+
+All services are accessible via `.local` domains. Add the following to your `/etc/hosts`:
+
+```
+192.168.50.75  grafana.local prometheus.local alertmanager.local ceph.local kuma.local loki.local headlamp.local weave.local openhab.local
+```
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| **Grafana** | http://grafana.local | Dashboards and visualization |
+| **Prometheus** | http://prometheus.local | Metrics and queries |
+| **Alertmanager** | http://alertmanager.local | Alert management |
+| **Ceph Dashboard** | http://ceph.local | Ceph storage status |
+| **Uptime Kuma** | http://kuma.local | Uptime monitoring |
+| **Loki** | http://loki.local | Log queries |
+| **Headlamp** | http://headlamp.local | Kubernetes UI |
+| **Weave GitOps** | http://weave.local | Flux/GitOps UI |
+
 ### OpenHAB Logs Dashboard
 
 A specialized Grafana dashboard has been created to monitor openHAB logs:
