@@ -13,9 +13,6 @@ resources:
   - alertmanager-crd.yaml
   - k3s-alert-rules.yaml
   - silence-rules.yaml
-  - kubeshark-rules.yaml
-  - kubeshark-dashboard-configmap.yaml
-  - kubeshark-alerts.yaml
   - alert-history-dashboard-configmap.yaml
   - alertmanager-config.yaml
   - k3s-silence-rules.yaml

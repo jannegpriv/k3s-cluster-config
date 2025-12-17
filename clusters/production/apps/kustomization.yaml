@@ -7,6 +7,5 @@ resources:
   - headlamp
   - monitoring
   - rook-ceph
-  - kubeshark
   - loki
   - uptime-kuma
