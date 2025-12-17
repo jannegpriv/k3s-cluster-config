@@ -51,6 +51,8 @@ spec:
           value: "true"
         - name: EXECUTIONS_DATA_MAX_AGE
           value: "168"
+        - name: N8N_SECURE_COOKIE
+          value: "false"
         resources:
           requests:
             cpu: 100m
