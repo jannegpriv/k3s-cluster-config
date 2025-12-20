@@ -31,7 +31,6 @@ resources:
   - k3s-endpoints.yaml
   - k3s-kubelet-servicemonitor.yaml
   - ceph-prometheus-rules.yaml
-  - apiserver-metric-drop.yaml
 configMapGenerator:
   - name: alertmanager-values
     files:

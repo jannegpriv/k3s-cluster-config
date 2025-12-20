@@ -107,7 +107,7 @@ spec:
         evaluationInterval: "90s"  # Increased from 60s to reduce evaluation frequency
         enableAdminAPI: false  # Disable admin API to reduce attack surface
         walCompression: true  # Enable WAL compression to reduce disk I/O
-        # Node affinity to target k3s-w-3 node with custom-node=true label
+        # Node affinity to target k3s-w-4 node with custom-node=true label
         affinity:
           nodeAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
@@ -187,6 +187,14 @@ spec:
         limits:
           cpu: 50m
           memory: 64Mi
+
+    # Drop high-cardinality histogram metrics from apiserver to reduce memory
+    kubeApiServer:
+      serviceMonitor:
+        metricRelabelings:
+          - sourceLabels: [__name__]
+            regex: 'apiserver_request_duration_seconds_bucket|apiserver_request_sli_duration_seconds_bucket|apiserver_request_body_size_bytes_bucket|apiserver_response_sizes_bucket|etcd_request_duration_seconds_bucket|apiserver_watch_cache_read_wait_seconds_bucket|apiserver_watch_events_sizes_bucket|workqueue_queue_duration_seconds_bucket|workqueue_work_duration_seconds_bucket|scheduler_plugin_execution_duration_seconds_bucket'
+            action: drop
           
     # K3s component monitoring configuration
     kubeControllerManager:
