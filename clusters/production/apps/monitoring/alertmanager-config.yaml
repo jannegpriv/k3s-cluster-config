@@ -41,8 +41,10 @@ spec:
   receivers:
     - name: "null"
     - name: "critical-alerts"
-      # This is a placeholder. In a real setup, you would configure
-      # email, Slack, PagerDuty, etc. notifications here
+      webhookConfigs:
+        - url: "http://n8n.n8n:5678/webhook/alertmanager"
+          sendResolved: true
     - name: "warning-alerts"
-      # This is a placeholder. In a real setup, you would configure
-      # email, Slack, PagerDuty, etc. notifications here
+      webhookConfigs:
+        - url: "http://n8n.n8n:5678/webhook/alertmanager"
+          sendResolved: true
