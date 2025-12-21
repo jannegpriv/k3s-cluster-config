@@ -34,7 +34,7 @@ spec:
         - name: MM_SQLSETTINGS_DATASOURCE
           value: "postgres://mattermost:mattermost-db-secure-2024@mattermost-postgres:5432/mattermost?sslmode=disable&connect_timeout=10"
         - name: MM_SERVICESETTINGS_SITEURL
-          value: "http://mattermost.local"
+          value: "https://chat.k3s.nu"
         - name: MM_SERVICESETTINGS_ENABLEOUTGOINGWEBHOOKS
           value: "true"
         - name: MM_SERVICESETTINGS_ENABLEINCOMINGWEBHOOKS

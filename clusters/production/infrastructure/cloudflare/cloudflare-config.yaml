@@ -29,6 +29,12 @@ data:
             X-Content-Type-Options: "nosniff"
             X-Frame-Options: "SAMEORIGIN"
             Referrer-Policy: "strict-origin-when-cross-origin"
+      - hostname: chat.k3s.nu
+        service: http://mattermost.mattermost:8065
+        originRequest:
+          connectTimeout: 30s
+          keepAliveTimeout: 30s
+          keepAliveConnections: 10
       - service: http_status:404  # This catch-all rule is required
     protocol: quic
     retries: 5
