@@ -10,3 +10,4 @@ resources:
   - loki
   - uptime-kuma
   - n8n
+  - mattermost

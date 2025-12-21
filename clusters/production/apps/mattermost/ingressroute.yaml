@@ -1,0 +1,14 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: mattermost
+  namespace: mattermost
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`mattermost.local`)
+      kind: Rule
+      services:
+        - name: mattermost
+          port: 8065
