@@ -49,6 +49,22 @@ spec:
           value: "https://chat.k3s.nu http://mattermost.local"
         - name: MM_SERVICESETTINGS_ENABLEINSECUREOUTGOINGCONNECTIONS
           value: "true"
+        - name: MM_SERVICESETTINGS_ENABLEMULTIFACTORAUTHENTICATION
+          value: "true"
+        - name: MM_SERVICESETTINGS_ENFORCEMULTIFACTORAUTHENTICATION
+          value: "true"
+        - name: MM_TEAMSETTINGS_ENABLEOPENSERVER
+          value: "false"
+        - name: MM_PASSWORDSETTINGS_MINIMUMLENGTH
+          value: "12"
+        - name: MM_PASSWORDSETTINGS_LOWERCASE
+          value: "true"
+        - name: MM_PASSWORDSETTINGS_UPPERCASE
+          value: "true"
+        - name: MM_PASSWORDSETTINGS_NUMBER
+          value: "true"
+        - name: MM_PASSWORDSETTINGS_SYMBOL
+          value: "true"
         volumeMounts:
         - name: data
           mountPath: /mattermost/data
