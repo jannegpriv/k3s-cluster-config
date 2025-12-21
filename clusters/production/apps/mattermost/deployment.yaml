@@ -25,7 +25,7 @@ spec:
                 - k3s-w-3
       containers:
       - name: mattermost
-        image: mattermost/mattermost-team-edition:9.11
+        image: supersunho/mattermost:10.2.0
         ports:
         - containerPort: 8065
         env:
