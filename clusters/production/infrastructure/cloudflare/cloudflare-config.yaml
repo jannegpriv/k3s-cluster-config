@@ -30,7 +30,7 @@ data:
             X-Frame-Options: "SAMEORIGIN"
             Referrer-Policy: "strict-origin-when-cross-origin"
       - hostname: chat.k3s.nu
-        service: http://mattermost.mattermost:8065
+        service: http://mattermost.mattermost.svc.cluster.local:8065
         originRequest:
           connectTimeout: 30s
           keepAliveTimeout: 30s
