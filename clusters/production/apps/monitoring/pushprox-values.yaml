@@ -1,0 +1,16 @@
+metricsPort: 10249
+component: kube-proxy
+serviceMonitor:
+  enabled: true
+clients:
+  port: 10013
+  useLocalhost: true
+  https:
+    enabled: false
+  # Run on all nodes, including control plane
+  # Remove nodeSelector to run on all nodes
+  tolerations:
+    - effect: "NoExecute"
+      operator: "Exists"
+    - effect: "NoSchedule"
+      operator: "Exists"

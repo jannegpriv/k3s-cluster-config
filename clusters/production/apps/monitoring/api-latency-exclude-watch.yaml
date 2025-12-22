@@ -1,0 +1,38 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: api-latency-exclude-watch
+  namespace: monitoring
+  labels:
+    app: kube-prometheus-stack
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    prometheus: kube-prometheus-stack-prometheus
+    release: kube-prometheus-stack
+spec:
+  groups:
+  - name: apiserver-latency-overrides
+    rules:
+    # Record rules to override the default apiserver latency metrics by excluding WATCH verb
+    - expr: histogram_quantile(0.99, sum by (cluster, le, resource) (rate(apiserver_request_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",verb!="WATCH",subresource!~"proxy|attach|log|exec|portforward"}[5m])))
+      labels:
+        quantile: "0.99"
+        verb: read
+      record: cluster_quantile:apiserver_request_duration_seconds:histogram_quantile:exclude_watch
+    
+    - expr: histogram_quantile(0.99, sum by (cluster, le, resource) (rate(apiserver_request_duration_seconds_bucket{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",verb!="WATCH",subresource!~"proxy|attach|log|exec|portforward"}[5m])))
+      labels:
+        quantile: "0.99"
+        verb: write
+      record: cluster_quantile:apiserver_request_duration_seconds:histogram_quantile:exclude_watch
+    
+    # Alert rule that uses the new metrics excluding WATCH verb
+    - alert: KubeAPILatencyHighNoWatch
+      annotations:
+        description: The API server has a 99th percentile latency of {{ $value }} seconds for {{ $labels.verb }} {{ $labels.resource }} (excluding WATCH operations).
+        summary: Kubernetes API server has high latency for {{ $labels.verb }} {{ $labels.resource }} operations (excluding WATCH).
+      expr: |
+        cluster_quantile:apiserver_request_duration_seconds:histogram_quantile:exclude_watch{quantile="0.99"} > 1
+      for: 10m
+      labels:
+        severity: warning

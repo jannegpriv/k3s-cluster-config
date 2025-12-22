@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rook-ceph-mon-m-fix-data
+  namespace: rook-ceph
+spec:
+  containers:
+  - name: fix-data
+    image: quay.io/ceph/ceph:v18.2.2
+    command: ["sh", "-c", "
+      # Create directory structure
+      mkdir -p /destination/data/store.db;
+      
+      # Copy all files from source to destination
+      cp -av /source/data/* /destination/data/;
+      
+      # Fix permissions
+      chown -R ceph:ceph /destination/data;
+      chmod -R 755 /destination/data;
+      
+      # Create symlinks for any .ldb files that might be needed
+      cd /destination/data/store.db;
+      for f in *.sst; do
+        base=$(basename $f .sst);
+        ln -sf $f ${base}.ldb;
+      done;
+      
+      echo 'Data migration and repair completed successfully'
+    "]
+    volumeMounts:
+    - name: source-vol
+      mountPath: /source
+    - name: destination-vol
+      mountPath: /destination
+  volumes:
+  - name: source-vol
+    persistentVolumeClaim:
+      claimName: rook-ceph-mon-m-ceph
+  - name: destination-vol
+    persistentVolumeClaim:
+      claimName: rook-ceph-mon-m-ceph
+  restartPolicy: Never

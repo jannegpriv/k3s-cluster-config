@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rook-ceph-mon-m-data-mover
+  namespace: rook-ceph
+spec:
+  containers:
+  - name: data-mover
+    image: busybox
+    command: ["sh", "-c", "cp -av /source/* /destination/ && echo 'Data migration completed successfully'"]
+    volumeMounts:
+    - name: source-vol
+      mountPath: /source
+    - name: destination-vol
+      mountPath: /destination
+  volumes:
+  - name: source-vol
+    persistentVolumeClaim:
+      claimName: rook-ceph-mon-m
+  - name: destination-vol
+    persistentVolumeClaim:
+      claimName: rook-ceph-mon-m-ceph
+  restartPolicy: Never

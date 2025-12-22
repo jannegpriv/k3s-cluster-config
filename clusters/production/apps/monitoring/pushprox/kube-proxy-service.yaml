@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pushprox-kube-proxy-client
+  namespace: kube-system
+  labels:
+    k8s-app: pushprox-kube-proxy-client
+spec:
+  ports:
+  - name: http
+    port: 10249
+    protocol: TCP
+    targetPort: 10249
+  selector:
+    k8s-app: pushprox-kube-proxy-client
+  type: ClusterIP

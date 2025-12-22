@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: pushprox-kube-proxy-client
+  namespace: kube-system
+spec:
+  template:
+    spec:
+      containers:
+      - name: pushprox-client
+        args:
+        - --fqdn=$(HOST_IP)
+        - --proxy-url=$(PROXY_URL)
+        - --allow-port=10249
+        - --metrics-path=/metrics
+        env:
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.hostIP
+        - name: PROXY_URL
+          value: http://pushprox-kube-proxy-proxy.kube-system.svc:8080

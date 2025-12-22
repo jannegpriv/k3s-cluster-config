@@ -1,0 +1,187 @@
+apiVersion: ceph.rook.io/v1
+kind: CephCluster
+metadata:
+  creationTimestamp: "2025-03-08T14:56:07Z"
+  finalizers:
+  - cephcluster.ceph.rook.io
+  generation: 22
+  labels:
+    kustomize.toolkit.fluxcd.io/name: apps
+    kustomize.toolkit.fluxcd.io/namespace: flux-system
+  name: rook-ceph
+  namespace: rook-ceph
+  resourceVersion: "11378046"
+  uid: 6c4ccbf7-40a9-4f25-bce3-da820591b460
+spec:
+  cephVersion:
+    image: quay.io/ceph/ceph:v18.2.2
+  cleanupPolicy:
+    sanitizeDisks: {}
+  continueUpgradeAfterChecksEvenIfNotHealthy: true
+  crashCollector:
+    disable: true
+  csi:
+    cephfs: {}
+    readAffinity:
+      enabled: false
+  dashboard:
+    enabled: true
+    ssl: false
+  dataDirHostPath: /var/lib/rook
+  disruptionManagement: {}
+  external: {}
+  healthCheck:
+    daemonHealth:
+      mon:
+        disabled: false
+        interval: 45s
+      osd:
+        disabled: false
+        interval: 60s
+      status:
+        disabled: false
+        interval: 60s
+    livenessProbe:
+      mgr:
+        probe:
+          failureThreshold: 5
+          initialDelaySeconds: 10
+          periodSeconds: 60
+          successThreshold: 1
+          timeoutSeconds: 30
+      mon:
+        probe:
+          failureThreshold: 5
+          initialDelaySeconds: 10
+          periodSeconds: 60
+          successThreshold: 1
+          timeoutSeconds: 30
+      osd:
+        probe:
+          failureThreshold: 5
+          initialDelaySeconds: 10
+          periodSeconds: 60
+          successThreshold: 1
+          timeoutSeconds: 30
+  logCollector: {}
+  mgr:
+    modules:
+    - enabled: true
+      name: prometheus
+  mon:
+    allowMultiplePerNode: true
+    count: 3
+    volumeClaimTemplate:
+      spec:
+        resources:
+          requests:
+            storage: 25Gi
+        storageClassName: rook-ceph-block
+  monitoring: {}
+  network:
+    multiClusterService: {}
+  placement:
+    mgr:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+              - k3s-m-1
+    mon:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - rook-ceph-mon
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+  resources:
+    mgr:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+    mon:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+    osd:
+      limits:
+        cpu: "3"
+        memory: 4Gi
+      requests:
+        cpu: "1"
+        memory: 2Gi
+  security:
+    keyRotation:
+      enabled: false
+    kms: {}
+  skipUpgradeChecks: true
+  storage:
+    flappingRestartIntervalHours: 0
+    store: {}
+    useAllDevices: true
+    useAllNodes: true
+status:
+  ceph:
+    capacity:
+      bytesAvailable: 738385395712
+      bytesTotal: 960057057280
+      bytesUsed: 221671661568
+      lastUpdated: "2025-04-06T19:55:42Z"
+    details:
+      MON_DOWN:
+        message: 1/3 mons down, quorum n,o
+        severity: HEALTH_WARN
+    fsid: e2e946a6-06e8-4818-8395-ea14fe84164d
+    health: HEALTH_WARN
+    lastChanged: "2025-04-06T19:51:02Z"
+    lastChecked: "2025-04-06T19:55:42Z"
+    previousHealth: HEALTH_ERR
+    versions:
+      mgr:
+        ceph version 18.2.2 (531c0d11a1c5d39fbfe6aa8a521f023abf3bf3e2) reef (stable): 1
+      mon:
+        ceph version 18.2.2 (531c0d11a1c5d39fbfe6aa8a521f023abf3bf3e2) reef (stable): 3
+      osd:
+        ceph version 18.2.2 (531c0d11a1c5d39fbfe6aa8a521f023abf3bf3e2) reef (stable): 4
+      overall:
+        ceph version 18.2.2 (531c0d11a1c5d39fbfe6aa8a521f023abf3bf3e2) reef (stable): 8
+  conditions:
+  - lastHeartbeatTime: "2025-04-06T19:55:44Z"
+    lastTransitionTime: "2025-04-06T19:51:04Z"
+    message: Cluster created successfully
+    reason: ClusterCreated
+    status: "True"
+    type: Ready
+  - lastHeartbeatTime: "2025-04-06T19:56:23Z"
+    lastTransitionTime: "2025-04-06T19:56:23Z"
+    message: Processing OSD 3 on node "k3s-w-3"
+    reason: ClusterProgressing
+    status: "True"
+    type: Progressing
+  message: Processing OSD 3 on node "k3s-w-3"
+  observedGeneration: 22
+  phase: Progressing
+  state: Creating
+  storage:
+    deviceClasses:
+    - name: ssd
+    osd:
+      storeType:
+        bluestore: 4
+  version:
+    image: quay.io/ceph/ceph:v18.2.2
+    version: 18.2.2-0

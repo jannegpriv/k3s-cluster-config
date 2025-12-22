@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: pushprox-silence-config
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  route:
+    receiver: "null"
+    routes:
+    - receiver: "null"
+      matchers:
+      - name: alertname
+        value: TargetDown
+      - name: job
+        value: kube-proxy
+  receivers:
+  - name: "null"
