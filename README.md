@@ -439,6 +439,116 @@ kubectl -n bitwarden create job --from=cronjob/bitwarden-backup bitwarden-backup
 
 For openHAB restore instructions, see `clusters/production/apps/openhab/restore-backup.sh`.
 
+## Mattermost
+
+Mattermost is deployed as a chat platform with AI integration via n8n.
+
+### Configuration
+
+| Setting | Value |
+|---------|-------|
+| **Namespace** | mattermost |
+| **Image** | ghcr.io/jannegpriv/mattermost-arm64:11.1.0 |
+| **External URL** | https://chat.k3s.nu |
+| **Local URL** | http://mattermost.local |
+| **Database** | PostgreSQL |
+
+### Custom ARM64 Docker Image
+
+The official Mattermost Docker image doesn't support ARM64. A custom image is built from [remiheens/mattermost-docker-arm](https://github.com/remiheens/mattermost-docker-arm) releases.
+
+**Repository:** https://github.com/jannegpriv/mattermost-arm64
+
+#### Building a New Version
+
+1. Check for new releases at https://github.com/remiheens/mattermost-docker-arm/releases
+
+2. Update the version in `Dockerfile`:
+   ```dockerfile
+   ARG MATTERMOST_VERSION=11.1.0
+   ```
+
+3. Commit and push:
+   ```bash
+   cd ~/git/mattermost-arm64
+   git commit -am "Upgrade to vX.X.X"
+   git push
+   ```
+
+4. GitHub Actions will automatically build and push to `ghcr.io/jannegpriv/mattermost-arm64:X.X.X`
+
+5. Update the k3s deployment:
+   ```bash
+   # Edit clusters/production/apps/mattermost/deployment.yaml
+   # Change image tag to new version
+   git commit -am "Upgrade Mattermost to vX.X.X"
+   git push
+   flux reconcile kustomization flux-system --with-source
+   ```
+
+#### Manual Build Trigger
+
+You can also trigger a build manually via GitHub Actions:
+1. Go to https://github.com/jannegpriv/mattermost-arm64/actions
+2. Click "Run workflow"
+3. Enter the desired Mattermost version
+
+### Webhooks
+
+| Type | Channel | URL/Trigger |
+|------|---------|-------------|
+| **Incoming** | claude-ai | Used by n8n to post AI responses |
+| **Outgoing** | claude-ai | Trigger: `@claude` |
+
+## n8n Workflow Automation
+
+n8n is deployed for workflow automation and integrations.
+
+### Access
+
+| URL | Description |
+|-----|-------------|
+| http://n8n.local | Local access |
+| Internal: `http://n8n.n8n` | Kubernetes service DNS |
+
+### Workflows
+
+#### 1. Alertmanager to Mattermost
+Forwards Prometheus alerts to Mattermost channel.
+
+#### 2. Claude AI Agent
+Enables AI chat in Mattermost via `@claude` trigger.
+
+**Flow:** Mattermost Outgoing Webhook → n8n Webhook → Anthropic API → Mattermost Incoming Webhook
+
+**Configuration:**
+- Trigger word: `@claude`
+- Model: Claude Sonnet 4
+- Webhook path: `/webhook/claude`
+
+#### 3. K3s Cluster Status
+Daily cluster health report with AI analysis.
+
+**Flow:** Schedule/Webhook → Prometheus queries → Format data → AI Agent → Mattermost
+
+**Data collected:**
+- CPU usage per node
+- Memory usage per node
+- Active alerts from Alertmanager
+
+**Triggers:**
+- Scheduled: Daily at 08:00
+- Manual: POST to `/webhook/cluster-status`
+
+### Important: Internal Connections
+
+For Mattermost to reach n8n internally, the following environment variable is required in the Mattermost deployment:
+
+```yaml
+- name: MM_SERVICESETTINGS_ALLOWEDUNTRUSTEDINTERNALCONNECTIONS
+  value: "n8n.n8n n8n.n8n.svc.cluster.local"
+```
+
 ## General Troubleshooting
 
 1. Check Flux logs:
