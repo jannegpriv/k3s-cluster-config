@@ -1,0 +1,189 @@
+{
+  "name": "Daglig Energianalys",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "id": "b2229331-fa70-48c8-90a5-72ca6f01c01f",
+      "name": "Varje dag kl 07:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        784,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = 'http://openhab-production.openhab:8080/rest/persistence/items';\n\n// Beräkna tidsintervall för igår (00:00 - 23:59:59)\nconst now = new Date();\nconst yesterday = new Date(now);\nyesterday.setDate(yesterday.getDate() - 1);\n\n// starttime = igår 00:00:00, endtime = idag 00:00:00 (ger hela gårdagen)\nconst starttime = yesterday.toISOString().split('T')[0] + 'T00:00:00';\nconst endtime = now.toISOString().split('T')[0] + 'T00:00:00';\n\nconst items = [\n  'Currently_One_Currently_Used',\n  'Currently_One_Currently_Using',\n  'Currently_One_Currently_L1',\n  'Currently_One_Currently_L2',\n  'Currently_One_Currently_L3',\n  'Currently_One_Currently_I1',\n  'Currently_One_Currently_I2',\n  'Currently_One_Currently_I3',\n  'Compressor_State_Value_as_Switch',\n  'Add_Heat_Status_Value_as_Number',\n  'Radiator_Forward_Value_as_Number',\n  'Outdoor_Temperature_Value_as_Number',\n  'Warm_Water_Temperature_Value_as_Number',\n  'HuddingeStation_IndoorTemperature'\n];\n\n// Hämta all data med n8n:s httpRequest\nconst results = {};\nfor (const item of items) {\n  const response = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `${baseUrl}/${item}?starttime=${starttime}&endtime=${endtime}`,\n  });\n  results[item] = response;\n}\n\n// ELFÖRBRUKNING - differens mellan första och sista mätarställning\nconst energyData = results['Currently_One_Currently_Used'].data || [];\nconst startKwh = parseFloat(energyData[0]?.state || 0);\nconst endKwh = parseFloat(energyData[energyData.length - 1]?.state || 0);\nconst dailyUsage = (endKwh - startKwh).toFixed(2);\n\n// TOPPEFFEKT - max effekt under dygnet\nconst powerData = results['Currently_One_Currently_Using'].data || [];\nconst powerValues = powerData.map(d => parseFloat(d.state)).filter(v => !isNaN(v));\nconst peakPower = powerValues.length ? Math.max(...powerValues).toFixed(0) : 'N/A';\nconst avgPower = powerValues.length ? (powerValues.reduce((a, b) => a + b, 0) / powerValues.length).toFixed(0) : 'N/A';\n\n// EFFEKT PER FAS - hitta max och medel per fas\nconst calcFasStats = (data) => {\n  const values = data.data?.map(d => parseFloat(d.state)).filter(v => !isNaN(v)) || [];\n  if (values.length === 0) return { max: 0, avg: 0, total: 0 };\n  const max = Math.max(...values);\n  const avg = values.reduce((a, b) => a + b, 0) / values.length;\n  const total = values.reduce((a, b) => a + b, 0);\n  return { max: max.toFixed(0), avg: avg.toFixed(0), total };\n};\n\nconst L1 = calcFasStats(results['Currently_One_Currently_L1']);\nconst L2 = calcFasStats(results['Currently_One_Currently_L2']);\nconst L3 = calcFasStats(results['Currently_One_Currently_L3']);\n\n// MEST BELASTAD FAS\nconst fasData = [\n  { name: 'L1', ...L1 },\n  { name: 'L2', ...L2 },\n  { name: 'L3', ...L3 }\n];\nconst mostLoadedFas = fasData.reduce((a, b) => a.total > b.total ? a : b);\n\n// MAX STRÖM PER FAS\nconst calcCurrentStats = (data) => {\n  const values = data.data?.map(d => parseFloat(d.state)).filter(v => !isNaN(v)) || [];\n  if (values.length === 0) return { max: 'N/A', avg: 'N/A' };\n  return { \n    max: Math.max(...values).toFixed(1), \n    avg: (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1) \n  };\n};\n\nconst I1 = calcCurrentStats(results['Currently_One_Currently_I1']);\nconst I2 = calcCurrentStats(results['Currently_One_Currently_I2']);\nconst I3 = calcCurrentStats(results['Currently_One_Currently_I3']);\n\n// Hitta fas med högst ström\nconst maxCurrentFas = [\n  { name: 'L1', max: parseFloat(I1.max) || 0 },\n  { name: 'L2', max: parseFloat(I2.max) || 0 },\n  { name: 'L3', max: parseFloat(I3.max) || 0 }\n].reduce((a, b) => a.max > b.max ? a : b);\n\n// KOMPRESSORTID - räkna tid när kompressor var ON\nconst compressorData = results['Compressor_State_Value_as_Switch'].data || [];\nlet compressorMinutes = 0;\nfor (let i = 1; i < compressorData.length; i++) {\n  if (compressorData[i].state === 'ON') {\n    const timeDiff = (compressorData[i].time - compressorData[i-1].time) / 60000;\n    compressorMinutes += timeDiff;\n  }\n}\nconst compressorHours = (compressorMinutes / 60).toFixed(1);\nconst compressorPercent = ((compressorMinutes / 1440) * 100).toFixed(0);\n\n// TILLSKOTTSVÄRME - räkna tid när värde > 0\nconst addHeatData = results['Add_Heat_Status_Value_as_Number'].data || [];\nlet addHeatMinutes = 0;\nfor (let i = 1; i < addHeatData.length; i++) {\n  if (parseFloat(addHeatData[i].state) > 0) {\n    const timeDiff = (addHeatData[i].time - addHeatData[i-1].time) / 60000;\n    addHeatMinutes += timeDiff;\n  }\n}\nconst addHeatHours = (addHeatMinutes / 60).toFixed(1);\n\n// STATISTIK - beräkna medel, min, max för temperaturer\nconst calcStats = (data) => {\n  const values = data.data?.map(d => parseFloat(d.state)).filter(v => !isNaN(v)) || [];\n  if (values.length === 0) return { avg: 'N/A', min: 'N/A', max: 'N/A' };\n  const avg = (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1);\n  const min = Math.min(...values).toFixed(1);\n  const max = Math.max(...values).toFixed(1);\n  return { avg, min, max };\n};\n\nconst outdoor = calcStats(results['Outdoor_Temperature_Value_as_Number']);\nconst radiator = calcStats(results['Radiator_Forward_Value_as_Number']);\nconst warmWater = calcStats(results['Warm_Water_Temperature_Value_as_Number']);\nconst indoor = calcStats(results['HuddingeStation_IndoorTemperature']);\n\n// Formatera datum för rapporten\nconst dateStr = yesterday.toLocaleDateString('sv-SE');\n\nconst report = `Energirapport för ${dateStr}\n\n**ELFÖRBRUKNING**\n- Dygnsförbrukning: ${dailyUsage} kWh\n- Toppeffekt: ${peakPower} W\n- Medeleffekt: ${avgPower} W\n\n**FASBELASTNING**\n- L1: max ${L1.max} W, medel ${L1.avg} W, max ström ${I1.max} A\n- L2: max ${L2.max} W, medel ${L2.avg} W, max ström ${I2.max} A\n- L3: max ${L3.max} W, medel ${L3.avg} W, max ström ${I3.max} A\n- Mest belastad fas: ${mostLoadedFas.name}\n- Högst ström: ${maxCurrentFas.name} (${maxCurrentFas.max.toFixed(1)} A)\n\n**VÄRMEPUMP (IVT Premiumline HQ C8)**\n- Kompressor drifttid: ${compressorHours} timmar (${compressorPercent}% av dygnet)\n- Tillskottsvärme drifttid: ${addHeatHours} timmar\n\n**TEMPERATURER**\n- Inomhus: medel ${indoor.avg}°C (min ${indoor.min}°C, max ${indoor.max}°C)\n- Utomhus: medel ${outdoor.avg}°C (min ${outdoor.min}°C, max ${outdoor.max}°C)\n- Framledning radiator: medel ${radiator.avg}°C (min ${radiator.min}°C, max ${radiator.max}°C)\n- Varmvatten: medel ${warmWater.avg}°C (min ${warmWater.min}°C, max ${warmWater.max}°C)`;\n\nreturn [{ json: { report, dailyUsage, peakPower, avgPower, mostLoadedFas: mostLoadedFas.name, compressorHours, addHeatHours, indoorAvg: indoor.avg, outdoorAvg: outdoor.avg } }];"
+      },
+      "id": "2d65121a-74eb-4ef5-8f42-b4f90970deea",
+      "name": "Hämta och analysera data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://chat.k3s.nu/hooks/cybd87dfgj8pzrxn6xm384tc8o",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=text",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "98059910-9ddd-4d97-908d-16ccaaccb65b",
+      "name": "Posta till Mattermost",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1584,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Du är en energiexpert som analyserar hushållsenergi för ett svenskt hem med bergvärmepump (IVT Premiumline HQ C8).\n\n**Din uppgift:**\nAnalysera den dagliga energirapporten och ge en kort, insiktsfull sammanfattning.\n\n**Fokusera på:**\n1. **Elförbrukning** - Är den rimlig för årstiden och utomhustemperaturen?\n2. **Värmepumpens effektivitet** - Jämför utomhustemperatur med framledningstemperatur\n3. **Inomhustemperatur** - Hålls den stabil? (mål: 21-23°C)\n4. **Tillskottsvärme** - Varna om den används mycket (bör vara minimal)\n5. **Fasbelastning** - Är någon fas överbelastad?\n6. **Trender** - Jämför med tidigare dagar om du har minne av dem\n7. **Rekommendationer** - Konkreta tips för att spara energi\n\n**Riktlinjer:**\n- Håll svaret koncist (max 150 ord)\n- Använd emojis för tydlighet (🔋⚡🌡️❄️✅⚠️🏠)\n- Formatera med markdown\n- Svara alltid på svenska\n- Kom ihåg tidigare rapporter för att identifiera trender\n\n**Referensvärden för detta hus:**\n- Normal vinterförbrukning (dec-feb): 100-200 kWh/dygn beroende på temperatur\n- Kompressor bör gå 50-90% av tiden vid kyla\n- Tillskottsvärme bör vara under 2 timmar/dygn normalt\n\n**Värmekurva (framledningstemperatur vs utomhustemperatur):**\n- +5°C ute → ~35-38°C framledning\n- 0°C ute → ~38-42°C framledning\n- -5°C ute → ~45-48°C framledning\n- -10°C ute → ~50-55°C framledning\n\n**Fasbelastning:**\n- Max 16A per fas (säkring)\n- Varning om någon fas överstiger 14A\n\nHåll svaret kort och koncist (max 10 rader).\n\n{{ $('Hämta och analysera data').first().json.report }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1232,
+        -64
+      ],
+      "id": "d90980d2-aa10-4d7b-acdc-e5c66551bc1a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-5-20250929",
+          "cachedResultName": "Claude Sonnet 4.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        1240,
+        160
+      ],
+      "id": "c82221a7-5678-4f5e-bdc7-2d0f60f9a484",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "MsJOoUoULSXgQVIj",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "energy-analysis",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1368,
+        160
+      ],
+      "id": "39f6effa-c42b-4688-97e6-7c8e767b5acd",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Varje dag kl 07:00": {
+      "main": [
+        [
+          {
+            "node": "Hämta och analysera data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hämta och analysera data": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Posta till Mattermost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4c5d7b04-b617-405e-8eda-86a30c234d0b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b9f163c2054ffafe19eb3d69906c098313fc09c4ecd85dab008a2b72977831ad"
+  },
+  "id": "ulo9oudaQ4NF3nKb",
+  "tags": [
+    {
+      "name": "Home Automation"
+    }
+  ]
+}
