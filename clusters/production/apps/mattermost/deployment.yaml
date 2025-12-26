@@ -25,7 +25,7 @@ spec:
                 - k3s-w-3
       containers:
       - name: mattermost
-        image: remiheens/mattermost-docker-arm:v11.1.0
+        image: ngrie/mattermost-team-edition-arm:10.11.2
         ports:
         - containerPort: 8065
         env:
