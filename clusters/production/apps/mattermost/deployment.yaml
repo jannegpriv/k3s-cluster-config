@@ -25,7 +25,7 @@ spec:
                 - k3s-w-3
       containers:
       - name: mattermost
-        image: ngrie/mattermost-team-edition-arm:9.5.1
+        image: remiheens/mattermost-docker-arm:v11.1.0
         ports:
         - containerPort: 8065
         env:
@@ -51,6 +51,10 @@ spec:
           value: "true"
         - name: MM_SERVICESETTINGS_ALLOWEDUNTRUSTEDINTERNALCONNECTIONS
           value: "n8n.n8n n8n.n8n.svc.cluster.local"
+        - name: MM_EMAILSETTINGS_SENDPUSHNOTIFICATIONS
+          value: "true"
+        - name: MM_EMAILSETTINGS_PUSHNOTIFICATIONSERVER
+          value: "https://push-test.mattermost.com"
         - name: MM_SERVICESETTINGS_ENABLEMULTIFACTORAUTHENTICATION
           value: "true"
         - name: MM_SERVICESETTINGS_ENFORCEMULTIFACTORAUTHENTICATION
