@@ -35,9 +35,9 @@ spec:
     - name: "null"
     - name: "critical-alerts"
       webhookConfigs:
-        - url: "http://n8n.n8n:5678/webhook/alertmanager"
+        - url: "http://n8n.n8n/webhook/alertmanager"
           sendResolved: true
     - name: "warning-alerts"
       webhookConfigs:
-        - url: "http://n8n.n8n:5678/webhook/alertmanager"
+        - url: "http://n8n.n8n/webhook/alertmanager"
           sendResolved: true
