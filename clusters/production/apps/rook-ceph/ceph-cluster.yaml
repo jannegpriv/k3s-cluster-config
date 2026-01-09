@@ -58,6 +58,10 @@ spec:
     useAllNodes: true
     # Note: Manual CRUSH weight adjustments have been made:
     # - OSD.2 CRUSH weight and REWEIGHT both reduced to 0.25 (2025-04-13) to address storage imbalance and nearfull warnings
+    nodes:
+    - name: k3s-w-5
+      devices:
+      - name: /dev/nvme0n1p3
   
   placement:
     mgr:
