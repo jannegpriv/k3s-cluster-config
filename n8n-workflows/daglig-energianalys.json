@@ -60,7 +60,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=Du är en energiexpert som analyserar hushållsenergi för ett svenskt hem med bergvärmepump (IVT Premiumline HQ C8).\n\n**Din uppgift:**\nAnalysera den dagliga energirapporten och ge en kort, insiktsfull sammanfattning.\n\n**Fokusera på:**\n1. **Elförbrukning** - Är den rimlig för årstiden och utomhustemperaturen?\n2. **Värmepumpens effektivitet** - Jämför utomhustemperatur med framledningstemperatur\n3. **Inomhustemperatur** - Hålls den stabil? (mål: 21-23°C)\n4. **Tillskottsvärme** - Varna om den används mycket (bör vara minimal)\n5. **Fasbelastning** - Är någon fas överbelastad?\n6. **Trender** - Jämför med tidigare dagar om du har minne av dem\n7. **Rekommendationer** - Konkreta tips för att spara energi\n\n**Riktlinjer:**\n- Håll svaret koncist (max 150 ord)\n- Använd emojis för tydlighet (🔋⚡🌡️❄️✅⚠️🏠)\n- Formatera med markdown\n- Svara alltid på svenska\n- Kom ihåg tidigare rapporter för att identifiera trender\n\n**Referensvärden för detta hus:**\n- Normal vinterförbrukning (dec-feb): 100-200 kWh/dygn beroende på temperatur\n- Kompressor bör gå 50-90% av tiden vid kyla\n- Tillskottsvärme bör vara under 2 timmar/dygn normalt\n\n**Värmekurva (framledningstemperatur vs utomhustemperatur):**\n- +5°C ute → ~35-38°C framledning\n- 0°C ute → ~38-42°C framledning\n- -5°C ute → ~45-48°C framledning\n- -10°C ute → ~50-55°C framledning\n\n**Fasbelastning:**\n- 20A tröga säkringar per fas (klarar upp till 36A kortvarigt)\n- Varning om någon fas överstiger 18A kontinuerligt\n- Kritiskt om någon fas överstiger 25A\n\nHåll svaret kort och koncist (max 10 rader).\n\n{{ $('Hämta och analysera data').first().json.report }}",
+        "text": "=Du är en energiexpert som analyserar hushållsenergi för ett svenskt hem med bergvärmepump (IVT Premiumline HQ C8).\n\n**Din uppgift:**\nAnalysera den dagliga energirapporten och ge en kort, insiktsfull sammanfattning.\n\n**Fokusera på:**\n1. **Elförbrukning** - Är den rimlig för årstiden och utomhustemperaturen?\n2. **Värmepumpens effektivitet** - Jämför utomhustemperatur med framledningstemperatur\n3. **Inomhustemperatur** - Hålls den stabil? (mål: 21-23°C)\n4. **Tillskottsvärme** - Varna om den används mycket (bör vara minimal)\n5. **Fasbelastning** - Är någon fas överbelastad?\n6. **Trender** - Jämför med tidigare dagar om du har minne av dem\n7. **Rekommendationer** - Konkreta tips för att spara energi\n\n**Riktlinjer:**\n- Håll svaret koncist (max 150 ord)\n- Använd emojis för tydlighet (🔋⚡🌡️❄️✅⚠️🏠)\n- Formatera med markdown\n- Svara alltid på svenska\n- Kom ihåg tidigare rapporter för att identifiera trender\n\n**Referensvärden för detta hus:**\n- Normal vinterförbrukning (dec-feb): 100-200 kWh/dygn beroende på temperatur\n- Kompressor bör gå 50-90% av tiden vid kyla\n- Tillskottsvärme bör vara under 2 timmar/dygn normalt\n\n**VIKTIGA SYSTEMBEGRÄNSNINGAR:**\n- Borrhålet är endast 130m djupt (begränsar tillgänglig värmeenergi)\n- Systemet har problem med att ta ut mer effekt från kompressorn\n- FÖRESLÅ ALDRIG att höja värmekurvan - det förvärrar problemet\n- Fokusera istället på att sänka inomhustemperatur, optimera drifttider eller öka isolering\n\n**Värmekurva (framledningstemperatur vs utomhustemperatur):**\n- +5°C ute → ~35-38°C framledning\n- 0°C ute → ~38-42°C framledning\n- -5°C ute → ~45-48°C framledning\n- -10°C ute → ~50-55°C framledning\n\n**Fasbelastning:**\n- 20A tröga säkringar per fas (klarar upp till 36A kortvarigt)\n- Varning om någon fas överstiger 18A kontinuerligt\n- Kritiskt om någon fas överstiger 25A\n\nHåll svaret kort och koncist (max 10 rader).\n\n{{ $('Hämta och analysera data').first().json.report }}",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -124,19 +124,19 @@
           "mappingMode": "defineBelow",
           "value": {
             "date": "={{ $('Hämta och analysera data').first().json.date }}",
-            "daily_usage_kwh": "={{ $('Hämta och analysera data').first().json.dailyUsage }}",
-            "peak_power_w": "={{ $('Hämta och analysera data').first().json.peakPower }}",
-            "avg_power_w": "={{ $('Hämta och analysera data').first().json.avgPower }}",
-            "outdoor_avg_temp": "={{ $('Hämta och analysera data').first().json.outdoorAvg }}",
-            "outdoor_min_temp": "={{ $('Hämta och analysera data').first().json.outdoorMin }}",
-            "outdoor_max_temp": "={{ $('Hämta och analysera data').first().json.outdoorMax }}",
-            "indoor_avg_temp": "={{ $('Hämta och analysera data').first().json.indoorAvg }}",
-            "compressor_hours": "={{ $('Hämta och analysera data').first().json.compressorHours }}",
-            "compressor_percent": "={{ $('Hämta och analysera data').first().json.compressorPercent }}",
-            "add_heat_hours": "={{ $('Hämta och analysera data').first().json.addHeatHours }}",
-            "max_current_l1": "={{ $('Hämta och analysera data').first().json.maxCurrentL1 }}",
-            "max_current_l2": "={{ $('Hämta och analysera data').first().json.maxCurrentL2 }}",
-            "max_current_l3": "={{ $('Hämta och analysera data').first().json.maxCurrentL3 }}",
+            "daily_usage_kwh": "={{ $('Hämta och analysera data').first().json.daily_usage_kwh }}",
+            "peak_power_w": "={{ $('Hämta och analysera data').first().json.peak_power_w }}",
+            "avg_power_w": "={{ $('Hämta och analysera data').first().json.avg_power_w }}",
+            "outdoor_avg_temp": "={{ $('Hämta och analysera data').first().json.outdoor_avg_temp }}",
+            "outdoor_min_temp": "={{ $('Hämta och analysera data').first().json.outdoor_min_temp }}",
+            "outdoor_max_temp": "={{ $('Hämta och analysera data').first().json.outdoor_max_temp }}",
+            "indoor_avg_temp": "={{ $('Hämta och analysera data').first().json.indoor_avg_temp }}",
+            "compressor_hours": "={{ $('Hämta och analysera data').first().json.compressor_hours }}",
+            "compressor_percent": "={{ $('Hämta och analysera data').first().json.compressor_percent }}",
+            "add_heat_hours": "={{ $('Hämta och analysera data').first().json.add_heat_hours }}",
+            "max_current_l1": "={{ $('Hämta och analysera data').first().json.max_current_l1 }}",
+            "max_current_l2": "={{ $('Hämta och analysera data').first().json.max_current_l2 }}",
+            "max_current_l3": "={{ $('Hämta och analysera data').first().json.max_current_l3 }}",
             "ai_summary": "={{ $json.output }}"
           }
         }

@@ -24,3 +24,6 @@ kubeconfig
 # Sensitive files
 admin_token_salt.txt
 bitwarden-admin-token.txt
+
+# n8n workflow generated data
+n8n-workflows/*.csv
