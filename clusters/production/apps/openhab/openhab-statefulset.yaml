@@ -18,7 +18,7 @@ spec:
       labels:
         app: openhab-production
       annotations:
-        kubernetes.io/change-cause: "Enable hostNetwork for Tuya binding broadcast support"
+        kubernetes.io/change-cause: "Upgrade OpenHAB to 5.1.1"
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
@@ -26,8 +26,8 @@ spec:
       nodeSelector:
         kubernetes.io/hostname: k3s-w-1
       containers:
-      - name: openhab500
-        image: openhab/openhab:5.0.0-debian
+      - name: openhab511
+        image: openhab/openhab:5.1.1-debian
         imagePullPolicy: Always
         lifecycle:
           postStart:
