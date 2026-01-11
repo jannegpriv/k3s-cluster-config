@@ -46,6 +46,33 @@ fi
 
 log_info "Starting safe restart of node: $NODE_NAME (type: $NODE_TYPE)"
 
+# Check for pinned pods (nodeSelector) that won't be rescheduled
+log_info "Checking for pinned pods on $NODE_NAME..."
+PINNED_PODS=$(kubectl get pods -A -o json | jq -r --arg node "$NODE_NAME" '
+  .items[] | 
+  select(.spec.nodeSelector["kubernetes.io/hostname"] == $node) |
+  "\(.metadata.namespace)/\(.metadata.name)"
+' 2>/dev/null)
+
+if [ -n "$PINNED_PODS" ]; then
+    echo ""
+    log_warn "=========================================="
+    log_warn "PINNED PODS DETECTED!"
+    log_warn "The following pods are pinned to $NODE_NAME"
+    log_warn "and will be UNAVAILABLE during restart:"
+    log_warn "=========================================="
+    echo "$PINNED_PODS" | while read pod; do
+        echo -e "  ${YELLOW}→${NC} $pod"
+    done
+    echo ""
+    read -p "Do you want to continue? (y/N): " CONFIRM
+    if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
+        log_info "Restart cancelled by user"
+        exit 0
+    fi
+    echo ""
+fi
+
 # Step 1: Drain the node
 log_info "Step 1/5: Draining node $NODE_NAME..."
 kubectl drain "$NODE_NAME" \
