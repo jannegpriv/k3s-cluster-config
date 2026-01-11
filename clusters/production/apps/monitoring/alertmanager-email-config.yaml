@@ -20,6 +20,10 @@ spec:
             key: password
           requireTLS: true
           sendResolved: true
+    - name: n8n-webhook
+      webhookConfigs:
+        - url: "http://n8n.n8n/webhook/alertmanager"
+          sendResolved: true
   route:
     # Group by more fields to combine related alerts
     groupBy: ['alertname', 'severity', 'job']
@@ -31,7 +35,13 @@ spec:
     repeatInterval: 6h
     receiver: email
     routes:
-      # Route for warning/critical alerts
+      # Route warning/critical alerts to both n8n and email
+      - receiver: n8n-webhook
+        matchers:
+          - name: severity
+            value: warning|critical
+            regex: true
+        continue: true
       - receiver: email
         matchers:
           - name: severity
