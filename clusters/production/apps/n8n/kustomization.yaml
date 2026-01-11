@@ -5,6 +5,10 @@ resources:
   - namespace.yaml
   - pvc.yaml
   - secret.yaml
+  - serviceaccount.yaml
+  - serviceaccount-token.yaml
+  - clusterrole.yaml
+  - clusterrolebinding.yaml
   - deployment.yaml
   - service.yaml
   - ingressroute.yaml
