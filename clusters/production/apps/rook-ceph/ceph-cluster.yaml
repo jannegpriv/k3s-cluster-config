@@ -128,10 +128,10 @@ spec:
       mgr:
         probe:
           initialDelaySeconds: 10
-          timeoutSeconds: 30
-          periodSeconds: 60
+          timeoutSeconds: 45
+          periodSeconds: 90
           successThreshold: 1
-          failureThreshold: 5
+          failureThreshold: 6
       osd:
         probe:
           initialDelaySeconds: 10
