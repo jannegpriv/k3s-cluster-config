@@ -62,11 +62,52 @@ BACKUP_NAME=$(basename "${LATEST_BACKUP}")
 log "Debug: LATEST_BACKUP=${LATEST_BACKUP}"
 log "Debug: BACKUP_NAME=${BACKUP_NAME}"
 log "Debug: Copying from openhab/${OPENHAB_POD}:${LATEST_BACKUP} to ${TMP_DIR}/${BACKUP_NAME}"
-kubectl cp "openhab/${OPENHAB_POD}:${LATEST_BACKUP}" "${TMP_DIR}/${BACKUP_NAME}" || {
-    log "Failed to copy backup from pod. Check if backup was created successfully."
+
+# Get expected file size from pod for verification
+EXPECTED_SIZE=$(kubectl exec -n openhab ${OPENHAB_POD} -- stat -c%s "${LATEST_BACKUP}" 2>/dev/null || echo "0")
+log "Debug: Expected file size: ${EXPECTED_SIZE} bytes"
+
+# Retry loop for kubectl cp (known to fail on large files)
+MAX_RETRIES=3
+RETRY_DELAY=10
+COPY_SUCCESS=false
+
+for attempt in $(seq 1 $MAX_RETRIES); do
+    log "Attempt ${attempt}/${MAX_RETRIES}: Copying backup file..."
+    rm -f "${TMP_DIR}/${BACKUP_NAME}" 2>/dev/null || true
+
+    if timeout 300 kubectl cp "openhab/${OPENHAB_POD}:${LATEST_BACKUP}" "${TMP_DIR}/${BACKUP_NAME}" 2>&1; then
+        # Verify file was copied completely
+        if [ -f "${TMP_DIR}/${BACKUP_NAME}" ]; then
+            ACTUAL_SIZE=$(stat -c%s "${TMP_DIR}/${BACKUP_NAME}" 2>/dev/null || echo "0")
+            log "Debug: Copied file size: ${ACTUAL_SIZE} bytes"
+
+            if [ "${ACTUAL_SIZE}" -gt 0 ] && [ "${ACTUAL_SIZE}" -eq "${EXPECTED_SIZE}" ]; then
+                log "File copied successfully and size verified."
+                COPY_SUCCESS=true
+                break
+            else
+                log "Warning: File size mismatch (expected: ${EXPECTED_SIZE}, actual: ${ACTUAL_SIZE})"
+            fi
+        else
+            log "Warning: File not found after copy"
+        fi
+    else
+        log "Warning: kubectl cp command failed"
+    fi
+
+    if [ $attempt -lt $MAX_RETRIES ]; then
+        log "Retrying in ${RETRY_DELAY} seconds..."
+        sleep $RETRY_DELAY
+    fi
+done
+
+if [ "$COPY_SUCCESS" != "true" ]; then
+    log "Failed to copy backup from pod after ${MAX_RETRIES} attempts."
     rm -rf "${TMP_DIR}"
     exit 1
-}
+fi
+
 log "Debug: Contents of ${TMP_DIR}:"
 ls -la "${TMP_DIR}"
 
