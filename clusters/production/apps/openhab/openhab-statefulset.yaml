@@ -24,7 +24,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: default
       nodeSelector:
-        kubernetes.io/hostname: k3s-w-1
+        kubernetes.io/hostname: k3s-w-5
       containers:
       - name: openhab511
         image: openhab/openhab:5.1.1-debian

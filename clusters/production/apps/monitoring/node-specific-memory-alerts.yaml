@@ -9,9 +9,9 @@ spec:
   groups:
     - name: NodeSpecificMemoryAlerts
       rules:
-        # Higher threshold for k3s-w-1 (192.168.50.237) running openHAB
+        # Higher threshold for k3s-w-5 (192.168.50.21) running openHAB
         - alert: OpenHABNodeHighMemoryUsage
-          expr: instance:node_memory_utilisation:ratio{instance="192.168.50.237:9100"} * 100 > 92
+          expr: instance:node_memory_utilisation:ratio{instance="192.168.50.21:9100"} * 100 > 92
           for: 5m
           labels:
             severity: warning
@@ -21,7 +21,7 @@ spec:
             
         # Critical alert still needed for extreme cases
         - alert: OpenHABNodeCriticalMemoryUsage
-          expr: instance:node_memory_utilisation:ratio{instance="192.168.50.237:9100"} * 100 > 97
+          expr: instance:node_memory_utilisation:ratio{instance="192.168.50.21:9100"} * 100 > 97
           for: 2m
           labels:
             severity: critical
