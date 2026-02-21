@@ -34,7 +34,7 @@ spec:
           runAsUser: 0
       containers:
       - name: mattermost
-        image: ghcr.io/jannegpriv/mattermost-arm64:11.1.0
+        image: ghcr.io/jannegpriv/mattermost-arm64:11.3.0
         ports:
         - containerPort: 8065
         env:
