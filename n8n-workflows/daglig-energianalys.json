@@ -111,44 +111,6 @@
       ],
       "id": "39f6effa-c42b-4688-97e6-7c8e767b5acd",
       "name": "Simple Memory"
-    },
-    {
-      "parameters": {
-        "operation": "append",
-        "dataTableId": {
-          "__rl": true,
-          "value": "TTBdwPyQTQzMSJng",
-          "mode": "id"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "date": "={{ $('Hämta och analysera data').first().json.date }}",
-            "daily_usage_kwh": "={{ $('Hämta och analysera data').first().json.daily_usage_kwh }}",
-            "peak_power_w": "={{ $('Hämta och analysera data').first().json.peak_power_w }}",
-            "avg_power_w": "={{ $('Hämta och analysera data').first().json.avg_power_w }}",
-            "outdoor_avg_temp": "={{ $('Hämta och analysera data').first().json.outdoor_avg_temp }}",
-            "outdoor_min_temp": "={{ $('Hämta och analysera data').first().json.outdoor_min_temp }}",
-            "outdoor_max_temp": "={{ $('Hämta och analysera data').first().json.outdoor_max_temp }}",
-            "indoor_avg_temp": "={{ $('Hämta och analysera data').first().json.indoor_avg_temp }}",
-            "compressor_hours": "={{ $('Hämta och analysera data').first().json.compressor_hours }}",
-            "compressor_percent": "={{ $('Hämta och analysera data').first().json.compressor_percent }}",
-            "add_heat_hours": "={{ $('Hämta och analysera data').first().json.add_heat_hours }}",
-            "max_current_l1": "={{ $('Hämta och analysera data').first().json.max_current_l1 }}",
-            "max_current_l2": "={{ $('Hämta och analysera data').first().json.max_current_l2 }}",
-            "max_current_l3": "={{ $('Hämta och analysera data').first().json.max_current_l3 }}",
-            "ai_summary": "={{ $json.output }}"
-          }
-        }
-      },
-      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-      "name": "Spara till Data Table",
-      "type": "n8n-nodes-base.dataTable",
-      "typeVersion": 1.1,
-      "position": [
-        1584,
-        120
-      ]
     }
   ],
   "pinData": {},
@@ -202,11 +164,6 @@
         [
           {
             "node": "Posta till Mattermost",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Spara till Data Table",
             "type": "main",
             "index": 0
           }
