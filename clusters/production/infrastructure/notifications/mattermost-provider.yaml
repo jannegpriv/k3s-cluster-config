@@ -4,5 +4,6 @@ metadata:
   name: mattermost
   namespace: flux-system
 spec:
-  type: rocket
+  type: slack
+  channel: flux-alerts
   address: https://chat.k3s.nu/hooks/95z499na3jr5dm9mhedccydd7w
