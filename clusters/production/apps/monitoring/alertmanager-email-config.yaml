@@ -35,6 +35,21 @@ spec:
     repeatInterval: 6h
     receiver: email
     routes:
+      # Silence TargetDown for kube-proxy (false positive in k3s)
+      - receiver: "null"
+        matchers:
+          - name: alertname
+            value: TargetDown
+          - name: job
+            value: kube-proxy
+        continue: false
+      # Silence known k3s embedded component alerts
+      - receiver: "null"
+        matchers:
+          - name: alertname
+            value: KubeControllerManagerDown|KubeSchedulerDown|KubeProxyDown|K3sServiceDown
+            regex: true
+        continue: false
       # Route warning/critical alerts to both n8n and email
       - receiver: n8n-webhook
         matchers:
