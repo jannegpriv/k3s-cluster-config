@@ -15,7 +15,15 @@ spec:
           - name: alertname
             value: KubeControllerManagerDown|KubeSchedulerDown|KubeProxyDown|K3sServiceDown|ApiServerHighLatency|ApiServerCriticalLatency
             regex: true
-        continue: true
+        continue: false
+      # Silence TargetDown for kube-proxy (expected in k3s - components are embedded)
+      - receiver: "null"
+        matchers:
+          - name: alertname
+            value: TargetDown
+          - name: job
+            value: kube-proxy
+        continue: false
       # Route for critical alerts
       - receiver: "critical-alerts"
         matchers:
