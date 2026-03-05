@@ -47,15 +47,15 @@ spec:
           value: grafana-secure-password
         - name: GF_DATABASE_SSL_MODE
           value: disable
+      extraConfigmapMounts:
+        - name: grafana-alerting-provisioning
+          mountPath: /etc/grafana/provisioning/alerting
+          configMap: grafana-alerting-provisioning
+          readOnly: true
       sidecar:
         dashboards:
           enabled: true
           label: grafana_dashboard
-          labelValue: "1"
-          searchNamespace: monitoring
-        alerts:
-          enabled: true
-          label: grafana_alert
           labelValue: "1"
           searchNamespace: monitoring
       persistence:

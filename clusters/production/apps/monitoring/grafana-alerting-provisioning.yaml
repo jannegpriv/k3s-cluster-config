@@ -4,7 +4,7 @@ metadata:
   name: grafana-alerting-provisioning
   namespace: monitoring
 data:
-  contactpoints.yaml: |
+  alerting.yaml: |
     apiVersion: 1
     contactPoints:
       - orgId: 1
@@ -16,9 +16,6 @@ data:
               url: https://chat.k3s.nu/hooks/j1cwwhjhzpbqdx8uhndgiiyx5c
               httpMethod: POST
             disableResolveMessage: false
-
-  policies.yaml: |
-    apiVersion: 1
     policies:
       - orgId: 1
         receiver: grafana-default-email
@@ -34,3 +31,54 @@ data:
             group_wait: 30s
             group_interval: 5m
             repeat_interval: 4h
+    groups:
+      - orgId: 1
+        name: OpenHAB Errors
+        folder: OpenHAB
+        interval: 5m
+        rules:
+          - uid: openhab-binding-errors
+            title: OpenHAB Binding Errors/Exceptions
+            condition: C
+            data:
+              - refId: A
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                datasourceUid: loki
+                model:
+                  expr: 'count_over_time({job="openhab-logs", level=~"WARN|ERROR"} |~ "Exception|NullPointer|ClassCast|IllegalState|IllegalArgument|VerisureSession|binding" [5m])'
+                  queryType: range
+              - refId: B
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                datasourceUid: __expr__
+                model:
+                  type: reduce
+                  expression: A
+                  reducer: sum
+                  settings:
+                    mode: ""
+              - refId: C
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                datasourceUid: __expr__
+                model:
+                  type: threshold
+                  expression: B
+                  conditions:
+                    - evaluator:
+                        type: gt
+                        params:
+                          - 0
+            noDataState: OK
+            execErrState: Alerting
+            for: 0s
+            annotations:
+              summary: "OpenHAB binding error/exception detected"
+              description: "{{ $labels.component }}: Found {{ $values.B }} error(s) in the last 5 minutes"
+            labels:
+              severity: warning
+              service: openhab
