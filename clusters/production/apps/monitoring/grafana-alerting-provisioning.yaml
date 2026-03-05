@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-alerting-provisioning
+  namespace: monitoring
+data:
+  contactpoints.yaml: |
+    apiVersion: 1
+    contactPoints:
+      - orgId: 1
+        name: openhab-mattermost
+        receivers:
+          - uid: openhab-mattermost-webhook
+            type: webhook
+            settings:
+              url: https://chat.k3s.nu/hooks/j1cwwhjhzpbqdx8uhndgiiyx5c
+              httpMethod: POST
+            disableResolveMessage: false
+
+  policies.yaml: |
+    apiVersion: 1
+    policies:
+      - orgId: 1
+        receiver: grafana-default-email
+        group_by:
+          - grafana_folder
+          - alertname
+        routes:
+          - receiver: openhab-mattermost
+            object_matchers:
+              - ["grafana_folder", "=", "OpenHAB"]
+            group_by:
+              - alertname
+            group_wait: 30s
+            group_interval: 5m
+            repeat_interval: 4h

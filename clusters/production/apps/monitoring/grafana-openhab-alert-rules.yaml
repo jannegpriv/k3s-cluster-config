@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-openhab-alert-rules
+  namespace: monitoring
+  labels:
+    grafana_alert: "1"
+data:
+  openhab-error-alerts.yaml: |
+    apiVersion: 1
+    groups:
+      - orgId: 1
+        name: OpenHAB Errors
+        folder: OpenHAB
+        interval: 5m
+        rules:
+          - uid: openhab-binding-errors
+            title: OpenHAB Binding Errors/Exceptions
+            condition: C
+            data:
+              - refId: A
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                datasourceUid: loki
+                model:
+                  expr: 'count_over_time({job="openhab-logs", level=~"WARN|ERROR"} |~ "Exception|NullPointer|ClassCast|IllegalState|IllegalArgument|VerisureSession|binding" [5m])'
+                  queryType: range
+              - refId: B
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                datasourceUid: __expr__
+                model:
+                  type: reduce
+                  expression: A
+                  reducer: sum
+                  settings:
+                    mode: ""
+              - refId: C
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                datasourceUid: __expr__
+                model:
+                  type: threshold
+                  expression: B
+                  conditions:
+                    - evaluator:
+                        type: gt
+                        params:
+                          - 0
+            noDataState: OK
+            execErrState: Alerting
+            for: 0s
+            annotations:
+              summary: "OpenHAB binding error/exception detected"
+              description: "{{ $labels.component }}: Found {{ $values.B }} error(s) in the last 5 minutes"
+            labels:
+              severity: warning
+              service: openhab
