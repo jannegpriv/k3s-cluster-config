@@ -11,3 +11,4 @@ resources:
   - uptime-kuma
   - n8n
   - mattermost
+  - authelia

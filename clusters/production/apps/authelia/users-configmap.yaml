@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authelia-users
+  namespace: authelia
+data:
+  users_database.yml: |
+    users:
+      janne:
+        disabled: false
+        displayname: "Janne"
+        email: "jannegpriv@gmail.com"
+        password: "$argon2id$v=19$m=65536,t=3,p=4$U0qmfH1PAFPjDfoWDWyRxQ$BrIyBYUMZWNfQ9kNnWW1pdBcSrG9/+vwaX/Z/Ygmq9s"
+        groups:
+          - admins
+          - users

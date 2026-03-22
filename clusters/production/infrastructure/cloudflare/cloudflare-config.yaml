@@ -29,6 +29,12 @@ data:
             X-Content-Type-Options: "nosniff"
             X-Frame-Options: "SAMEORIGIN"
             Referrer-Policy: "strict-origin-when-cross-origin"
+      - hostname: auth.k3s.nu
+        service: http://authelia.authelia.svc.cluster.local:80
+        originRequest:
+          connectTimeout: 30s
+          keepAliveTimeout: 30s
+          keepAliveConnections: 10
       - hostname: chat.k3s.nu
         service: http://mattermost.mattermost.svc.cluster.local:8065
         originRequest:

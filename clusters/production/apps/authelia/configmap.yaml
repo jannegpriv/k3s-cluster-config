@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authelia-config
+  namespace: authelia
+data:
+  configuration.yml: |
+    theme: dark
+
+    server:
+      address: 'tcp://0.0.0.0:9091'
+
+    log:
+      level: info
+
+    totp:
+      issuer: k3s.nu
+      period: 30
+      skew: 1
+
+    authentication_backend:
+      file:
+        path: /config/users_database.yml
+        password:
+          algorithm: argon2id
+          iterations: 3
+          memory: 65536
+          parallelism: 4
+          salt_length: 16
+          key_length: 32
+
+    access_control:
+      default_policy: deny
+      rules:
+        - domain: auth.k3s.nu
+          policy: bypass
+        - domain: auth.local
+          policy: bypass
+        - domain: "*.local"
+          policy: one_factor
+        - domain: "*.k3s.nu"
+          policy: two_factor
+
+    session:
+      name: authelia_session
+      expiration: 3600
+      inactivity: 300
+      remember_me: 1M
+      cookies:
+        - domain: 'k3s.nu'
+          authelia_url: 'https://auth.k3s.nu'
+        - domain: 'local'
+          authelia_url: 'http://auth.local'
+
+    regulation:
+      max_retries: 3
+      find_time: 2m
+      ban_time: 5m
+
+    storage:
+      local:
+        path: /data/db.sqlite3
+
+    notifier:
+      filesystem:
+        filename: /data/notification.txt
