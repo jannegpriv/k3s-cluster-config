@@ -17,13 +17,14 @@ spec:
       labels:
         app: authelia
     spec:
+      enableServiceLinks: false
       containers:
       - name: authelia
         image: authelia/authelia:4.38.19
         ports:
         - containerPort: 9091
         env:
-        - name: AUTHELIA_JWT_SECRET_FILE
+        - name: AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE
           value: /secrets/jwt_secret
         - name: AUTHELIA_SESSION_SECRET_FILE
           value: /secrets/session_secret

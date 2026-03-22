@@ -49,8 +49,6 @@ data:
       cookies:
         - domain: 'k3s.nu'
           authelia_url: 'https://auth.k3s.nu'
-        - domain: 'local'
-          authelia_url: 'http://auth.local'
 
     regulation:
       max_retries: 3
