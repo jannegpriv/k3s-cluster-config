@@ -18,7 +18,7 @@ spec:
       labels:
         app: openhab-production
       annotations:
-        kubernetes.io/change-cause: "Upgrade OpenHAB to 5.1.1"
+        kubernetes.io/change-cause: "Upgrade OpenHAB to 5.1.4"
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
@@ -26,8 +26,8 @@ spec:
       nodeSelector:
         kubernetes.io/hostname: k3s-w-5
       containers:
-      - name: openhab511
-        image: openhab/openhab:5.1.1-debian
+      - name: openhab514
+        image: openhab/openhab:5.1.4-debian
         imagePullPolicy: Always
         lifecycle:
           postStart:
