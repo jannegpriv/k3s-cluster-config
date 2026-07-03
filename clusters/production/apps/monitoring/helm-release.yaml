@@ -72,14 +72,16 @@ spec:
           cpu: 800m  # Increased from 600m to reduce CPU throttling
           memory: 256Mi
       affinity:
+        # Was hard-pinned to k3s-w-3 (which died in the 2026-07 incident and left
+        # Grafana unschedulable). Grafana's PVC is RBD (follows the pod), so no
+        # node pin is needed — just softly prefer a worker node.
         nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/hostname
-                operator: In
-                values:
-                - k3s-w-3
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: DoesNotExist
     
     prometheus:
       ingress:
