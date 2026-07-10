@@ -96,7 +96,10 @@ spec:
             cpu: 500m  # Reduced from 1000m to fit on k3s-w-3 node
             memory: 2Gi  # Increased from 1Gi to prevent OOMKilled
           limits:
-            cpu: 2000m  # Increased from 1500m to reduce CPU throttling
+            # No CPU limit: Prometheus is bursty (WAL compaction, rule eval) and
+            # briefly touches any limit -> CFS throttling that fired NodeCPUThrottling.
+            # CPU is compressible; the request (500m) still guarantees scheduling.
+            # History of bumping 600->800->1500->2000 never stopped it. Removed 2026-07-10.
             memory: 3Gi  # Increased from 2Gi to prevent OOMKilled
         # Persistent storage configuration
         storageSpec:
