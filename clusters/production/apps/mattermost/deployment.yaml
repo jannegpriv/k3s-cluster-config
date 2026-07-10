@@ -10,7 +10,6 @@ spec:
   # upgrade). Recreate kills the old pod first.
   strategy:
     type: Recreate
-    rollingUpdate: null  # explicit null: server keeps old field otherwise -> invalid combo
   selector:
     matchLabels:
       app: mattermost
