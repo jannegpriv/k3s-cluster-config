@@ -5,6 +5,11 @@ metadata:
   namespace: mattermost
 spec:
   replicas: 1
+  # RWO PVC (Ceph RBD) can only attach to one pod: RollingUpdate deadlocks on
+  # Multi-Attach when the new pod lands on another node (hit during 11.7.6
+  # upgrade). Recreate kills the old pod first.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: mattermost
