@@ -1,5 +1,5 @@
 {
-  "id": "aiRemMainAgent01",
+  "id": "aiRemMainAgent03",
   "name": "ai_alert_remediator",
   "nodes": [
     {
@@ -28,7 +28,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst alerts = (body.alerts || []).filter(a => a.status === \"firing\");\nif (!alerts.length) return [];\nconst sd = $getWorkflowStaticData(\"global\");\nsd.seen = sd.seen || {};\nconst cooldownMs = parseInt($env.COOLDOWN_MINUTES || \"30\", 10) * 60000;\nconst now = Date.now();\nconst out = [];\nfor (const a of alerts.slice(0, 3)) {\n  const fp = a.fingerprint || (a.labels?.alertname + \"/\" + (a.labels?.pod || a.labels?.deployment || \"\"));\n  if (sd.seen[fp] && now - sd.seen[fp] < cooldownMs) continue;\n  sd.seen[fp] = now;\n  out.push({json: {fingerprint: fp, alert: {\n    name: a.labels?.alertname, severity: a.labels?.severity,\n    namespace: a.labels?.namespace, pod: a.labels?.pod, deployment: a.labels?.deployment,\n    summary: a.annotations?.summary, description: a.annotations?.description,\n    startsAt: a.startsAt}}}];\n}\nreturn out;"
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst alerts = (body.alerts || []).filter(a => a.status === \"firing\");\nif (!alerts.length) return [];\nconst sd = $getWorkflowStaticData(\"global\");\nsd.seen = sd.seen || {};\nconst cooldownMs = parseInt($env.COOLDOWN_MINUTES || \"30\", 10) * 60000;\nconst now = Date.now();\nconst out = [];\nfor (const a of alerts.slice(0, 3)) {\n  const fp = a.fingerprint || (a.labels?.alertname + \"/\" + (a.labels?.pod || a.labels?.deployment || \"\"));\n  if (sd.seen[fp] && now - sd.seen[fp] < cooldownMs) continue;\n  sd.seen[fp] = now;\n  out.push({json: {fingerprint: fp, alert: {\n    name: a.labels?.alertname, severity: a.labels?.severity,\n    namespace: a.labels?.namespace, pod: a.labels?.pod, deployment: a.labels?.deployment,\n    summary: a.annotations?.summary, description: a.annotations?.description,\n    startsAt: a.startsAt}}});\n}\nreturn out;"
       }
     },
     {
@@ -65,9 +65,7 @@
           "value": "claude-sonnet-5",
           "cachedResultName": "Claude Sonnet 5"
         },
-        "options": {
-          "temperature": 0.2
-        }
+        "options": {}
       },
       "credentials": {
         "anthropicApi": {
@@ -140,7 +138,28 @@
             "selector": "={{ $fromAI('selector', 'optional label selector, empty string if not needed', 'string') }}"
           },
           "matchingColumns": [],
-          "schema": []
+          "schema": [
+            {
+              "id": "namespace",
+              "displayName": "namespace",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "selector",
+              "displayName": "selector",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ]
         }
       }
     },
@@ -169,7 +188,38 @@
             "previous": "={{ $fromAI('previous', 'true for previous crashed container, else false', 'string') }}"
           },
           "matchingColumns": [],
-          "schema": []
+          "schema": [
+            {
+              "id": "namespace",
+              "displayName": "namespace",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "pod",
+              "displayName": "pod",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "previous",
+              "displayName": "previous",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ]
         }
       }
     },
@@ -197,7 +247,28 @@
             "name": "={{ $fromAI('name', 'optional involved object name, empty string for all', 'string') }}"
           },
           "matchingColumns": [],
-          "schema": []
+          "schema": [
+            {
+              "id": "namespace",
+              "displayName": "namespace",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ]
         }
       }
     },
@@ -225,7 +296,28 @@
             "name": "={{ $fromAI('name', 'deployment name', 'string') }}"
           },
           "matchingColumns": [],
-          "schema": []
+          "schema": [
+            {
+              "id": "namespace",
+              "displayName": "namespace",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ]
         }
       }
     },
@@ -252,7 +344,18 @@
             "namespace": "={{ $fromAI('namespace', 'namespace', 'string') }}"
           },
           "matchingColumns": [],
-          "schema": []
+          "schema": [
+            {
+              "id": "namespace",
+              "displayName": "namespace",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ]
         }
       }
     },
@@ -281,7 +384,38 @@
             "reason": "={{ $fromAI('reason', 'why this restart fixes the diagnosed problem', 'string') }}"
           },
           "matchingColumns": [],
-          "schema": []
+          "schema": [
+            {
+              "id": "namespace",
+              "displayName": "namespace",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "pod",
+              "displayName": "pod",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ]
         }
       }
     },
@@ -310,7 +444,38 @@
             "reason": "={{ $fromAI('reason', 'why this restart fixes the diagnosed problem', 'string') }}"
           },
           "matchingColumns": [],
-          "schema": []
+          "schema": [
+            {
+              "id": "namespace",
+              "displayName": "namespace",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ]
         }
       }
     },
@@ -340,7 +505,48 @@
             "reason": "={{ $fromAI('reason', 'why scaling fixes the diagnosed problem', 'string') }}"
           },
           "matchingColumns": [],
-          "schema": []
+          "schema": [
+            {
+              "id": "namespace",
+              "displayName": "namespace",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "replicas",
+              "displayName": "replicas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ]
         }
       }
     }
@@ -491,7 +697,8 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "errorWorkflow": "aiRemErrorWf0001"
   },
-  "active": false
+  "active": true
 }

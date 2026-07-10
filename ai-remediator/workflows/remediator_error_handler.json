@@ -1,0 +1,85 @@
+{
+  "id": "aiRemErrorWf0001",
+  "name": "remediator_error_handler",
+  "active": true,
+  "nodes": [
+    {
+      "id": "errtrig",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "fmt",
+      "name": "Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const e = $input.first().json;\nconst wf = e.workflow?.name || \"?\";\nconst msg = e.execution?.error?.message || \"okänt fel\";\nreturn [{json: {text: \"🚨 **AI-remediatorn kraschade**\\nWorkflow: \" + wf + \"\\nFel: \" + String(msg).slice(0,300) + \"\\nExecution: \" + (e.execution?.id || \"?\") + \" — kolla n8n executions.\"}}];"
+      }
+    },
+    {
+      "id": "post",
+      "name": "Post to k3s-alerts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://chat.k3s.nu/hooks/6qstcuba9tdg5xpmhm4dfptfph",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({text: $json.text}) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format": {
+      "main": [
+        [
+          {
+            "node": "Post to k3s-alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "id": "aiRemRateGate001",
+  "name": "rate_gate",
+  "active": true,
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "tool"
+            },
+            {
+              "name": "target"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "gate",
+      "name": "Gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const i = $input.first().json;\nconst sd = $getWorkflowStaticData(\"global\");\nsd.events = (sd.events || []).filter(e => Date.now() - e.ts < 3600000);\nconst max = parseInt($env.MAX_ACTIONS_PER_HOUR || \"4\", 10);\nif (sd.events.length >= max) {\n  return [{json: {allowed: false, detail: `rate limit: ${sd.events.length}/${max} write actions in the last hour - diagnosis-only mode`, recent: sd.events}}];\n}\nsd.events.push({ts: Date.now(), tool: i.tool || \"?\", target: i.target || \"?\"});\nreturn [{json: {allowed: true, count: sd.events.length, max}}];"
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -245,6 +245,99 @@
       "parameters": {
         "jsCode": "const r = $input.first().json;\nreturn [{json: {ok: false, detail: r.detail}}];"
       }
+    },
+    {
+      "id": "rate-gate",
+      "name": "Rate gate",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        500,
+        -250
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "aiRemRateGate001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tool": "restart_pod",
+            "target": "={{ $json.target }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tool",
+              "displayName": "tool",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "target",
+              "displayName": "target",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "rate-ok",
+      "name": "Rate OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        700,
+        -250
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.allowed === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "rate-refused",
+      "name": "RateRefused",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        -350
+      ],
+      "parameters": {
+        "jsCode": "return [{json: {ok: false, detail: $input.first().json.detail || \"rate limited\"}}];"
+      }
     }
   ],
   "connections": {
@@ -274,7 +367,7 @@
       "main": [
         [
           {
-            "node": "Ask Approval",
+            "node": "Rate gate",
             "type": "main",
             "index": 0
           }
@@ -360,10 +453,40 @@
           }
         ]
       ]
+    },
+    "Rate gate": {
+      "main": [
+        [
+          {
+            "node": "Rate OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate OK?": {
+      "main": [
+        [
+          {
+            "node": "Ask Approval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "RateRefused",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "errorWorkflow": "aiRemErrorWf0001"
   },
   "active": true
 }

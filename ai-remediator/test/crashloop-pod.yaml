@@ -1,0 +1,17 @@
+# Phase 6 test 1: CrashLoopBackOff
+# kubectl apply -f crashloop-pod.yaml ; cleanup: kubectl delete -f crashloop-pod.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crashloop-test
+  namespace: remediator-test
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: crashloop-test}}
+  template:
+    metadata: {labels: {app: crashloop-test}}
+    spec:
+      containers:
+      - name: crasher
+        image: busybox:1.36
+        command: ["sh", "-c", "echo 'FATAL: cannot connect to dependency db-svc:5432'; sleep 5; exit 1"]
