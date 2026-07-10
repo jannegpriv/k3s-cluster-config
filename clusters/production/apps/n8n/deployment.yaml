@@ -46,6 +46,10 @@ spec:
         - name: TZ
           value: "Europe/Stockholm"
         # --- ai-remediator config (read by tool sub-workflows via $env) ---
+        # n8n 2.x blocks $env in Code nodes by default; the write-tool
+        # guardrails read REMEDIATOR_* via $env, so unblock it.
+        - name: N8N_BLOCK_ENV_ACCESS_IN_NODE
+          value: "false"
         # Kill switch: write tools are no-ops until this is "true".
         # Flip to "true" only after the approval gate (Phase 4) + safety
         # rails (Phase 5) are in place and Phase 6 tests pass.
