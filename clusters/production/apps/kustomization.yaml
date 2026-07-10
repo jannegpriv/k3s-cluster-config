@@ -12,3 +12,4 @@ resources:
   - n8n
   - mattermost
   - authelia
+  - automation

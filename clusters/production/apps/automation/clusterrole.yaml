@@ -1,0 +1,32 @@
+# Rules for the AI remediation agent. Deliberately narrow:
+# - no secrets, no exec, no create/delete of workloads
+# - pod delete = "restart" (controller recreates)
+# - deployment patch = rollout restart annotation + scale
+# Scoped per namespace via RoleBindings (rolebindings.yaml) — there is NO
+# ClusterRoleBinding, so namespaces without a binding (kube-system, rook-ceph,
+# flux-system, ...) are unreachable.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ai-remediator
+rules:
+  # Read/diagnose
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "events", "services", "endpoints"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
+    verbs: ["get", "list"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+  # Remediate (narrow)
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["delete"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["patch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments/scale"]
+    verbs: ["get", "patch"]

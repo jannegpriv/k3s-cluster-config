@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: automation
+---
+# Sandbox for ai-remediator test scenarios (Phase 6) — kept permanently so
+# guardrail tests can be re-run after changes.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: remediator-test

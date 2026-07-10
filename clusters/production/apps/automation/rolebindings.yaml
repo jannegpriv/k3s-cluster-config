@@ -1,0 +1,156 @@
+# One RoleBinding per in-scope namespace (the allow-list). Adding a namespace
+# here widens the agent's reach — keep in sync with REMEDIATOR_NAMESPACES in n8n.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-remediator
+  namespace: openhab
+subjects:
+  - kind: ServiceAccount
+    name: ai-remediator
+    namespace: automation
+roleRef:
+  kind: ClusterRole
+  name: ai-remediator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-remediator
+  namespace: mattermost
+subjects:
+  - kind: ServiceAccount
+    name: ai-remediator
+    namespace: automation
+roleRef:
+  kind: ClusterRole
+  name: ai-remediator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-remediator
+  namespace: n8n
+subjects:
+  - kind: ServiceAccount
+    name: ai-remediator
+    namespace: automation
+roleRef:
+  kind: ClusterRole
+  name: ai-remediator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-remediator
+  namespace: mosquitto
+subjects:
+  - kind: ServiceAccount
+    name: ai-remediator
+    namespace: automation
+roleRef:
+  kind: ClusterRole
+  name: ai-remediator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-remediator
+  namespace: uptime-kuma
+subjects:
+  - kind: ServiceAccount
+    name: ai-remediator
+    namespace: automation
+roleRef:
+  kind: ClusterRole
+  name: ai-remediator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-remediator
+  namespace: bitwarden
+subjects:
+  - kind: ServiceAccount
+    name: ai-remediator
+    namespace: automation
+roleRef:
+  kind: ClusterRole
+  name: ai-remediator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-remediator
+  namespace: headlamp
+subjects:
+  - kind: ServiceAccount
+    name: ai-remediator
+    namespace: automation
+roleRef:
+  kind: ClusterRole
+  name: ai-remediator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-remediator
+  namespace: authelia
+subjects:
+  - kind: ServiceAccount
+    name: ai-remediator
+    namespace: automation
+roleRef:
+  kind: ClusterRole
+  name: ai-remediator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-remediator
+  namespace: loki
+subjects:
+  - kind: ServiceAccount
+    name: ai-remediator
+    namespace: automation
+roleRef:
+  kind: ClusterRole
+  name: ai-remediator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-remediator
+  namespace: monitoring
+subjects:
+  - kind: ServiceAccount
+    name: ai-remediator
+    namespace: automation
+roleRef:
+  kind: ClusterRole
+  name: ai-remediator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-remediator
+  namespace: remediator-test
+subjects:
+  - kind: ServiceAccount
+    name: ai-remediator
+    namespace: automation
+roleRef:
+  kind: ClusterRole
+  name: ai-remediator
+  apiGroup: rbac.authorization.k8s.io
