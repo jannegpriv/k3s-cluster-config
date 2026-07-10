@@ -1,0 +1,128 @@
+{
+  "id": "aiRemGetPodLogs1",
+  "name": "get_pod_logs",
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "namespace"
+            },
+            {
+              "name": "pod"
+            },
+            {
+              "name": "previous"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "prepare",
+      "name": "Prepare",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;\nfunction bad(s){ return !s || typeof s !== \"string\" || !RE.test(s); }\nconst i = $input.first().json;\nif (bad(i.namespace) || bad(i.pod)) return [{json: {blocked: true, ok: false, detail: \"invalid or missing namespace/pod\"}}];\nlet url = `https://kubernetes.default.svc/api/v1/namespaces/${i.namespace}/pods/${i.pod}/log?tailLines=200`;\nif (String(i.previous) === \"true\") url += \"&previous=true\";\nreturn [{json: {url}}];"
+      }
+    },
+    {
+      "id": "http",
+      "name": "K8s GET",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "aiRemediatorK8s1",
+          "name": "K8s ai-remediator"
+        }
+      }
+    },
+    {
+      "id": "result",
+      "name": "Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nif (r.blocked) return [{json: {ok: false, detail: r.detail}}];\nif (r.statusCode >= 400) return [{json: {ok: false, detail: `K8s API ${r.statusCode}: ${String(r.body).slice(0,300)}`}}];\nlet log = String(r.body || \"\");\nif (log.length > 6000) log = \"...(truncated)...\\n\" + log.slice(-6000);\nreturn [{json: {ok: true, log}}];"
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare": {
+      "main": [
+        [
+          {
+            "node": "K8s GET",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "K8s GET": {
+      "main": [
+        [
+          {
+            "node": "Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

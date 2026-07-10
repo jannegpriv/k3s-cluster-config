@@ -45,6 +45,20 @@ spec:
           value: "Europe/Stockholm"
         - name: TZ
           value: "Europe/Stockholm"
+        # --- ai-remediator config (read by tool sub-workflows via $env) ---
+        # Kill switch: write tools are no-ops until this is "true".
+        # Flip to "true" only after the approval gate (Phase 4) + safety
+        # rails (Phase 5) are in place and Phase 6 tests pass.
+        - name: REMEDIATOR_ENABLED
+          value: "false"
+        - name: REMEDIATOR_NAMESPACES
+          value: "openhab,mattermost,n8n,mosquitto,uptime-kuma,bitwarden,headlamp,authelia,loki,monitoring,remediator-test"
+        - name: MAX_REPLICAS
+          value: "3"
+        - name: COOLDOWN_MINUTES
+          value: "30"
+        - name: MAX_ACTIONS_PER_HOUR
+          value: "4"
         - name: N8N_ENCRYPTION_KEY
           valueFrom:
             secretKeyRef:

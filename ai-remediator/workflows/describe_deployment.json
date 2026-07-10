@@ -1,0 +1,124 @@
+{
+  "id": "aiRemDescDeploy1",
+  "name": "describe_deployment",
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "namespace"
+            },
+            {
+              "name": "name"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "prepare",
+      "name": "Prepare",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;\nfunction bad(s){ return !s || typeof s !== \"string\" || !RE.test(s); }\nconst i = $input.first().json;\nif (bad(i.namespace) || bad(i.name)) return [{json: {blocked: true, ok: false, detail: \"invalid or missing namespace/name\"}}];\nreturn [{json: {url: `https://kubernetes.default.svc/apis/apps/v1/namespaces/${i.namespace}/deployments/${i.name}`}}];"
+      }
+    },
+    {
+      "id": "http",
+      "name": "K8s GET",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "aiRemediatorK8s1",
+          "name": "K8s ai-remediator"
+        }
+      }
+    },
+    {
+      "id": "result",
+      "name": "Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nif (r.blocked) return [{json: {ok: false, detail: r.detail}}];\nif (r.statusCode >= 400) return [{json: {ok: false, detail: `K8s API ${r.statusCode}: ${JSON.stringify(r.body?.message).slice(0,200)}`}}];\nconst d = r.body;\nreturn [{json: {ok: true, deployment: {\n  name: d.metadata.name, namespace: d.metadata.namespace,\n  replicas: {desired: d.spec.replicas, ready: d.status.readyReplicas||0, available: d.status.availableReplicas||0, updated: d.status.updatedReplicas||0},\n  strategy: d.spec.strategy?.type,\n  containers: (d.spec.template.spec.containers||[]).map(c => ({name: c.name, image: c.image, resources: c.resources})),\n  conditions: (d.status.conditions||[]).map(c => `${c.type}=${c.status} (${c.reason||\"\"})`)\n}}}];"
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare": {
+      "main": [
+        [
+          {
+            "node": "K8s GET",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "K8s GET": {
+      "main": [
+        [
+          {
+            "node": "Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

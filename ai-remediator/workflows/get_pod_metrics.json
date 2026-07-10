@@ -1,0 +1,121 @@
+{
+  "id": "aiRemGetMetrics1",
+  "name": "get_pod_metrics",
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "namespace"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "prepare",
+      "name": "Prepare",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;\nfunction bad(s){ return !s || typeof s !== \"string\" || !RE.test(s); }\nconst i = $input.first().json;\nif (bad(i.namespace)) return [{json: {blocked: true, ok: false, detail: \"invalid or missing namespace\"}}];\nreturn [{json: {url: `https://kubernetes.default.svc/apis/metrics.k8s.io/v1beta1/namespaces/${i.namespace}/pods`}}];"
+      }
+    },
+    {
+      "id": "http",
+      "name": "K8s GET",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "aiRemediatorK8s1",
+          "name": "K8s ai-remediator"
+        }
+      }
+    },
+    {
+      "id": "result",
+      "name": "Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nif (r.blocked) return [{json: {ok: false, detail: r.detail}}];\nif (r.statusCode >= 400) return [{json: {ok: false, detail: `K8s API ${r.statusCode} (metrics-server?)`}}];\nconst pods = (r.body.items || []).map(p => ({\n  name: p.metadata.name,\n  containers: (p.containers||[]).map(c => `${c.name}: cpu=${c.usage.cpu} mem=${c.usage.memory}`)}));\nreturn [{json: {ok: true, count: pods.length, metrics: pods}}];"
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare": {
+      "main": [
+        [
+          {
+            "node": "K8s GET",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "K8s GET": {
+      "main": [
+        [
+          {
+            "node": "Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}
