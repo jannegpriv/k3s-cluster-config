@@ -21,9 +21,9 @@
       "parameters": {
         "modelId": {
           "__rl": true,
-          "value": "claude-sonnet-4-5-20250929",
+          "value": "claude-sonnet-5",
           "mode": "list",
-          "cachedResultName": "claude-sonnet-4-5-20250929"
+          "cachedResultName": "claude-sonnet-5"
         },
         "messages": {
           "values": [
@@ -223,8 +223,8 @@
         "model": {
           "__rl": true,
           "mode": "list",
-          "value": "claude-sonnet-4-5-20250929",
-          "cachedResultName": "Claude Sonnet 4.5"
+          "value": "claude-sonnet-5",
+          "cachedResultName": "Claude Sonnet 5"
         },
         "options": {}
       },
