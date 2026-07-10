@@ -1,0 +1,497 @@
+{
+  "id": "aiRemMainAgent01",
+  "name": "ai_alert_remediator",
+  "nodes": [
+    {
+      "id": "webhook",
+      "name": "Webhook alert-remediate",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "alert-remediate",
+        "options": {}
+      },
+      "webhookId": "aiRemWebhook0001"
+    },
+    {
+      "id": "dedup",
+      "name": "Filter & Dedup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst alerts = (body.alerts || []).filter(a => a.status === \"firing\");\nif (!alerts.length) return [];\nconst sd = $getWorkflowStaticData(\"global\");\nsd.seen = sd.seen || {};\nconst cooldownMs = parseInt($env.COOLDOWN_MINUTES || \"30\", 10) * 60000;\nconst now = Date.now();\nconst out = [];\nfor (const a of alerts.slice(0, 3)) {\n  const fp = a.fingerprint || (a.labels?.alertname + \"/\" + (a.labels?.pod || a.labels?.deployment || \"\"));\n  if (sd.seen[fp] && now - sd.seen[fp] < cooldownMs) continue;\n  sd.seen[fp] = now;\n  out.push({json: {fingerprint: fp, alert: {\n    name: a.labels?.alertname, severity: a.labels?.severity,\n    namespace: a.labels?.namespace, pod: a.labels?.pod, deployment: a.labels?.deployment,\n    summary: a.annotations?.summary, description: a.annotations?.description,\n    startsAt: a.startsAt}}}];\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "agent",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        420,
+        0
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=Ny alert från Alertmanager (fingerprint: {{ $json.fingerprint }}):\n\n```json\n{{ JSON.stringify($json.alert, null, 2) }}\n```\n\nDiagnostisera och hantera enligt dina instruktioner.",
+        "options": {
+          "systemMessage": "You are an SRE agent for a K3s home cluster (Raspberry Pi, ARM64). You receive one alert at a time.\nDiagnose first: use read-only tools (get_pod_status, get_pod_logs, get_events, describe_deployment, get_pod_metrics) to find the root cause. Then, if and only if a remediation from your write tools clearly applies, request it - a human operator approves or denies every write action; a denial or timeout is a final answer, do not retry it.\nKnown playbook: CrashLoopBackOff -> inspect logs (including previous container); if transient (OOM, failed dependency now healthy) -> rollout_restart_deployment. OOMKilled -> restart + RECOMMEND (do not apply) a memory-limit increase. Replicas unavailable after node pressure -> scale or restart as evidence suggests. If nothing in your action list fits, do NOT act - summarize the diagnosis and recommend manual steps.\nNever touch namespaces outside your scope (the tools enforce this). Never invent tool results. If a tool returns ok:false, report that honestly.\nAlways finish with a report in Swedish in EXACTLY this structure (markdown):\n**Alert:** name/severity\n**Diagnos:** what you found, with evidence\n**Åtgärd:** what you did, or \"ingen — kräver manuell hantering\"\n**Resultat:** verified outcome (re-check with a read tool after any write)\n**Rekommendation:** follow-ups",
+          "maxIterations": 10
+        }
+      }
+    },
+    {
+      "id": "model",
+      "name": "Anthropic Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        300,
+        220
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-5",
+          "cachedResultName": "Claude Sonnet 5"
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": "MsJOoUoULSXgQVIj",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "id": "format",
+      "name": "Format report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const txt = $input.first().json.output || $input.first().json.text || JSON.stringify($input.first().json).slice(0,3000);\nreturn [{json: {text: \"🤖 **AI-remediator** (fingerprint: \" + ($('Filter & Dedup').first().json.fingerprint || \"?\") + \")\\n\\n\" + txt}}];"
+      }
+    },
+    {
+      "id": "post",
+      "name": "Post to k3s-cluster",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://chat.k3s.nu/hooks/n6ix6iani3ro8c7h17hm36xkze",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({text: $json.text}) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "tool-get_pod_status",
+      "name": "get_pod_status",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        100,
+        420
+      ],
+      "parameters": {
+        "name": "get_pod_status",
+        "description": "List pods in a namespace with phase, readiness, restart counts and waiting/termination reasons. Inputs: namespace (required), selector (optional label selector).",
+        "workflowId": {
+          "__rl": true,
+          "value": "aiRemGetPodStat1",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "namespace": "={{ $fromAI('namespace', 'namespace to list pods in', 'string') }}",
+            "selector": "={{ $fromAI('selector', 'optional label selector, empty string if not needed', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        }
+      }
+    },
+    {
+      "id": "tool-get_pod_logs",
+      "name": "get_pod_logs",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        230,
+        420
+      ],
+      "parameters": {
+        "name": "get_pod_logs",
+        "description": "Fetch the last 200 log lines from a pod. Inputs: namespace, pod, previous ('true' to read the PREVIOUS crashed container instance - use for CrashLoopBackOff).",
+        "workflowId": {
+          "__rl": true,
+          "value": "aiRemGetPodLogs1",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "namespace": "={{ $fromAI('namespace', 'namespace of the pod', 'string') }}",
+            "pod": "={{ $fromAI('pod', 'exact pod name', 'string') }}",
+            "previous": "={{ $fromAI('previous', 'true for previous crashed container, else false', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        }
+      }
+    },
+    {
+      "id": "tool-get_events",
+      "name": "get_events",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        360,
+        420
+      ],
+      "parameters": {
+        "name": "get_events",
+        "description": "List recent Kubernetes events in a namespace, optionally filtered to one object. Inputs: namespace, name (optional object name).",
+        "workflowId": {
+          "__rl": true,
+          "value": "aiRemGetEvents01",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "namespace": "={{ $fromAI('namespace', 'namespace', 'string') }}",
+            "name": "={{ $fromAI('name', 'optional involved object name, empty string for all', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        }
+      }
+    },
+    {
+      "id": "tool-describe_deployment",
+      "name": "describe_deployment",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        490,
+        420
+      ],
+      "parameters": {
+        "name": "describe_deployment",
+        "description": "Get deployment details: replica counts, strategy, container images, resources, conditions. Inputs: namespace, name.",
+        "workflowId": {
+          "__rl": true,
+          "value": "aiRemDescDeploy1",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "namespace": "={{ $fromAI('namespace', 'namespace', 'string') }}",
+            "name": "={{ $fromAI('name', 'deployment name', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        }
+      }
+    },
+    {
+      "id": "tool-get_pod_metrics",
+      "name": "get_pod_metrics",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        620,
+        420
+      ],
+      "parameters": {
+        "name": "get_pod_metrics",
+        "description": "Current CPU/memory usage per pod in a namespace. Inputs: namespace.",
+        "workflowId": {
+          "__rl": true,
+          "value": "aiRemGetMetrics1",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "namespace": "={{ $fromAI('namespace', 'namespace', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        }
+      }
+    },
+    {
+      "id": "tool-restart_pod",
+      "name": "restart_pod",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        750,
+        420
+      ],
+      "parameters": {
+        "name": "restart_pod",
+        "description": "WRITE ACTION (requires human approval): restart a pod by deleting it so its controller recreates it. Inputs: namespace, pod, reason (mandatory motivation).",
+        "workflowId": {
+          "__rl": true,
+          "value": "aiRemRestartPod1",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "namespace": "={{ $fromAI('namespace', 'namespace', 'string') }}",
+            "pod": "={{ $fromAI('pod', 'pod to restart', 'string') }}",
+            "reason": "={{ $fromAI('reason', 'why this restart fixes the diagnosed problem', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        }
+      }
+    },
+    {
+      "id": "tool-rollout_restart_deployment",
+      "name": "rollout_restart_deployment",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        420
+      ],
+      "parameters": {
+        "name": "rollout_restart_deployment",
+        "description": "WRITE ACTION (requires human approval): rolling restart of a deployment. Inputs: namespace, name, reason.",
+        "workflowId": {
+          "__rl": true,
+          "value": "aiRemRolloutRst1",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "namespace": "={{ $fromAI('namespace', 'namespace', 'string') }}",
+            "name": "={{ $fromAI('name', 'deployment name', 'string') }}",
+            "reason": "={{ $fromAI('reason', 'why this restart fixes the diagnosed problem', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        }
+      }
+    },
+    {
+      "id": "tool-scale_deployment",
+      "name": "scale_deployment",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1010,
+        420
+      ],
+      "parameters": {
+        "name": "scale_deployment",
+        "description": "WRITE ACTION (requires human approval): scale a deployment. Replicas clamped to 1..MAX. Inputs: namespace, name, replicas, reason.",
+        "workflowId": {
+          "__rl": true,
+          "value": "aiRemScaleDepl01",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "namespace": "={{ $fromAI('namespace', 'namespace', 'string') }}",
+            "name": "={{ $fromAI('name', 'deployment name', 'string') }}",
+            "replicas": "={{ $fromAI('replicas', 'target replica count as integer', 'string') }}",
+            "reason": "={{ $fromAI('reason', 'why scaling fixes the diagnosed problem', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook alert-remediate": {
+      "main": [
+        [
+          {
+            "node": "Filter & Dedup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter & Dedup": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Format report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format report": {
+      "main": [
+        [
+          {
+            "node": "Post to k3s-cluster",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_pod_status": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_pod_logs": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_events": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "describe_deployment": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_pod_metrics": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "restart_pod": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "rollout_restart_deployment": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "scale_deployment": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

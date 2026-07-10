@@ -22,6 +22,9 @@
             },
             {
               "name": "reason"
+            },
+            {
+              "name": "fingerprint"
             }
           ]
         }
@@ -37,7 +40,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;\nfunction bad(s){ return !s || typeof s !== \"string\" || !RE.test(s); }\nconst i = $input.first().json;\nconst allow = ($env.REMEDIATOR_NAMESPACES || \"\").split(\",\").map(s => s.trim()).filter(Boolean);\nfunction refuse(detail){ return [{json: {blocked: true, ok: false, detail}}]; }\nif (String($env.REMEDIATOR_ENABLED) !== \"true\") return refuse(\"disabled by operator (REMEDIATOR_ENABLED != true)\");\nif (bad(i.namespace)) return refuse(\"invalid or missing namespace\");\nif (!allow.includes(i.namespace)) return refuse(`namespace '${i.namespace}' is outside REMEDIATOR_NAMESPACES allow-list`);\nif (!i.reason || String(i.reason).trim().length < 5) return refuse(\"a meaningful 'reason' is required\");\nif (bad(i.name)) return refuse(\"invalid or missing name\");\nreturn [{json: {url: `https://kubernetes.default.svc/apis/apps/v1/namespaces/${i.namespace}/deployments/${i.name}`,\n  body: {spec: {template: {metadata: {annotations: {\"kubectl.kubernetes.io/restartedAt\": new Date().toISOString()}}}}}, reason: i.reason}}];"
+        "jsCode": "const RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;\nfunction bad(s){ return !s || typeof s !== \"string\" || !RE.test(s); }\nconst i = $input.first().json;\nconst allow = ($env.REMEDIATOR_NAMESPACES || \"\").split(\",\").map(s => s.trim()).filter(Boolean);\nfunction refuse(detail){ return [{json: {blocked: true, ok: false, detail}}]; }\nif (String($env.REMEDIATOR_ENABLED) !== \"true\") return refuse(\"disabled by operator (REMEDIATOR_ENABLED != true)\");\nif (bad(i.namespace)) return refuse(\"invalid or missing namespace\");\nif (!allow.includes(i.namespace)) return refuse(`namespace '${i.namespace}' is outside REMEDIATOR_NAMESPACES allow-list`);\nif (!i.reason || String(i.reason).trim().length < 5) return refuse(\"a meaningful 'reason' is required\");\nif (bad(i.name)) return refuse(\"invalid or missing name\");\nreturn [{json: {url: `https://kubernetes.default.svc/apis/apps/v1/namespaces/${i.namespace}/deployments/${i.name}`,\n  body: {spec: {template: {metadata: {annotations: {\"kubectl.kubernetes.io/restartedAt\": new Date().toISOString()}}}}},\n  reason: i.reason, target: `deployment/${i.name} i ns/${i.namespace}`}}];"
       }
     },
     {
@@ -58,11 +61,11 @@
           },
           "conditions": [
             {
-              "leftValue": "={{ $json.blocked }}",
+              "leftValue": "={{ !$json.blocked }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
-                "operation": "notEquals"
+                "operation": "true"
               }
             }
           ],
@@ -71,12 +74,115 @@
       }
     },
     {
-      "id": "http",
+      "id": "ask-approval",
+      "name": "Ask Approval",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "const g = $('Guard').first().json;\nconst i = $('When Executed by Another Workflow').first().json;\nconst resume = $execution.resumeUrl;\nconst text = [\n  \"⚠️ **AI-remediator begär godkännande**\",\n  \"**Åtgärd:** rollout_restart_deployment \" + (\"`\" + g.target + \"`\"),\n  \"**Motivering:** \" + (g.reason || \"-\"),\n  (i.fingerprint ? \"**Alert-fingerprint:** \" + i.fingerprint : \"\"),\n  \"\",\n  \"✅ **Godkänn:** \" + resume + \"?approve=yes\",\n  \"❌ **Neka:** \" + resume + \"?approve=no\",\n  \"_Timeout 15 min = neka._\"\n].filter(Boolean).join(\"\\n\");\nreturn [{json: {text, __spec: g}}];"
+      }
+    },
+    {
+      "id": "post-approval",
+      "name": "Post approval request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        -100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://chat.k3s.nu/hooks/n6ix6iani3ro8c7h17hm36xkze",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({text: $json.text}) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "wait",
+      "name": "Wait for approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        -100
+      ],
+      "webhookId": "apprvolloutRst1",
+      "parameters": {
+        "resume": "webhook",
+        "httpMethod": "GET",
+        "limitWaitTime": true,
+        "limitType": "afterTimeInterval",
+        "resumeAmount": 15,
+        "resumeUnit": "minutes",
+        "options": {}
+      }
+    },
+    {
+      "id": "check-approval",
+      "name": "Check approval",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "const resumed = $input.first().json;\nconst q = resumed.query || {};\nconst approved = q.approve === \"yes\";\nconst g = $('Guard').first().json;\nif (!approved) return [{json: {blocked: true, ok: false, approved: false,\n  detail: q.approve === \"no\" ? \"denied by operator\" : \"approval timed out (15 min) - treated as deny\"}}];\nreturn [{json: {...g, approved: true}}];"
+      }
+    },
+    {
+      "id": "approved",
+      "name": "Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        60
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.approved === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "http-write",
       "name": "K8s WRITE",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        600,
+        1200,
         -100
       ],
       "parameters": {
@@ -119,11 +225,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        800,
+        1400,
         -100
       ],
       "parameters": {
-        "jsCode": "const r = $input.first().json;\nif (r.blocked) return [{json: {ok: false, tool: \"rollout_restart_deployment\", detail: r.detail}}];\nconst ok = r.statusCode < 400;\nconsole.log(JSON.stringify({audit: \"rollout_restart_deployment\", ts: new Date().toISOString(), status: r.statusCode, ok}));\nreturn [{json: {ok, tool: \"rollout_restart_deployment\", status: r.statusCode,\n  detail: ok ? \"executed\" : `K8s API ${r.statusCode}: ${JSON.stringify(r.body?.message || r.body).slice(0,300)}`}}];"
+        "jsCode": "const r = $input.first().json;\nif (r.blocked) return [{json: {ok: false, tool: \"rollout_restart_deployment\", detail: r.detail}}];\nconst ok = r.statusCode < 400;\nconsole.log(JSON.stringify({audit: \"rollout_restart_deployment\", ts: new Date().toISOString(), status: r.statusCode, ok}));\nreturn [{json: {ok, tool: \"rollout_restart_deployment\", status: r.statusCode,\n  detail: ok ? \"executed (approved by operator)\" : `K8s API ${r.statusCode}: ${JSON.stringify(r.body?.message || r.body).slice(0,300)}`}}];"
       }
     },
     {
@@ -133,7 +239,20 @@
       "typeVersion": 2,
       "position": [
         600,
-        100
+        150
+      ],
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nreturn [{json: {ok: false, detail: r.detail}}];"
+      }
+    },
+    {
+      "id": "denied",
+      "name": "Denied",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        60
       ],
       "parameters": {
         "jsCode": "const r = $input.first().json;\nreturn [{json: {ok: false, detail: r.detail}}];"
@@ -167,7 +286,7 @@
       "main": [
         [
           {
-            "node": "K8s WRITE",
+            "node": "Ask Approval",
             "type": "main",
             "index": 0
           }
@@ -175,6 +294,68 @@
         [
           {
             "node": "Refused",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Approval": {
+      "main": [
+        [
+          {
+            "node": "Post approval request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post approval request": {
+      "main": [
+        [
+          {
+            "node": "Wait for approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for approval": {
+      "main": [
+        [
+          {
+            "node": "Check approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check approval": {
+      "main": [
+        [
+          {
+            "node": "Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved?": {
+      "main": [
+        [
+          {
+            "node": "K8s WRITE",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Denied",
             "type": "main",
             "index": 0
           }
@@ -196,5 +377,5 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "active": false
+  "active": true
 }
