@@ -82,7 +82,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const r = $input.first().json;\nif (r.blocked) return [{json: {ok: false, detail: r.detail}}];\nif (r.statusCode >= 400) return [{json: {ok: false, detail: `K8s API ${r.statusCode}: ${String(r.body).slice(0,300)}`}}];\nlet log = String(r.body || \"\");\nif (log.length > 6000) log = \"...(truncated)...\\n\" + log.slice(-6000);\nreturn [{json: {ok: true, log}}];"
+        "jsCode": "const r = $input.first().json;\nif (r.blocked) return [{json: {ok: false, detail: r.detail}}];\nif (r.statusCode >= 400) return [{json: {ok: false, detail: `K8s API ${r.statusCode}: ${String(r.body ?? r.data).slice(0,300)}`}}];\nlet log = String(r.body ?? r.data ?? \"\");\nif (log.length > 6000) log = \"...(truncated)...\\n\" + log.slice(-6000);\nreturn [{json: {ok: true, log}}];"
       }
     }
   ],
