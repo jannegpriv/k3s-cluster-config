@@ -85,7 +85,7 @@ spec:
         resources:
           requests:
             cpu: 100m
-            memory: 512Mi
+            memory: 768Mi  # raised: pod evicted under memory pressure mid agent-run 2026-07-13
           limits:
             # 512Mi starved the Node.js heap during 2.29.9 DB migrations
             # (FATAL: JS heap out of memory at startup) — raised 2026-07-10.

@@ -83,7 +83,7 @@
         -100
       ],
       "parameters": {
-        "jsCode": "const g = $('Guard').first().json;\nconst i = $('When Executed by Another Workflow').first().json;\nconst resume = $execution.resumeUrl;\nconst text = [\n  \"⚠️ **AI-remediator begär godkännande**\",\n  \"**Åtgärd:** rollout_restart_deployment \" + (\"`\" + g.target + \"`\"),\n  \"**Motivering:** \" + (g.reason || \"-\"),\n  (i.fingerprint ? \"**Alert-fingerprint:** \" + i.fingerprint : \"\"),\n  \"\",\n  \"✅ **Godkänn:** \" + resume + \"?approve=yes\",\n  \"❌ **Neka:** \" + resume + \"?approve=no\",\n  \"_Timeout 15 min = neka._\"\n].filter(Boolean).join(\"\\n\");\nreturn [{json: {text, __spec: g}}];"
+        "jsCode": "const g = $('Guard').first().json;\nconst i = $('When Executed by Another Workflow').first().json;\nconst resume = $execution.resumeUrl;\nconst text = [\n  \"⚠️ **AI-remediator begär godkännande**\",\n  \"**Åtgärd:** rollout_restart_deployment \" + (\"`\" + g.target + \"`\"),\n  \"**Motivering:** \" + (g.reason || \"-\"),\n  (i.fingerprint ? \"**Alert-fingerprint:** \" + i.fingerprint : \"\"),\n  \"\",\n  \"✅ **Godkänn:** \" + resume + \"&approve=yes\",\n  \"❌ **Neka:** \" + resume + \"&approve=no\",\n  \"_Timeout 15 min = neka._\"\n].filter(Boolean).join(\"\\n\");\nreturn [{json: {text, __spec: g}}];"
       }
     },
     {
