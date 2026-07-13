@@ -54,7 +54,7 @@ spec:
         # Flip to "true" only after the approval gate (Phase 4) + safety
         # rails (Phase 5) are in place and Phase 6 tests pass.
         - name: REMEDIATOR_ENABLED
-          value: "false"
+          value: "true"  # Phase 6 testing approved by Janne 2026-07-13; approval gate + rate limit + allow-list still guard every write
         - name: REMEDIATOR_NAMESPACES
           value: "openhab,mattermost,n8n,mosquitto,uptime-kuma,bitwarden,headlamp,authelia,loki,monitoring,remediator-test"
         - name: MAX_REPLICAS
