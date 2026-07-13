@@ -41,6 +41,15 @@ data:
           connectTimeout: 30s
           keepAliveTimeout: 30s
           keepAliveConnections: 10
+      # n8n UI + ai-remediator approval links. Protected by Cloudflare Access
+      # (app "n8n.k3s.nu", policy ClaudeControl: One-time PIN to Janne's email)
+      # PLUS n8n's own login. Added 2026-07-13 for remote approvals from landet.
+      - hostname: n8n.k3s.nu
+        service: http://n8n.n8n.svc.cluster.local:80
+        originRequest:
+          connectTimeout: 30s
+          keepAliveTimeout: 30s
+          keepAliveConnections: 10
       - service: http_status:404  # This catch-all rule is required
     protocol: quic
     retries: 5

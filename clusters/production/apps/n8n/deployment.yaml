@@ -40,7 +40,7 @@ spec:
         - name: N8N_HOST
           value: "n8n.local"
         - name: WEBHOOK_URL
-          value: "http://n8n.local/"
+          value: "https://n8n.k3s.nu/"  # public via Cloudflare tunnel + Access; approval links clickable from anywhere
         - name: GENERIC_TIMEZONE
           value: "Europe/Stockholm"
         - name: TZ
