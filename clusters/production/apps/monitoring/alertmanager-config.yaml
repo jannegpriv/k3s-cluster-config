@@ -24,6 +24,15 @@ spec:
           - name: job
             value: kube-proxy
         continue: false
+      # AI remediation agent (Phase 7 go-live 2026-07-17): diagnoses and
+      # proposes remediation; every write action requires human approval in
+      # Mattermost. continue: true keeps the normal alert feed untouched.
+      - receiver: "ai-remediator"
+        matchers:
+          - name: severity
+            value: critical|warning
+            regex: true
+        continue: true
       # Route for critical alerts
       - receiver: "critical-alerts"
         matchers:
@@ -38,9 +47,13 @@ spec:
             value: warning
             regex: false
         continue: true
-  
+
   receivers:
     - name: "null"
+    - name: "ai-remediator"
+      webhookConfigs:
+        - url: "http://n8n.n8n/webhook/alert-remediate"
+          sendResolved: false
     - name: "critical-alerts"
       webhookConfigs:
         - url: "http://n8n.n8n/webhook/alertmanager"
