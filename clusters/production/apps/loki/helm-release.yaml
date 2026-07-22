@@ -25,7 +25,9 @@ spec:
           memory: 512Mi
         limits:
           cpu: 1500m
-          memory: 1Gi
+          # 1Gi caused recurring OOM kills (3rd incident 2026-07-22: killed at
+          # 1024MB RSS during the VXLAN incident's log surge) — raised 2026-07-23.
+          memory: 1536Mi
       
       # Persistent storage för långsiktig logglagring
       persistence:
