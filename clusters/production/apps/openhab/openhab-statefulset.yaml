@@ -18,7 +18,7 @@ spec:
       labels:
         app: openhab-production
       annotations:
-        kubernetes.io/change-cause: "Upgrade OpenHAB to 5.1.4"
+        kubernetes.io/change-cause: "Raise memory limit to 4Gi (was 3000Mi) - fix OOM hang"
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
@@ -35,7 +35,7 @@ spec:
               command: ["/bin/sh", "-c", "apt update && apt install -y ffmpeg"]
         resources:
           limits:
-            memory: "3000Mi"
+            memory: "4Gi"
             cpu:    "4.5"
           requests:
             memory: "2000Mi"
