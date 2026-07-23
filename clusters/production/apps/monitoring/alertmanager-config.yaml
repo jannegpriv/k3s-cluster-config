@@ -9,6 +9,17 @@ spec:
   route:
     receiver: "null"
     routes:
+      # Dead-man's-switch (2026-07-23): the always-firing Watchdog pings
+      # healthchecks.io every ~3 min; missing pings page Janne externally.
+      # FIRST route + continue: false — Watchdog goes nowhere else.
+      - receiver: "deadmans-switch"
+        matchers:
+          - name: alertname
+            value: Watchdog
+        groupWait: 0s
+        groupInterval: 1m
+        repeatInterval: 3m
+        continue: false
       # Silence the embedded component alerts in k3s
       - receiver: "null"
         matchers:
@@ -50,6 +61,12 @@ spec:
 
   receivers:
     - name: "null"
+    - name: "deadmans-switch"
+      webhookConfigs:
+        - urlSecret:
+            name: deadmans-switch
+            key: url
+          sendResolved: false
     - name: "ai-remediator"
       webhookConfigs:
         - url: "http://n8n.n8n/webhook/alert-remediate"
