@@ -1,0 +1,15 @@
+sitemap watch label="watch"
+{
+        Frame label="Topfloor" {
+                Switch item=gAllTopfloorLights label="Top floor lights"
+        }
+        Frame label="Frontdoor" {
+                Switch item=YaledoormanSmartlock_SmartLockStatus label="Smart Lock"
+        }
+        Frame label="Lynk & Co 08" {
+                Switch item=LynkCo_Vehicle_Door_Lock_Control label="Bil-lås"
+                Switch item=LynkCo_Vehicle_Preclimatization_Control label="Förvärmning"
+                Setpoint item=LynkCo_Vehicle_Target_Temp_Control label="Måltemp [%.0f °C]" minValue=16 maxValue=28 step=1
+                Switch item=LynkCo_Vehicle_Ventilation_Control label="Vädra"
+        }
+}
