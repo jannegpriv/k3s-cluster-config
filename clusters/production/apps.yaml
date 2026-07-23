@@ -12,3 +12,10 @@ spec:
     name: flux-system
   path: ./clusters/production/apps
   prune: true
+  # SOPS decryption for *.enc.yaml secrets (first consumer:
+  # monitoring/deadmans-switch-secret.enc.yaml). Without this Flux applies
+  # the ciphertext verbatim.
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-gpg
