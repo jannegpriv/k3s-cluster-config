@@ -12,4 +12,8 @@ sitemap watch label="watch"
                 Setpoint item=LynkCo_Vehicle_Target_Temp_Control label="Måltemp [%.0f °C]" minValue=16 maxValue=28 step=1
                 Switch item=LynkCo_Vehicle_Ventilation_Control label="Vädra"
         }
+        Frame label="Landet" {
+                Switch item=Remote_openHAB_Server_Landet_Item_Water_Control_Open_Valve_with_Duration label="Vattna"
+                Switch item=Remote_openHAB_Server_Landet_Item_Water_Control_Close_All_Valves label="Stäng vattnet"
+        }
 }
