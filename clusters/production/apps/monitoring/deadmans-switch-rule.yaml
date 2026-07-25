@@ -1,0 +1,22 @@
+# Own always-firing alert for the external dead man's switch.
+# The built-in Watchdog has NO namespace label, and the operator scopes all
+# AlertmanagerConfig routes under namespace="monitoring" - so Watchdog can
+# never match a namespaced route. This rule carries the label explicitly.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: deadmans-switch-rule
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: deadmans-switch
+      rules:
+        - alert: DeadMansSwitch
+          expr: vector(1)
+          labels:
+            severity: none
+            namespace: monitoring
+          annotations:
+            summary: "Always-firing heartbeat; missing pings at healthchecks.io page Janne"

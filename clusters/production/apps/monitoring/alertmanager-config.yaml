@@ -15,7 +15,7 @@ spec:
       - receiver: "deadmans-switch"
         matchers:
           - name: alertname
-            value: Watchdog
+            value: DeadMansSwitch
         groupWait: 0s
         groupInterval: 1m
         repeatInterval: 3m

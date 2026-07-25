@@ -16,6 +16,7 @@ resources:
   - alert-history-dashboard-configmap.yaml
   - alertmanager-config.yaml
   - deadmans-switch-secret.enc.yaml
+  - deadmans-switch-rule.yaml
   - k3s-silence-rules.yaml
   - alertmanager-config-configmap.yaml
   - ../loki/grafana-integration
