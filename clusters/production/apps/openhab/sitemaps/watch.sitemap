@@ -18,5 +18,6 @@ sitemap watch label="watch"
                 Switch item=Remote_openHAB_Server_Landet_Item_Water_Control_Close_All_Valves label="Stäng vattnet"
                 Switch item=Remote_openHAB_Server_Landet_Item_Sensibo_Sky_Jans_device_Master_Switch label="Värmepump"
                 Setpoint item=Remote_openHAB_Server_Landet_Item_Sensibo_Sky_Jans_device_Target_Temperature label="Pump måltemp [%.0f °C]" minValue=10 maxValue=25 step=1
+                Text item=Remote_openHAB_Server_Landet_Item_Gateway_Device_Temperature_Channel_3 label="Stora Gla [%.1f °C]"
         }
 }
