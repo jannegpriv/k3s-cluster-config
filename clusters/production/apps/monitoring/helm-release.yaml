@@ -69,7 +69,10 @@ spec:
           cpu: 300m
           memory: 128Mi
         limits:
-          cpu: 800m  # Increased from 600m to reduce CPU throttling
+          # No CPU limit: Grafana is bursty (dashboard rendering/queries), avg
+          # ~20m but spikes hit any CFS quota -> NodeCPUThrottling. Same fix as
+          # Prometheus (2026-07-10): bumping 600->800m never stopped it, so the
+          # limit was removed 2026-08-22. Request (300m) still guarantees scheduling.
           memory: 256Mi
       affinity:
         # Was hard-pinned to k3s-w-3 (which died in the 2026-07 incident and left
