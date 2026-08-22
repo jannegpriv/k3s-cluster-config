@@ -16,6 +16,10 @@ spec:
       interval: 1m
   values:
     grafana:
+      # RWO RBD PVC: RollingUpdate deadlocks on Multi-Attach (new pod waits for
+      # the volume the old pod still holds). Same fix as Mattermost.
+      deploymentStrategy:
+        type: Recreate
       ingress:
         enabled: true
         ingressClassName: traefik
