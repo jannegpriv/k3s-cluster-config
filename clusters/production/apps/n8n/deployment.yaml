@@ -57,6 +57,12 @@ spec:
           value: "true"  # Phase 6 testing approved by Janne 2026-07-13; approval gate + rate limit + allow-list still guard every write
         - name: REMEDIATOR_NAMESPACES
           value: "openhab,mattermost,n8n,mosquitto,uptime-kuma,bitwarden,headlamp,authelia,loki,monitoring,remediator-test"
+        # Phase 8 graduation (Janne 2026-08-30, after 6 weeks observation):
+        # comma-list of write tools that execute WITHOUT Mattermost approval
+        # (a notice is still posted). All other guards (kill switch, ns
+        # allow-list, rate gate, cooldown) unchanged. Empty = all need approval.
+        - name: REMEDIATOR_AUTO_ACTIONS
+          value: "restart_pod"
         - name: MAX_REPLICAS
           value: "3"
         - name: COOLDOWN_MINUTES

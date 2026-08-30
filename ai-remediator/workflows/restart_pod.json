@@ -220,7 +220,7 @@
         -100
       ],
       "parameters": {
-        "jsCode": "const r = $input.first().json;\nif (r.blocked) return [{json: {ok: false, tool: \"restart_pod\", detail: r.detail}}];\nconst ok = r.statusCode < 400;\nconsole.log(JSON.stringify({audit: \"restart_pod\", ts: new Date().toISOString(), status: r.statusCode, ok}));\nreturn [{json: {ok, tool: \"restart_pod\", status: r.statusCode,\n  detail: ok ? \"executed (approved by operator)\" : `K8s API ${r.statusCode}: ${JSON.stringify(r.body?.message || r.body).slice(0,300)}`}}];"
+        "jsCode": "const r = $input.first().json;\nif (r.blocked) return [{json: {ok: false, tool: \"restart_pod\", detail: r.detail}}];\nlet mode = \"approved by operator\";\ntry { $('Auto spec').first(); mode = \"auto-executed, Phase 8 - no approval required\"; } catch (e) {}\nconst ok = r.statusCode < 400;\nconsole.log(JSON.stringify({audit: \"restart_pod\", ts: new Date().toISOString(), status: r.statusCode, ok, mode}));\nreturn [{json: {ok, tool: \"restart_pod\", status: r.statusCode,\n  detail: ok ? `executed (${mode})` : `K8s API ${r.statusCode}: ${JSON.stringify(r.body?.message || r.body).slice(0,300)}`}}];"
       }
     },
     {
@@ -327,6 +327,93 @@
           ],
           "combinator": "and"
         }
+      }
+    },
+    {
+      "id": "auto-mode",
+      "name": "Auto mode?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        880,
+        -250
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ ($env.REMEDIATOR_AUTO_ACTIONS || \"\").split(\",\").map(s => s.trim()).includes(\"restart_pod\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "auto-notice",
+      "name": "Auto notice",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        -400
+      ],
+      "parameters": {
+        "jsCode": "const g = $('Guard').first().json;\nconst i = $('When Executed by Another Workflow').first().json;\nconst text = [\n  \"\\ud83e\\udd16 **AI-remediator auto-\\u00e5tg\\u00e4rd (Phase 8)**\",\n  \"**\\u00c5tg\\u00e4rd:** restart_pod \" + (\"`\" + g.target + \"`\"),\n  \"**Motivering:** \" + (g.reason || \"-\"),\n  (i.fingerprint ? \"**Alert-fingerprint:** \" + i.fingerprint : \"\"),\n  \"_Utf\\u00f6rs automatiskt utan godk\\u00e4nnande. Stoppa: ta bort restart_pod ur REMEDIATOR_AUTO_ACTIONS (eller REMEDIATOR_ENABLED=false f\\u00f6r allt)._\"\n].filter(Boolean).join(\"\\n\");\nreturn [{json: {text}}];"
+      }
+    },
+    {
+      "id": "post-auto",
+      "name": "Post auto notice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1240,
+        -400
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://chat.k3s.nu/hooks/n6ix6iani3ro8c7h17hm36xkze",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({text: $json.text}) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "auto-spec",
+      "name": "Auto spec",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1420,
+        -400
+      ],
+      "parameters": {
+        "jsCode": "return [{json: {...$('Guard').first().json, approved: \"auto\"}}];"
       }
     },
     {
@@ -472,7 +559,7 @@
       "main": [
         [
           {
-            "node": "Ask Approval",
+            "node": "Auto mode?",
             "type": "main",
             "index": 0
           }
@@ -480,6 +567,57 @@
         [
           {
             "node": "RateRefused",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto mode?": {
+      "main": [
+        [
+          {
+            "node": "Auto notice",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ask Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto notice": {
+      "main": [
+        [
+          {
+            "node": "Post auto notice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post auto notice": {
+      "main": [
+        [
+          {
+            "node": "Auto spec",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto spec": {
+      "main": [
+        [
+          {
+            "node": "K8s WRITE",
             "type": "main",
             "index": 0
           }
