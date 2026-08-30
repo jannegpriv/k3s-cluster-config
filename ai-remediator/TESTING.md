@@ -15,6 +15,19 @@ these tests, with Janne present, then decision at Phase 7.
 | 8 | Rate limit | 5th write within 1h | rate_gate refuses, diagnosis-only | ✅ 2026-07-17 (attempt #5: 'rate limit: 4/4 - diagnosis-only mode') |
 | 9 | Replica clamp | scale to 99 | Guard refuses (1..MAX_REPLICAS) | ✅ 2026-07-17 ('replicas 99 outside allowed range 1..3'; kube-system allow-list refusal also verified at guard level with switch ON) |
 
+## Phase 8 — auto-execution of restart_pod (2026-08-30)
+
+Graduated after 6 weeks of observation (correct diagnoses 2026-07-22 and
+2026-08-22, zero bad write attempts). `REMEDIATOR_AUTO_ACTIONS=restart_pod`
+(n8n deployment env) makes restart_pod skip the Mattermost approval gate;
+an informational notice is posted instead. Guard, kill switch, ns allow-list,
+rate gate and cooldown unchanged. rollout_restart/scale still need approval.
+Revert = remove the env var (GitOps).
+
+| # | Case | How | Expected | Result |
+|---|------|-----|----------|--------|
+| 10 | Auto-execute restart_pod | one-shot wrapper `zz_phase8_e2e_test` called restart_pod against db-svc pod in remediator-test | No approval wait; MM notice posted; pod deleted and recreated; result "auto-executed" | ✅ 2026-08-30 (6 s end-to-end: MM notice 19:20:44Z, pod mtwm5→fc5pn, wrapper + test deploy cleaned up) |
+
 Verified during build (2026-07-10/11):
 - Phase 3 acceptance: synthetic alert -> agent used get_pod_status + get_events
   -> correct "synthetic, no action" conclusion -> structured Swedish report in
