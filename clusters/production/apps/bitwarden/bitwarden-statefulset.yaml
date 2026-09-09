@@ -21,7 +21,7 @@ spec:
       serviceAccountName: bitwarden
       containers:
         - name: bitwarden
-          image: vaultwarden/server:1.35.7
+          image: vaultwarden/server:1.37.2
           imagePullPolicy: IfNotPresent
           env:
             - name: ROCKET_PORT
