@@ -25,5 +25,9 @@ cp "clusters/production/apps/openhab/camera-bridge/openhab/cameras.items" "$TMP/
 scp -F /dev/null -q "$TMP/cameras.things" "$TMP/cameras.items" "${HOST}:/tmp/"
 # Static placeholder for snapshotUrl/poster (created once, 1280x720 dark grey).
 $SSH "$HOST" 'export KUBECONFIG=$HOME/.kube/config; kubectl -n openhab exec openhab-production-0 -c openhab514 -- sh -c "test -s /openhab/conf/html/camera-idle.jpg || (ffmpeg -hide_banner -loglevel error -f lavfi -i color=c=0x1f2933:s=1280x720 -frames:v 1 -q:v 4 /openhab/conf/html/camera-idle.jpg && chown openhab:openhab /openhab/conf/html/camera-idle.jpg); ls -l /openhab/conf/html/camera-idle.jpg"'
+# Stop any running bridge ffmpeg first: on a Things reload the old handler's
+# HLS ffmpeg keeps running ~60 s next to the new one and both write the same
+# playlist (sequence flaps -> players break). They restart on demand.
+$SSH "$HOST" 'export KUBECONFIG=$HOME/.kube/config; kubectl -n openhab exec openhab-production-0 -c openhab514 -- sh -c "pkill -f \"^/usr/bin/ffmpeg .*camera-bridge\" || true; rm -rf /dev/shm/ipcamera/c720_lillstugan /dev/shm/ipcamera/c425_landet_baksida /dev/shm/ipcamera/c425_carport"'
 $SSH "$HOST" 'export KUBECONFIG=$HOME/.kube/config; kubectl -n openhab cp /tmp/cameras.things openhab-production-0:/openhab/conf/things/cameras.things -c openhab514 && kubectl -n openhab cp /tmp/cameras.items openhab-production-0:/openhab/conf/items/cameras.items -c openhab514 && rm -f /tmp/cameras.things /tmp/cameras.items && kubectl -n openhab exec openhab-production-0 -c openhab514 -- sh -c "chown openhab:openhab /openhab/conf/things/cameras.things /openhab/conf/items/cameras.items; ls -l /openhab/conf/things/cameras.things /openhab/conf/items/cameras.items"'
 echo "deployed; watch: kubectl -n openhab exec openhab-production-0 -c openhab514 -- tail -f /openhab/userdata/logs/openhab.log | grep -i ipcamera"

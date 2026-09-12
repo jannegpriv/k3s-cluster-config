@@ -80,6 +80,25 @@ binding's `startStream` channel. ON keeps ffmpeg → bridge → Tapo running unt
 no start delay, poster always fresh, camera awake 24/7. Use only for mains-powered
 cameras (C720). The C425 toggles carry a battery warning and default OFF.
 
+## HLS quirks of the 5.2.x IP Camera binding (learned the hard way)
+
+- `CameraServlet` only skips its 4.5 s `HLS_STARTUP_DELAY_MS` when `Ffmpeg.isAlive()`
+  is true, and `Ffmpeg.java` never sets `notFrozen` for the HLS format → **every**
+  playlist request takes ~4.5 s, for every camera (C220 too). Players need a wide
+  window: `-hls_time 4 -hls_list_size 6` (24 s).
+- ffmpeg restarts often (64 s idle stop, page preload, Things reload) and would
+  restart `MEDIA-SEQUENCE` at 0 → Video.js crashes in `calculateBaseTime_`, Safari
+  reports "corruption". `-hls_flags append_list+discont_start` keeps the sequence
+  monotonic across restarts and marks the timeline reset.
+- A Things-file reload leaves the old handler's ffmpeg running ~60 s beside the new
+  one, both writing the same playlist. `camera-bridge-things.sh` kills bridge ffmpeg
+  before copying.
+- Without `-map`, ffmpeg picks the camera's 8 kHz G.711 audio for the AAC track;
+  `-map 0:v:0 -map 1:a:0` selects the silent 44.1 kHz `aevalsrc` instead.
+- `oh-video-card` with `startManually` still fetches the playlist on page load
+  (preload=metadata) → the C720 pipeline starts whenever the page is open and idles
+  out 64 s later. Battery cameras therefore live only on popup pages.
+
 ## Operations
 
 - Logs: `kubectl -n openhab logs deploy/camera-bridge -c tailscale` / `-c go2rtc`
