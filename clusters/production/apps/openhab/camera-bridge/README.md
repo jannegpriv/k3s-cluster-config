@@ -67,12 +67,13 @@ Tapo/go2rtc path from the Tailscale routing.
   `snapshotUrl` the binding silently runs a permanent `ffmpeg -skip_frame nokey`
   per camera against the bridge = permanent Tapo session (observed 2026-09-12).
   `updateImageWhen="0"`, `gifPreroll=0` → nothing polled.
-- The page shows a **Ström PÅ/AV toggle** (= binding `startStream`) and a still
-  image for each C425; a player is only rendered once `cameras.js` has polled the
+- Every camera card shows the **latest still** (`conf/html/<cam>-last.jpg`, extracted
+  by `cameras.js` from the newest segment whenever a stream stops). For the C425s
+  tapping the still sends `startStream` ON; a player replaces it once `cameras.js` has polled the
   HLS endpoint and seen a playlist with segments (`*_Ready`). Cold start is 10-40 s
   (camera wake, first Tapo attempt often refused) - far beyond the binding's 4.5 s
   wait, and Safari's native HLS never retries a 404 playlist. The rule switches the
-  stream OFF after 120 s max. C425 things use plain `delete_segments` (the rule
+  stream OFF after 120 s max; a red button stops it earlier. C425 things use plain `delete_segments` (the rule
   removes the stale playlist at wake; the player never spans a restart).
 - The binding keeps HLS (and thus the Tapo session) alive ~64 s after the last
   playlist request; expect the camera to report "awake" for about that long
