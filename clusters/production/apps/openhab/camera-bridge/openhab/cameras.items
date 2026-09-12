@@ -1,0 +1,10 @@
+// Permanent-stream switches for the camera-bridge cameras.
+// ON = the IP Camera binding keeps the HLS pipeline (ffmpeg -> bridge -> Tapo
+// session) running until switched OFF: instant playback, but the camera is
+// awake the whole time. Fine for mains-powered cameras; for the battery C425s
+// leave OFF (they are still viewable on demand via the popup pages).
+// Copied to /openhab/conf/items/cameras.items by scripts/camera-bridge-things.sh.
+
+Switch C720_Lillstugan_PermanentStream    "Lillstugan – permanent ström"     <camera> { channel="ipcamera:generic:c720_lillstugan:startStream" }
+Switch C425_LandetBaksida_PermanentStream "Landet baksida – permanent ström" <camera> { channel="ipcamera:generic:c425_landet_baksida:startStream" }
+Switch C425_Carport_PermanentStream       "Carport – permanent ström"        <camera> { channel="ipcamera:generic:c425_carport:startStream" }

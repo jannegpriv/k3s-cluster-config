@@ -33,6 +33,7 @@ Tapo/go2rtc path from the Tailscale routing.
 | `service.yaml` | ClusterIP `camera-bridge:8554` (RTSP only; API bound to 127.0.0.1, WebRTC off) | yes |
 | `secret.enc.yaml` | SOPS: `TS_AUTHKEY`, rendered `go2rtc.yaml` (Tapo pw URL-encoded, RTSP creds), `rtsp-username/-password` | yes (Flux decrypts with `sops-gpg`) |
 | `openhab/cameras.things.tmpl` | the two `ipcamera:generic` Things (creds filled at render time) | no — copied to the conf PVC |
+| `openhab/cameras.items` | `*_PermanentStream` switches → binding channel `startStream` (HLS kept running while ON; mains cameras only) | no — copied to the conf PVC |
 | `openhab/page-*.yaml` | Main UI pages (overview + C425 live popup) | no — Main UI (jsondb) |
 | `../../../../../scripts/camera-bridge-secret.sh` | builds + encrypts the Secret from local masked files | — |
 | `../../../../../scripts/camera-bridge-things.sh` | renders the Things file (RTSP creds from `~/.secrets/camera-bridge/`) and `kubectl cp`s it into `openhab-production-0` | — |
@@ -71,6 +72,13 @@ Tapo/go2rtc path from the Tailscale routing.
 - The binding keeps HLS (and thus the Tapo session) alive ~64 s after the last
   playlist request; expect the camera to report "awake" for about that long
   after closing the popup.
+
+## Permanent stream (mains-powered cameras)
+
+Each camera has a `<Cam>_PermanentStream` Switch (toggle on the pages) linked to the
+binding's `startStream` channel. ON keeps ffmpeg → bridge → Tapo running until OFF:
+no start delay, poster always fresh, camera awake 24/7. Use only for mains-powered
+cameras (C720). The C425 toggles carry a battery warning and default OFF.
 
 ## Operations
 

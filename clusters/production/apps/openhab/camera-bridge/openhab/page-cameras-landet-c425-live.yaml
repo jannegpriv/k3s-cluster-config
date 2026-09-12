@@ -35,3 +35,8 @@ slots:
                           hideControls: false
                           playerType: videojs
                           posterURL: /static/camera-idle.jpg
+                      - component: oh-toggle-card
+                        config:
+                          title: Permanent ström
+                          item: C425_LandetBaksida_PermanentStream
+                          footer: ⚠️ Batterikamera – PÅ håller kameran vaken dygnet runt. Lämna AV om den inte sitter på nätsladd.

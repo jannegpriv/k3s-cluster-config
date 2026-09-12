@@ -45,6 +45,11 @@ slots:
                           hideControls: false
                           playerType: videojs
                           posterURL: /static/camera-idle.jpg
+                      - component: oh-toggle-card
+                        config:
+                          title: Permanent ström (nätdriven kamera)
+                          item: C720_Lillstugan_PermanentStream
+                          footer: PÅ = strömmen hålls igång hela tiden, start utan fördröjning.
     - component: oh-block
       config:
         title: Landet baksida
