@@ -99,6 +99,13 @@ cameras (C720). The C425 toggles carry a battery warning and default OFF.
   (preload=metadata) → the C720 pipeline starts whenever the page is open and idles
   out 64 s later. Battery cameras therefore live only on popup pages.
 
+## Also applied to the existing C220 (`ipcamera:onvif:10ce3f91aa`, UI-managed)
+
+Same `hlsOutOptions` plus `-bsf:v filter_units=remove_types=6` (the C220 emits
+malformed SEI NAL units that Safari rejects), set via full `PUT /rest/things/<uid>`
+(`PUT .../config` returns 500 in 5.2.1). Overview card URL made relative with
+`type: application/x-mpegURL`. Not in Git - lives in openHAB's jsondb.
+
 ## Operations
 
 - Logs: `kubectl -n openhab logs deploy/camera-bridge -c tailscale` / `-c go2rtc`
