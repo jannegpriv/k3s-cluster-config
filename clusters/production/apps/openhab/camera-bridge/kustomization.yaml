@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - pvc.yaml
+  - service.yaml
+  - deployment.yaml
+  # SOPS-encrypted: TS_AUTHKEY, go2rtc.yaml (Tapo + RTSP creds), rtsp-username,
+  # rtsp-password. Created by scripts/camera-bridge-secret.sh - never edit by hand.
+  - secret.enc.yaml

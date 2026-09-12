@@ -1,0 +1,18 @@
+# Internal-only RTSP endpoint for openHAB (IP Camera binding / ffmpeg).
+# No Ingress, no NodePort, no Cloudflare route - cluster-internal by design.
+apiVersion: v1
+kind: Service
+metadata:
+  name: camera-bridge
+  namespace: openhab
+  labels:
+    app: camera-bridge
+spec:
+  type: ClusterIP
+  selector:
+    app: camera-bridge
+  ports:
+    - name: rtsp
+      port: 8554
+      targetPort: 8554
+      protocol: TCP

@@ -1,0 +1,51 @@
+// openHAB IP Camera things for the Landet cameras via camera-bridge (go2rtc).
+// TEMPLATE - rendered by scripts/camera-bridge-things.sh (fills @@RTSP_*@@ from
+// the SOPS secret) and copied to /openhab/conf/things/cameras.things.
+// The binding inserts username/password into the RTSP URL itself
+// ("Leave any user:pass@ out of any URLs, the binding will handle this").
+// HLS segments go to /dev/shm (RAM, 64 MiB tmpfs in the container): 4 x 2 s
+// segments per camera, deleted as they age. Nothing is polled or pre-rolled:
+// go2rtc only opens the Tapo session while openHAB's HLS is being watched
+// (+ the binding's ~64 s idle timeout).
+
+Thing ipcamera:generic:c720_lillstugan "Lillstugan – C720" [
+    ipAddress="camera-bridge.openhab.svc.cluster.local",
+    username="@@RTSP_USER@@",
+    password="@@RTSP_PASS@@",
+    ffmpegLocation="/usr/bin/ffmpeg",
+    ffmpegInput="rtsp://camera-bridge.openhab.svc.cluster.local:8554/c720_lillstugan",
+    ffmpegInputOptions="-rtsp_transport tcp",
+    ffmpegOutput="/dev/shm/ipcamera/c720_lillstugan/",
+    hlsOutOptions="-strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -hls_flags delete_segments -hls_time 2 -hls_list_size 4",
+    updateImageWhen="0",
+    gifPreroll=0,
+    ipWhitelist="DISABLE"
+]
+
+Thing ipcamera:generic:c425_landet_baksida "Landet baksida – C425" [
+    ipAddress="camera-bridge.openhab.svc.cluster.local",
+    username="@@RTSP_USER@@",
+    password="@@RTSP_PASS@@",
+    ffmpegLocation="/usr/bin/ffmpeg",
+    ffmpegInput="rtsp://camera-bridge.openhab.svc.cluster.local:8554/c425_landet_baksida",
+    ffmpegInputOptions="-rtsp_transport tcp",
+    ffmpegOutput="/dev/shm/ipcamera/c425_landet_baksida/",
+    hlsOutOptions="-strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -hls_flags delete_segments -hls_time 2 -hls_list_size 4",
+    updateImageWhen="0",
+    gifPreroll=0,
+    ipWhitelist="DISABLE"
+]
+
+Thing ipcamera:generic:c425_carport "Carport – C425" [
+    ipAddress="camera-bridge.openhab.svc.cluster.local",
+    username="@@RTSP_USER@@",
+    password="@@RTSP_PASS@@",
+    ffmpegLocation="/usr/bin/ffmpeg",
+    ffmpegInput="rtsp://camera-bridge.openhab.svc.cluster.local:8554/c425_carport",
+    ffmpegInputOptions="-rtsp_transport tcp",
+    ffmpegOutput="/dev/shm/ipcamera/c425_carport/",
+    hlsOutOptions="-strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -hls_flags delete_segments -hls_time 2 -hls_list_size 4",
+    updateImageWhen="0",
+    gifPreroll=0,
+    ipWhitelist="DISABLE"
+]

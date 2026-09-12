@@ -1,0 +1,16 @@
+# Persistent Tailscale node state (identity) for the camera bridge.
+# Without it every pod restart would register a new node in the tailnet.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: camera-bridge-tailscale-state
+  namespace: openhab
+  labels:
+    app: camera-bridge
+spec:
+  storageClassName: rook-ceph-block
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi

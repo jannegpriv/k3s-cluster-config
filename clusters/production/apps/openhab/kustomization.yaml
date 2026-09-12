@@ -11,6 +11,7 @@ resources:
   - backup-cronjob.yaml
   - backup-rbac.yaml
   - promtail-sidecar-configmap.yaml
+  - camera-bridge
 
 configMapGenerator:
   - name: openhab-backup-script

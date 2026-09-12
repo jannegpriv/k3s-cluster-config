@@ -1,0 +1,124 @@
+# camera-bridge: Tailscale (kernel mode, accept-routes) + go2rtc in ONE pod
+# so go2rtc can reach the Landet LAN (192.168.1.0/24) through the existing
+# subnet router "openhab3". go2rtc speaks the Tapo protocol (TCP 8800) to
+# the cameras and re-publishes plain RTSP (auth-protected) on 8554 for
+# openHAB's IP Camera binding. go2rtc is on-demand: it only connects to a
+# camera while a consumer (openHAB HLS) is active - important for the
+# battery-powered C425.
+#
+# Deliberately NOT a sidecar in the openHAB pod: that pod uses hostNetwork
+# and would put Tailscale on the node itself.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: camera-bridge
+  namespace: openhab
+  labels:
+    app: camera-bridge
+spec:
+  replicas: 1
+  # Recreate: never two tailscaled with the same state dir / node identity.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: camera-bridge
+  template:
+    metadata:
+      labels:
+        app: camera-bridge
+    spec:
+      # Keep the bridge off the control plane; any worker with /dev/net/tun works.
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: NotIn
+                    values: ["true"]
+      containers:
+        - name: tailscale
+          image: tailscale/tailscale:v1.102.3
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TS_USERSPACE
+              value: "false"          # kernel mode: routes land in the pod netns
+            - name: TS_KUBE_SECRET
+              value: ""               # state on the PVC, not in a k8s Secret
+            - name: TS_STATE_DIR
+              value: /var/lib/tailscale
+            - name: TS_HOSTNAME
+              value: camera-bridge
+            - name: TS_AUTH_ONCE
+              value: "true"           # reuse persisted identity; auth key only on first start
+            - name: TS_ACCEPT_DNS
+              value: "false"          # keep cluster DNS (camera-bridge.openhab.svc...)
+            - name: TS_EXTRA_ARGS
+              value: "--accept-routes" # use openhab3's 192.168.1.0/24 route; advertise nothing
+            - name: TS_ENABLE_HEALTH_CHECK
+              value: "true"
+            - name: TS_AUTHKEY
+              valueFrom:
+                secretKeyRef:
+                  name: camera-bridge
+                  key: TS_AUTHKEY
+          securityContext:
+            capabilities:
+              add: ["NET_ADMIN"]
+          volumeMounts:
+            - name: tailscale-state
+              mountPath: /var/lib/tailscale
+            - name: dev-net-tun
+              mountPath: /dev/net/tun
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 9002
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 20m
+              memory: 48Mi
+            limits:
+              memory: 128Mi
+        - name: go2rtc
+          image: alexxit/go2rtc:1.9.14
+          imagePullPolicy: IfNotPresent
+          workingDir: /config
+          ports:
+            - name: rtsp
+              containerPort: 8554
+              protocol: TCP
+          volumeMounts:
+            - name: go2rtc-config
+              mountPath: /config/go2rtc.yaml
+              subPath: go2rtc.yaml
+              readOnly: true
+          readinessProbe:
+            tcpSocket:
+              port: 8554
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 48Mi
+            limits:
+              memory: 256Mi
+      volumes:
+        - name: tailscale-state
+          persistentVolumeClaim:
+            claimName: camera-bridge-tailscale-state
+        - name: dev-net-tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice
+        - name: go2rtc-config
+          secret:
+            secretName: camera-bridge
+            items:
+              - key: go2rtc.yaml
+                path: go2rtc.yaml

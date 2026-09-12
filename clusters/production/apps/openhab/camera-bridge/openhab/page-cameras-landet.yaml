@@ -1,0 +1,90 @@
+# Main UI layout page "Kameror Landet" (uid: cameras_landet).
+# Paste into Main UI: Settings > Pages > + > Layout page > Code tab, or POST via
+# scripts/camera-bridge-page.sh. URLs are same-origin (relative), so the page
+# works on every openHAB URL the user uses (NodePort, openhab.local, k3s.nu)
+# and never exposes camera addresses or credentials to the browser.
+#
+# C720: video card, startManually - user presses play.
+# C425 (battery): NO player on this page at all. A button opens a popup page
+# (uid cameras_landet_c425_live) - nothing touches the camera until then.
+uid: cameras_landet
+tags:
+  - cameras
+props:
+  parameters: []
+  parameterGroups: []
+timestamp: Sep 12, 2026, 1:30:00 PM
+component: oh-layout-page
+config:
+  label: Kameror
+  sidebar: true
+slots:
+  default:
+    - component: oh-block
+      config:
+        title: Lillstugan
+      slots:
+        default:
+          - component: oh-grid-row
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
+                      - component: oh-video-card
+                        config:
+                          title: Lillstugan – C720
+                          footer: HLS via openHAB (~5–10 s fördröjning). Tryck play för att starta.
+                          url: /ipcamera/c720_lillstugan/ipcamera.m3u8
+                          type: application/x-mpegURL
+                          startManually: true
+                          startMuted: true
+                          hideControls: false
+                          playerType: videojs
+    - component: oh-block
+      config:
+        title: Landet baksida
+      slots:
+        default:
+          - component: oh-grid-row
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
+                      - component: oh-label-card
+                        config:
+                          title: Landet baksida – C425
+                          label: Batterikamera – ingen ström till kameran förrän du öppnar livevisningen.
+                          icon: f7:battery_25
+                          action: popup
+                          actionModal: page:cameras_landet_c425_live
+                          footer: Tryck för att öppna livevisning (~20–30 s per titt räcker)
+    - component: oh-block
+      config:
+        title: Carport (Huddinge)
+      slots:
+        default:
+          - component: oh-grid-row
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
+                      - component: oh-label-card
+                        config:
+                          title: Carport – C425
+                          label: Batterikamera – öppnas på begäran.
+                          icon: f7:battery_25
+                          action: popup
+                          actionModal: page:cameras_carport_c425_live
+                          footer: Tryck för att öppna livevisning
