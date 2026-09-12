@@ -1,20 +1,20 @@
-# Main UI layout page "Kameror Landet" (uid: cameras_landet).
-# Paste into Main UI: Settings > Pages > + > Layout page > Code tab, or POST via
-# scripts/camera-bridge-page.sh. URLs are same-origin (relative), so the page
-# works on every openHAB URL the user uses (NodePort, openhab.local, k3s.nu)
-# and never exposes camera addresses or credentials to the browser.
+# Main UI layout page "Kameror" (uid: cameras_landet). Deployed via
+# scripts/camera-bridge-page.sh (REST) or pasted into the page editor's Code tab.
+# URLs are same-origin (relative) so the page works on every openHAB URL and never
+# exposes camera addresses or credentials.
 #
-# C720: video card, startManually - user presses play.
+# NOTE: an oh-grid-col renders only its FIRST child -> one widget per row/col.
 # All cameras show the latest still (conf/html/<cam>-last.jpg, written by cameras.js
-# when a stream stops). C425s (battery): tapping the still sends startStream ON;
-# the player replaces the still once cameras.js has confirmed the playlist exists.
+# when a stream stops). C425s (battery): tapping the still sends startStream ON; the
+# player replaces the still once cameras.js has confirmed the playlist exists
+# (<Cam>_Ready). A red button or the 120 s cap stops the stream.
 uid: cameras_landet
 tags:
   - cameras
 props:
   parameters: []
   parameterGroups: []
-timestamp: Sep 12, 2026, 1:30:00 PM
+timestamp: Sep 12, 2026, 4:00:00 PM
 component: oh-layout-page
 config:
   label: Kameror
@@ -27,6 +27,8 @@ slots:
       slots:
         default:
           - component: oh-grid-row
+            config:
+                    {}
             slots:
               default:
                 - component: oh-grid-col
@@ -46,6 +48,17 @@ slots:
                           hideControls: false
                           playerType: videojs
                           posterURL: /static/c720_lillstugan-last.jpg
+          - component: oh-grid-row
+            config:
+                    {}
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
                       - component: oh-toggle-card
                         config:
                           title: Permanent ström (nätdriven kamera)
@@ -57,6 +70,8 @@ slots:
       slots:
         default:
           - component: oh-grid-row
+            config:
+                    visible: =items.C425_LandetBaksida_PermanentStream.state != 'ON'
             slots:
               default:
                 - component: oh-grid-col
@@ -74,14 +89,34 @@ slots:
                           actionItem: C425_LandetBaksida_PermanentStream
                           actionCommand: "ON"
                           footer: Senaste bild. Tryck på bilden för live (batterikamera – ~10–30 s start, max 2 min).
-                          visible: =items.C425_LandetBaksida_PermanentStream.state != 'ON'
+          - component: oh-grid-row
+            config:
+                    visible: =items.C425_LandetBaksida_PermanentStream.state == 'ON' && items.C425_LandetBaksida_Ready.state != 'ON'
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
                       - component: oh-label-card
                         config:
                           title: Landet baksida – C425
                           label: Väcker kameran…
                           icon: f7:hourglass
                           footer: Bilden kommer när strömmen är igång (10–30 s).
-                          visible: =items.C425_LandetBaksida_PermanentStream.state == 'ON' && items.C425_LandetBaksida_Ready.state != 'ON'
+          - component: oh-grid-row
+            config:
+                    visible: =items.C425_LandetBaksida_Ready.state == 'ON'
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
                       - component: oh-video-card
                         config:
                           title: Landet baksida – C425
@@ -93,7 +128,17 @@ slots:
                           hideControls: false
                           playerType: videojs
                           posterURL: /static/c425_landet_baksida-last.jpg
-                          visible: =items.C425_LandetBaksida_Ready.state == 'ON'
+          - component: oh-grid-row
+            config:
+                    visible: =items.C425_LandetBaksida_PermanentStream.state == 'ON'
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
                       - component: oh-button
                         config:
                           text: Stoppa strömmen nu
@@ -102,13 +147,14 @@ slots:
                           action: command
                           actionItem: C425_LandetBaksida_PermanentStream
                           actionCommand: "OFF"
-                          visible: =items.C425_LandetBaksida_PermanentStream.state == 'ON'
     - component: oh-block
       config:
         title: Carport (Huddinge)
       slots:
         default:
           - component: oh-grid-row
+            config:
+                    visible: =items.C425_Carport_PermanentStream.state != 'ON'
             slots:
               default:
                 - component: oh-grid-col
@@ -126,14 +172,34 @@ slots:
                           actionItem: C425_Carport_PermanentStream
                           actionCommand: "ON"
                           footer: Senaste bild. Tryck på bilden för live (batterikamera – ~10–30 s start, max 2 min).
-                          visible: =items.C425_Carport_PermanentStream.state != 'ON'
+          - component: oh-grid-row
+            config:
+                    visible: =items.C425_Carport_PermanentStream.state == 'ON' && items.C425_Carport_Ready.state != 'ON'
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
                       - component: oh-label-card
                         config:
                           title: Carport – C425
                           label: Väcker kameran…
                           icon: f7:hourglass
                           footer: Bilden kommer när strömmen är igång (10–30 s).
-                          visible: =items.C425_Carport_PermanentStream.state == 'ON' && items.C425_Carport_Ready.state != 'ON'
+          - component: oh-grid-row
+            config:
+                    visible: =items.C425_Carport_Ready.state == 'ON'
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
                       - component: oh-video-card
                         config:
                           title: Carport – C425
@@ -145,7 +211,17 @@ slots:
                           hideControls: false
                           playerType: videojs
                           posterURL: /static/c425_carport-last.jpg
-                          visible: =items.C425_Carport_Ready.state == 'ON'
+          - component: oh-grid-row
+            config:
+                    visible: =items.C425_Carport_PermanentStream.state == 'ON'
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
                       - component: oh-button
                         config:
                           text: Stoppa strömmen nu
@@ -154,4 +230,3 @@ slots:
                           action: command
                           actionItem: C425_Carport_PermanentStream
                           actionCommand: "OFF"
-                          visible: =items.C425_Carport_PermanentStream.state == 'ON'
