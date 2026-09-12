@@ -57,7 +57,7 @@ Tapo/go2rtc path from the Tailscale routing.
 3. `scripts/camera-bridge-things.sh` (after the bridge pod is Ready).
 4. Pages: paste `openhab/page-cameras-landet-c425-live.yaml`,
    `openhab/page-cameras-carport-c425-live.yaml`, then `openhab/page-cameras-landet.yaml` into Main UI → Settings → Pages → + →
-   Layout page → Code tab (or `OPENHAB_TOKEN=… scripts/camera-bridge-page.sh`).
+   Layout page → Code tab (or `scripts/camera-bridge-page.sh (token from ~/.secrets/camera-bridge/oh-token)`).
 
 ## Battery camera (C425) rules baked in
 
