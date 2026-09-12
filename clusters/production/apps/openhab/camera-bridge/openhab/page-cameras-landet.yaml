@@ -72,7 +72,7 @@ slots:
                           refreshInterval: 60000
                           action: command
                           actionItem: C425_LandetBaksida_PermanentStream
-                          actionCommand: ON
+                          actionCommand: "ON"
                           footer: Senaste bild. Tryck på bilden för live (batterikamera – ~10–30 s start, max 2 min).
                           visible: =items.C425_LandetBaksida_PermanentStream.state != 'ON'
                       - component: oh-label-card
@@ -101,7 +101,7 @@ slots:
                           color: red
                           action: command
                           actionItem: C425_LandetBaksida_PermanentStream
-                          actionCommand: OFF
+                          actionCommand: "OFF"
                           visible: =items.C425_LandetBaksida_PermanentStream.state == 'ON'
     - component: oh-block
       config:
@@ -124,7 +124,7 @@ slots:
                           refreshInterval: 60000
                           action: command
                           actionItem: C425_Carport_PermanentStream
-                          actionCommand: ON
+                          actionCommand: "ON"
                           footer: Senaste bild. Tryck på bilden för live (batterikamera – ~10–30 s start, max 2 min).
                           visible: =items.C425_Carport_PermanentStream.state != 'ON'
                       - component: oh-label-card
@@ -153,5 +153,5 @@ slots:
                           color: red
                           action: command
                           actionItem: C425_Carport_PermanentStream
-                          actionCommand: OFF
+                          actionCommand: "OFF"
                           visible: =items.C425_Carport_PermanentStream.state == 'ON'
