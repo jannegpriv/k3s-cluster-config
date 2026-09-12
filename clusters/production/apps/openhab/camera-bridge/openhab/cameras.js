@@ -16,6 +16,8 @@ const logger = log('cameras');
 
 const CAMERAS = [
   { name: 'Lillstugan',     item: 'C720_Lillstugan_PermanentStream',     ready: null,                      thing: 'c720_lillstugan',     hlsDir: '/dev/shm/ipcamera/c720_lillstugan' },
+  { name: 'Lillstugan C220',item: 'C220_Lillstugan_PermanentStream',     ready: null,                      thing: 'c220_lillstugan',     hlsDir: '/dev/shm/ipcamera/c220_lillstugan' },
+  { name: 'Arbetsrum',      item: 'C220_Arbetsrum_PermanentStream',      ready: null,                      thing: 'c220_arbetsrum',      hlsDir: '/openhab/userdata/ipcamera/10ce3f91aa' },
   { name: 'Landet baksida', item: 'C425_LandetBaksida_PermanentStream', ready: 'C425_LandetBaksida_Ready', thing: 'c425_landet_baksida', hlsDir: '/dev/shm/ipcamera/c425_landet_baksida' },
   { name: 'Carport',        item: 'C425_Carport_PermanentStream',       ready: 'C425_Carport_Ready',       thing: 'c425_carport',        hlsDir: '/dev/shm/ipcamera/c425_carport' },
 ];

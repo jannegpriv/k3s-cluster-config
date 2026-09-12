@@ -73,3 +73,25 @@ Thing ipcamera:generic:c425_carport "Carport – C425" [
     gifPreroll=0,
     ipWhitelist="DISABLE"
 ]
+
+Thing ipcamera:generic:c220_lillstugan "Lillstugan – C220" [
+    // For generic things ipAddress/port are ONLY used for HTTP (snapshotUrl);
+    // the binding ignores the host in snapshotUrl and connects to ipAddress:port.
+    // Point them at openHAB itself (static placeholder) - RTSP is explicit below.
+    ipAddress="127.0.0.1",
+    port=8080,
+    username="@@RTSP_USER@@",
+    password="@@RTSP_PASS@@",
+    // Static placeholder served by openHAB itself. WITHOUT this the binding
+    // auto-selects "ffmpeg snapshot" mode and runs a permanent ffmpeg per
+    // camera against the bridge -> permanent Tapo session -> drained battery.
+    snapshotUrl="http://127.0.0.1:8080/static/camera-idle.jpg",
+    ffmpegLocation="/usr/bin/ffmpeg",
+    ffmpegInput="rtsp://camera-bridge.openhab.svc.cluster.local:8554/c220_lillstugan",
+    ffmpegInputOptions="-rtsp_transport tcp",
+    ffmpegOutput="/dev/shm/ipcamera/c220_lillstugan/",
+    hlsOutOptions="-strict -2 -f lavfi -i aevalsrc=0 -map 0:v:0 -map 1:a:0 -bsf:v filter_units=remove_types=6 -acodec aac -vcodec copy -hls_flags delete_segments+append_list+discont_start -hls_time 4 -hls_list_size 6",
+    updateImageWhen="0",
+    gifPreroll=0,
+    ipWhitelist="DISABLE"
+]

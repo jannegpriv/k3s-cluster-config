@@ -20,7 +20,9 @@ Verified 2026-09-12 from the Mac over Tailscale: both cameras deliver H.264
 1280×720 via `tapo://…?subtype=1` with go2rtc 1.9.14. Direct RTSP/ONVIF on
 the cameras refused connections, so the Tapo protocol path is the one used.
 
-Also bridged (no Tailscale hop, same LAN as the cluster): **C425 Carport** `192.168.50.35`
+Also bridged: **C220 Lillstugan** `192.168.1.160` (Landet, mains, main stream 2560x1440,
+~2.2 Mbit/s, SEI NALs stripped like the Huddinge C220) as `c220_lillstugan`, and
+(no Tailscale hop, same LAN as the cluster) **C425 Carport** `192.168.50.35`
 as stream `c425_carport` — useful as the first test target because it isolates the
 Tapo/go2rtc path from the Tailscale routing.
 
@@ -35,6 +37,7 @@ Tapo/go2rtc path from the Tailscale routing.
 | `openhab/cameras.things.tmpl` | the two `ipcamera:generic` Things (creds filled at render time) | no — copied to the conf PVC |
 | `openhab/cameras.items` | `*_PermanentStream` switches → binding channel `startStream` (HLS kept running while ON; mains cameras only) | no — copied to the conf PVC |
 | `openhab/cameras.js` | JS Scripting rules: C425 wake (poll playlist → Ready) / auto-OFF 120 s | no — copied to `conf/automation/js/` |
+| `../../../../../scripts/camera-bridge-page-gen.py` | generates `openhab/page-cameras-landet.yaml` (5 cameras: 3 mains video cards + toggles, 2 battery tap-to-start) | — |
 | `openhab/page-*.yaml` | Main UI pages (overview + C425 live popup) | no — Main UI (jsondb) |
 | `../../../../../scripts/camera-bridge-secret.sh` | builds + encrypts the Secret from local masked files | — |
 | `../../../../../scripts/camera-bridge-things.sh` | renders the Things file (RTSP creds from `~/.secrets/camera-bridge/`) and `kubectl cp`s it into `openhab-production-0` | — |
@@ -109,8 +112,9 @@ cameras (C720). The C425 toggles carry a battery warning and default OFF.
 
 Same `hlsOutOptions` plus `-bsf:v filter_units=remove_types=6` (the C220 emits
 malformed SEI NAL units that Safari rejects), set via full `PUT /rest/things/<uid>`
-(`PUT .../config` returns 500 in 5.2.1). Overview card URL made relative with
-`type: application/x-mpegURL`. Not in Git - lives in openHAB's jsondb.
+(`PUT .../config` returns 500 in 5.2.1). Its card was removed from the Overview
+page (together with the Nest Landet baksida image card) and now lives on the Kameror
+page as `C220_Arbetsrum_PermanentStream` / still `c220_arbetsrum-last.jpg`. Not in Git - lives in openHAB's jsondb.
 
 ## Operations
 

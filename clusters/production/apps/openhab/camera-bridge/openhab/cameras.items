@@ -8,6 +8,9 @@
 Switch C720_Lillstugan_PermanentStream    "Lillstugan – permanent ström"     <camera> { channel="ipcamera:generic:c720_lillstugan:startStream" }
 Switch C425_LandetBaksida_PermanentStream "Landet baksida – permanent ström" <camera> { channel="ipcamera:generic:c425_landet_baksida:startStream" }
 Switch C425_Carport_PermanentStream       "Carport – permanent ström"        <camera> { channel="ipcamera:generic:c425_carport:startStream" }
+Switch C220_Lillstugan_PermanentStream    "Lillstugan C220 – permanent ström" <camera> { channel="ipcamera:generic:c220_lillstugan:startStream" }
+// Arbetsrum C220 is the pre-existing UI-managed thing (direct RTSP, not via the bridge)
+Switch C220_Arbetsrum_PermanentStream     "Arbetsrum – permanent ström"      <camera> { channel="ipcamera:onvif:10ce3f91aa:startStream" }
 
 // "Ready" flags for the battery cameras (no channel - set by cameras.rules ~12 s after
 // the stream started, so the popup only shows a player once the playlist exists;
