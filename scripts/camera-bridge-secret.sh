@@ -47,8 +47,8 @@ streams:
   c425_landet_baksida: tapo://{tapo}@192.168.1.83?subtype=1
   # Huddinge carport (same LAN as the cluster, no Tailscale hop) - reference/test camera.
   c425_carport: tapo://{tapo}@192.168.50.35?subtype=1
-  # Lillstugan C220 (mains, Landet LAN). subtype=1 = sub-stream (720p).
-  c220_lillstugan: tapo://{tapo}@192.168.1.160?subtype=1
+  # Lillstugan C220 (mains, Landet LAN). subtype=0 = main stream (2560x1440); sub-stream is only 640x360.
+  c220_lillstugan: tapo://{tapo}@192.168.1.160?subtype=0
 """
 doc = {
   "apiVersion": "v1", "kind": "Secret", "type": "Opaque",
