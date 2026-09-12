@@ -34,3 +34,4 @@ slots:
                           startMuted: true
                           hideControls: false
                           playerType: videojs
+                          posterURL: /static/camera-idle.jpg

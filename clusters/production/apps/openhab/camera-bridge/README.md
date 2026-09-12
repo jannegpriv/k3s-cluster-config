@@ -61,7 +61,11 @@ Tapo/go2rtc path from the Tailscale routing.
 ## Battery camera (C425) rules baked in
 
 - go2rtc is on-demand: no Tapo session unless an RTSP consumer is connected.
-- Things: `updateImageWhen="0"`, `gifPreroll=0`, no `snapshotUrl` → binding polls nothing.
+- Things: `snapshotUrl` = static `/static/camera-idle.jpg` (file `conf/html/camera-idle.jpg`,
+  generated once by `scripts/camera-bridge-things.sh`). **Required**: with a blank
+  `snapshotUrl` the binding silently runs a permanent `ffmpeg -skip_frame nokey`
+  per camera against the bridge = permanent Tapo session (observed 2026-09-12).
+  `updateImageWhen="0"`, `gifPreroll=0` → nothing polled.
 - Overview page holds **no** player for the C425 — only a button opening a
   popup page; the HLS playlist is first requested when the popup's player starts.
 - The binding keeps HLS (and thus the Tapo session) alive ~64 s after the last
