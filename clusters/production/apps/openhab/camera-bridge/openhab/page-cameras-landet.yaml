@@ -20,219 +20,7 @@ slots:
   default:
     - component: oh-block
       config:
-        title: Lillstugan
-      slots:
-        default:
-          - component: oh-grid-row
-            config:
-                    {}
-            slots:
-              default:
-                - component: oh-grid-col
-                  config:
-                    width: "100"
-                    large: "50"
-                  slots:
-                    default:
-                      - component: oh-video-card
-                        config:
-                          title: Lillstugan – C720
-                          footer: HLS via openHAB (~5–10 s fördröjning). Tryck play för att starta.
-                          url: /ipcamera/c720_lillstugan/ipcamera.m3u8
-                          type: application/x-mpegURL
-                          startManually: true
-                          startMuted: true
-                          hideControls: false
-                          playerType: videojs
-                          posterURL: /static/c720_lillstugan-last.jpg
-          - component: oh-grid-row
-            config:
-                    {}
-            slots:
-              default:
-                - component: oh-grid-col
-                  config:
-                    width: "100"
-                    large: "50"
-                  slots:
-                    default:
-                      - component: oh-toggle-card
-                        config:
-                          title: Permanent ström (nätdriven kamera)
-                          item: C720_Lillstugan_PermanentStream
-                          footer: PÅ = strömmen hålls igång hela tiden, start utan fördröjning. Visar även PÅ medan någon tittar.
-    - component: oh-block
-      config:
-        title: Lillstugan (C220)
-      slots:
-        default:
-          - component: oh-grid-row
-            config:
-                    {}
-            slots:
-              default:
-                - component: oh-grid-col
-                  config:
-                    width: "100"
-                    large: "50"
-                  slots:
-                    default:
-                      - component: oh-video-card
-                        config:
-                          title: Lillstugan – C220
-                          footer: HLS via openHAB (~5–10 s fördröjning). Tryck play för att starta.
-                          url: /ipcamera/c220_lillstugan/ipcamera.m3u8
-                          type: application/x-mpegURL
-                          startManually: true
-                          startMuted: true
-                          hideControls: false
-                          playerType: videojs
-                          posterURL: /static/c220_lillstugan-last.jpg
-          - component: oh-grid-row
-            config:
-                    {}
-            slots:
-              default:
-                - component: oh-grid-col
-                  config:
-                    width: "100"
-                    large: "50"
-                  slots:
-                    default:
-                      - component: oh-toggle-card
-                        config:
-                          title: Permanent ström (nätdriven kamera)
-                          item: C220_Lillstugan_PermanentStream
-                          footer: PÅ = strömmen hålls igång hela tiden, start utan fördröjning. Visar även PÅ medan någon tittar.
-    - component: oh-block
-      config:
-        title: Arbetsrum (Huddinge)
-      slots:
-        default:
-          - component: oh-grid-row
-            config:
-                    {}
-            slots:
-              default:
-                - component: oh-grid-col
-                  config:
-                    width: "100"
-                    large: "50"
-                  slots:
-                    default:
-                      - component: oh-video-card
-                        config:
-                          title: Arbetsrum – C220
-                          footer: HLS via openHAB (~5–10 s fördröjning). Tryck play för att starta.
-                          url: /ipcamera/10ce3f91aa/ipcamera.m3u8
-                          type: application/x-mpegURL
-                          startManually: true
-                          startMuted: true
-                          hideControls: false
-                          playerType: videojs
-                          posterURL: /static/c220_arbetsrum-last.jpg
-          - component: oh-grid-row
-            config:
-                    {}
-            slots:
-              default:
-                - component: oh-grid-col
-                  config:
-                    width: "100"
-                    large: "50"
-                  slots:
-                    default:
-                      - component: oh-toggle-card
-                        config:
-                          title: Permanent ström (nätdriven kamera)
-                          item: C220_Arbetsrum_PermanentStream
-                          footer: PÅ = strömmen hålls igång hela tiden, start utan fördröjning. Visar även PÅ medan någon tittar.
-    - component: oh-block
-      config:
-        title: Landet baksida
-      slots:
-        default:
-          - component: oh-grid-row
-            config:
-                    visible: =items.C425_LandetBaksida_PermanentStream.state != 'ON'
-            slots:
-              default:
-                - component: oh-grid-col
-                  config:
-                    width: "100"
-                    large: "50"
-                  slots:
-                    default:
-                      - component: oh-image-card
-                        config:
-                          title: Landet baksida – C425
-                          url: /static/c425_landet_baksida-last.jpg
-                          refreshInterval: 60000
-                          action: command
-                          actionItem: C425_LandetBaksida_PermanentStream
-                          actionCommand: "ON"
-                          footer: Senaste bild. Tryck på bilden för live (batterikamera – ~10–30 s start, max 2 min).
-          - component: oh-grid-row
-            config:
-                    visible: =items.C425_LandetBaksida_PermanentStream.state == 'ON' && items.C425_LandetBaksida_Ready.state != 'ON'
-            slots:
-              default:
-                - component: oh-grid-col
-                  config:
-                    width: "100"
-                    large: "50"
-                  slots:
-                    default:
-                      - component: oh-label-card
-                        config:
-                          title: Landet baksida – C425
-                          label: Väcker kameran…
-                          icon: f7:hourglass
-                          footer: Bilden kommer när strömmen är igång (10–30 s).
-          - component: oh-grid-row
-            config:
-                    visible: =items.C425_LandetBaksida_Ready.state == 'ON'
-            slots:
-              default:
-                - component: oh-grid-col
-                  config:
-                    width: "100"
-                    large: "50"
-                  slots:
-                    default:
-                      - component: oh-video-card
-                        config:
-                          title: Landet baksida – C425
-                          footer: Live (HLS, ~5–10 s fördröjning). Stängs av automatiskt efter 2 min.
-                          url: /ipcamera/c425_landet_baksida/ipcamera.m3u8
-                          type: application/x-mpegURL
-                          startManually: false
-                          startMuted: true
-                          hideControls: false
-                          playerType: videojs
-                          posterURL: /static/c425_landet_baksida-last.jpg
-          - component: oh-grid-row
-            config:
-                    visible: =items.C425_LandetBaksida_PermanentStream.state == 'ON'
-            slots:
-              default:
-                - component: oh-grid-col
-                  config:
-                    width: "100"
-                    large: "50"
-                  slots:
-                    default:
-                      - component: oh-button
-                        config:
-                          text: Stoppa strömmen nu
-                          fill: true
-                          color: red
-                          action: command
-                          actionItem: C425_LandetBaksida_PermanentStream
-                          actionCommand: "OFF"
-    - component: oh-block
-      config:
-        title: Carport (Huddinge)
+        title: Huddinge
       slots:
         default:
           - component: oh-grid-row
@@ -307,9 +95,206 @@ slots:
                     default:
                       - component: oh-button
                         config:
-                          text: Stoppa strömmen nu
+                          text: Stoppa Carport – C425
                           fill: true
                           color: red
                           action: command
                           actionItem: C425_Carport_PermanentStream
+                          actionCommand: "OFF"
+          - component: oh-grid-row
+            config:
+                    {}
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
+                      - component: oh-video-card
+                        config:
+                          title: Arbetsrum – C220
+                          footer: HLS via openHAB (~5–10 s fördröjning). Tryck play för att starta.
+                          url: /ipcamera/10ce3f91aa/ipcamera.m3u8
+                          type: application/x-mpegURL
+                          startManually: true
+                          startMuted: true
+                          hideControls: false
+                          playerType: videojs
+                          posterURL: /static/c220_arbetsrum-last.jpg
+          - component: oh-grid-row
+            config:
+                    {}
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
+                      - component: oh-toggle-card
+                        config:
+                          title: Arbetsrum – C220 – permanent ström
+                          item: C220_Arbetsrum_PermanentStream
+                          footer: PÅ = strömmen hålls igång hela tiden, start utan fördröjning. Visar även PÅ medan någon tittar.
+    - component: oh-block
+      config:
+        title: Landet
+      slots:
+        default:
+          - component: oh-grid-row
+            config:
+                    {}
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
+                      - component: oh-video-card
+                        config:
+                          title: Lillstugan – C720
+                          footer: HLS via openHAB (~5–10 s fördröjning). Tryck play för att starta.
+                          url: /ipcamera/c720_lillstugan/ipcamera.m3u8
+                          type: application/x-mpegURL
+                          startManually: true
+                          startMuted: true
+                          hideControls: false
+                          playerType: videojs
+                          posterURL: /static/c720_lillstugan-last.jpg
+          - component: oh-grid-row
+            config:
+                    {}
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
+                      - component: oh-toggle-card
+                        config:
+                          title: Lillstugan – C720 – permanent ström
+                          item: C720_Lillstugan_PermanentStream
+                          footer: PÅ = strömmen hålls igång hela tiden, start utan fördröjning. Visar även PÅ medan någon tittar.
+          - component: oh-grid-row
+            config:
+                    {}
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
+                      - component: oh-video-card
+                        config:
+                          title: Lillstugan – C220
+                          footer: HLS via openHAB (~5–10 s fördröjning). Tryck play för att starta.
+                          url: /ipcamera/c220_lillstugan/ipcamera.m3u8
+                          type: application/x-mpegURL
+                          startManually: true
+                          startMuted: true
+                          hideControls: false
+                          playerType: videojs
+                          posterURL: /static/c220_lillstugan-last.jpg
+          - component: oh-grid-row
+            config:
+                    {}
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
+                      - component: oh-toggle-card
+                        config:
+                          title: Lillstugan – C220 – permanent ström
+                          item: C220_Lillstugan_PermanentStream
+                          footer: PÅ = strömmen hålls igång hela tiden, start utan fördröjning. Visar även PÅ medan någon tittar.
+          - component: oh-grid-row
+            config:
+                    visible: =items.C425_LandetBaksida_PermanentStream.state != 'ON'
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
+                      - component: oh-image-card
+                        config:
+                          title: Landet baksida – C425
+                          url: /static/c425_landet_baksida-last.jpg
+                          refreshInterval: 60000
+                          action: command
+                          actionItem: C425_LandetBaksida_PermanentStream
+                          actionCommand: "ON"
+                          footer: Senaste bild. Tryck på bilden för live (batterikamera – ~10–30 s start, max 2 min).
+          - component: oh-grid-row
+            config:
+                    visible: =items.C425_LandetBaksida_PermanentStream.state == 'ON' && items.C425_LandetBaksida_Ready.state != 'ON'
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
+                      - component: oh-label-card
+                        config:
+                          title: Landet baksida – C425
+                          label: Väcker kameran…
+                          icon: f7:hourglass
+                          footer: Bilden kommer när strömmen är igång (10–30 s).
+          - component: oh-grid-row
+            config:
+                    visible: =items.C425_LandetBaksida_Ready.state == 'ON'
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
+                      - component: oh-video-card
+                        config:
+                          title: Landet baksida – C425
+                          footer: Live (HLS, ~5–10 s fördröjning). Stängs av automatiskt efter 2 min.
+                          url: /ipcamera/c425_landet_baksida/ipcamera.m3u8
+                          type: application/x-mpegURL
+                          startManually: false
+                          startMuted: true
+                          hideControls: false
+                          playerType: videojs
+                          posterURL: /static/c425_landet_baksida-last.jpg
+          - component: oh-grid-row
+            config:
+                    visible: =items.C425_LandetBaksida_PermanentStream.state == 'ON'
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "50"
+                  slots:
+                    default:
+                      - component: oh-button
+                        config:
+                          text: Stoppa Landet baksida – C425
+                          fill: true
+                          color: red
+                          action: command
+                          actionItem: C425_LandetBaksida_PermanentStream
                           actionCommand: "OFF"

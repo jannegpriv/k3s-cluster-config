@@ -4,14 +4,17 @@ One widget per grid row/col (an oh-grid-col renders only its first child)."""
 import os
 OUT = os.path.join(os.path.dirname(__file__), "..", "clusters/production/apps/openhab/camera-bridge/openhab/page-cameras-landet.yaml")
 NL = "\n"
-MAINS = [  # title, card title, item, hls path, still name
-    ("Lillstugan", "Lillstugan – C720", "C720_Lillstugan_PermanentStream", "/ipcamera/c720_lillstugan/ipcamera.m3u8", "c720_lillstugan"),
-    ("Lillstugan (C220)", "Lillstugan – C220", "C220_Lillstugan_PermanentStream", "/ipcamera/c220_lillstugan/ipcamera.m3u8", "c220_lillstugan"),
-    ("Arbetsrum (Huddinge)", "Arbetsrum – C220", "C220_Arbetsrum_PermanentStream", "/ipcamera/10ce3f91aa/ipcamera.m3u8", "c220_arbetsrum"),
-]
-BATTERY = [  # title, card title, item, ready item, thing
-    ("Landet baksida", "Landet baksida – C425", "C425_LandetBaksida_PermanentStream", "C425_LandetBaksida_Ready", "c425_landet_baksida"),
-    ("Carport (Huddinge)", "Carport – C425", "C425_Carport_PermanentStream", "C425_Carport_Ready", "c425_carport"),
+# Ordered groups; each entry: kind, card title, item, url/thing, still name[, ready item]
+GROUPS = [
+    ("Huddinge", [
+        ("battery", "Carport – C425", "C425_Carport_PermanentStream", "c425_carport", "c425_carport", "C425_Carport_Ready"),
+        ("mains", "Arbetsrum – C220", "C220_Arbetsrum_PermanentStream", "/ipcamera/10ce3f91aa/ipcamera.m3u8", "c220_arbetsrum"),
+    ]),
+    ("Landet", [
+        ("mains", "Lillstugan – C720", "C720_Lillstugan_PermanentStream", "/ipcamera/c720_lillstugan/ipcamera.m3u8", "c720_lillstugan"),
+        ("mains", "Lillstugan – C220", "C220_Lillstugan_PermanentStream", "/ipcamera/c220_lillstugan/ipcamera.m3u8", "c220_lillstugan"),
+        ("battery", "Landet baksida – C425", "C425_LandetBaksida_PermanentStream", "c425_landet_baksida", "c425_landet_baksida", "C425_LandetBaksida_Ready"),
+    ]),
 ]
 def row(comp, cfg, visible=None):
     rowcfg = ("                    visible: " + visible + NL) if visible else ("                    {}" + NL)
@@ -46,8 +49,8 @@ config:
 slots:
   default:
 '''
-for title, card, item, url, still in MAINS:
-    page += block(title, [
+def mains_rows(card, item, url, still):
+    return [
         row("oh-video-card", f'''title: {card}
 footer: HLS via openHAB (~5–10 s fördröjning). Tryck play för att starta.
 url: {url}
@@ -57,12 +60,12 @@ startMuted: true
 hideControls: false
 playerType: videojs
 posterURL: /static/{still}-last.jpg'''),
-        row("oh-toggle-card", f'''title: Permanent ström (nätdriven kamera)
+        row("oh-toggle-card", f'''title: {card} – permanent ström
 item: {item}
 footer: PÅ = strömmen hålls igång hela tiden, start utan fördröjning. Visar även PÅ medan någon tittar.'''),
-    ])
-for title, card, item, ready, thing in BATTERY:
-    page += block(title, [
+    ]
+def battery_rows(card, item, thing, ready):
+    return [
         row("oh-image-card", f'''title: {card}
 url: /static/{thing}-last.jpg
 refreshInterval: 60000
@@ -83,12 +86,20 @@ startMuted: true
 hideControls: false
 playerType: videojs
 posterURL: /static/{thing}-last.jpg''', f"=items.{ready}.state == 'ON'"),
-        row("oh-button", f'''text: Stoppa strömmen nu
+        row("oh-button", f'''text: Stoppa {card}
 fill: true
 color: red
 action: command
 actionItem: {item}
 actionCommand: "OFF"''', f"=items.{item}.state == 'ON'"),
-    ])
+    ]
+for gtitle, cams in GROUPS:
+    rows = []
+    for c in cams:
+        if c[0] == "mains":
+            rows += mains_rows(c[1], c[2], c[3], c[4])
+        else:
+            rows += battery_rows(c[1], c[2], c[3], c[5])
+    page += block(gtitle, rows)
 open(os.path.normpath(OUT), "w").write(page)
 print("wrote", os.path.normpath(OUT), page.count("oh-grid-row"), "rows")
