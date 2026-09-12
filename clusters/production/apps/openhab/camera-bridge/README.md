@@ -34,6 +34,7 @@ Tapo/go2rtc path from the Tailscale routing.
 | `secret.enc.yaml` | SOPS: `TS_AUTHKEY`, rendered `go2rtc.yaml` (Tapo pw URL-encoded, RTSP creds), `rtsp-username/-password` | yes (Flux decrypts with `sops-gpg`) |
 | `openhab/cameras.things.tmpl` | the two `ipcamera:generic` Things (creds filled at render time) | no — copied to the conf PVC |
 | `openhab/cameras.items` | `*_PermanentStream` switches → binding channel `startStream` (HLS kept running while ON; mains cameras only) | no — copied to the conf PVC |
+| `openhab/cameras.js` | JS Scripting rules: C425 wake (poll playlist → Ready) / auto-OFF 120 s | no — copied to `conf/automation/js/` |
 | `openhab/page-*.yaml` | Main UI pages (overview + C425 live popup) | no — Main UI (jsondb) |
 | `../../../../../scripts/camera-bridge-secret.sh` | builds + encrypts the Secret from local masked files | — |
 | `../../../../../scripts/camera-bridge-things.sh` | renders the Things file (RTSP creds from `~/.secrets/camera-bridge/`) and `kubectl cp`s it into `openhab-production-0` | — |
@@ -55,8 +56,7 @@ Tapo/go2rtc path from the Tailscale routing.
    the admin console or rotate the key + delete the PVC.
 2. `scripts/camera-bridge-secret.sh` → commit `secret.enc.yaml` → push → Flux.
 3. `scripts/camera-bridge-things.sh` (after the bridge pod is Ready).
-4. Pages: paste `openhab/page-cameras-landet-c425-live.yaml`,
-   `openhab/page-cameras-carport-c425-live.yaml`, then `openhab/page-cameras-landet.yaml` into Main UI → Settings → Pages → + →
+4. Page: paste `openhab/page-cameras-landet.yaml` into Main UI → Settings → Pages → + →
    Layout page → Code tab (or `scripts/camera-bridge-page.sh (token from ~/.secrets/camera-bridge/oh-token)`).
 
 ## Battery camera (C425) rules baked in
@@ -67,8 +67,13 @@ Tapo/go2rtc path from the Tailscale routing.
   `snapshotUrl` the binding silently runs a permanent `ffmpeg -skip_frame nokey`
   per camera against the bridge = permanent Tapo session (observed 2026-09-12).
   `updateImageWhen="0"`, `gifPreroll=0` → nothing polled.
-- Overview page holds **no** player for the C425 — only a button opening a
-  popup page; the HLS playlist is first requested when the popup's player starts.
+- The page shows a **Ström PÅ/AV toggle** (= binding `startStream`) and a still
+  image for each C425; a player is only rendered once `cameras.js` has polled the
+  HLS endpoint and seen a playlist with segments (`*_Ready`). Cold start is 10-40 s
+  (camera wake, first Tapo attempt often refused) - far beyond the binding's 4.5 s
+  wait, and Safari's native HLS never retries a 404 playlist. The rule switches the
+  stream OFF after 120 s max. C425 things use plain `delete_segments` (the rule
+  removes the stale playlist at wake; the player never spans a restart).
 - The binding keeps HLS (and thus the Tapo session) alive ~64 s after the last
   playlist request; expect the camera to report "awake" for about that long
   after closing the popup.
@@ -123,4 +128,4 @@ malformed SEI NAL units that Safari rejects), set via full `PUT /rest/things/<ui
 2. Delete `/openhab/conf/things/cameras.things` in the openHAB pod (the two
    Things vanish; existing C220 `ipcamera:onvif:10ce3f91aa` and all other Things
    are untouched).
-3. Main UI → Settings → Pages → delete `cameras_landet`, `cameras_landet_c425_live`, `cameras_carport_c425_live`.
+3. Main UI → Settings → Pages → delete `cameras_landet`.

@@ -8,3 +8,9 @@
 Switch C720_Lillstugan_PermanentStream    "Lillstugan – permanent ström"     <camera> { channel="ipcamera:generic:c720_lillstugan:startStream" }
 Switch C425_LandetBaksida_PermanentStream "Landet baksida – permanent ström" <camera> { channel="ipcamera:generic:c425_landet_baksida:startStream" }
 Switch C425_Carport_PermanentStream       "Carport – permanent ström"        <camera> { channel="ipcamera:generic:c425_carport:startStream" }
+
+// "Ready" flags for the battery cameras (no channel - set by cameras.rules ~12 s after
+// the stream started, so the popup only shows a player once the playlist exists;
+// Safari's native HLS gives up for good on a first 404).
+Switch C425_LandetBaksida_Ready "Landet baksida – ström redo" <camera>
+Switch C425_Carport_Ready       "Carport – ström redo"        <camera>

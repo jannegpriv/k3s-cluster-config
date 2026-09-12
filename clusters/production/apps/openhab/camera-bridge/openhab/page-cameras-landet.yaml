@@ -5,8 +5,8 @@
 # and never exposes camera addresses or credentials to the browser.
 #
 # C720: video card, startManually - user presses play.
-# C425 (battery): NO player on this page at all. A button opens a popup page
-# (uid cameras_landet_c425_live) - nothing touches the camera until then.
+# C425s (battery): toggle card = stream ON/OFF. Player is only rendered once
+# cameras.rules has confirmed the playlist exists (*_Ready); otherwise a still.
 uid: cameras_landet
 tags:
   - cameras
@@ -64,14 +64,34 @@ slots:
                     large: "50"
                   slots:
                     default:
-                      - component: oh-label-card
+                      - component: oh-toggle-card
                         config:
                           title: Landet baksida – C425
-                          label: Batterikamera – ingen ström till kameran förrän du öppnar livevisningen.
-                          icon: f7:battery_25
-                          action: popup
-                          actionModal: page:cameras_landet_c425_live
-                          footer: Tryck för att öppna livevisning (~20–30 s per titt räcker)
+                          item: C425_LandetBaksida_PermanentStream
+                          footer: Batterikamera – PÅ väcker kameran (~10–30 s till bild), AV efter max 2 min.
+                      - component: oh-image-card
+                        config:
+                          url: /static/camera-idle.jpg
+                          footer: Kameran sover. Slå PÅ strömmen ovan för att titta.
+                          visible: =items.C425_LandetBaksida_PermanentStream.state != 'ON'
+                      - component: oh-label-card
+                        config:
+                          label: Väcker kameran…
+                          icon: f7:hourglass
+                          footer: Bilden kommer när strömmen är igång (10–30 s).
+                          visible: =items.C425_LandetBaksida_PermanentStream.state == 'ON' && items.C425_LandetBaksida_Ready.state != 'ON'
+                      - component: oh-video-card
+                        config:
+                          title: Landet baksida – C425
+                          footer: Live (HLS, ~5–10 s fördröjning). Stängs av automatiskt efter 2 min.
+                          url: /ipcamera/c425_landet_baksida/ipcamera.m3u8
+                          type: application/x-mpegURL
+                          startManually: false
+                          startMuted: true
+                          hideControls: false
+                          playerType: videojs
+                          posterURL: /static/camera-idle.jpg
+                          visible: =items.C425_LandetBaksida_Ready.state == 'ON'
     - component: oh-block
       config:
         title: Carport (Huddinge)
@@ -86,11 +106,31 @@ slots:
                     large: "50"
                   slots:
                     default:
-                      - component: oh-label-card
+                      - component: oh-toggle-card
                         config:
                           title: Carport – C425
-                          label: Batterikamera – öppnas på begäran.
-                          icon: f7:battery_25
-                          action: popup
-                          actionModal: page:cameras_carport_c425_live
-                          footer: Tryck för att öppna livevisning
+                          item: C425_Carport_PermanentStream
+                          footer: Batterikamera – PÅ väcker kameran (~10–30 s till bild), AV efter max 2 min.
+                      - component: oh-image-card
+                        config:
+                          url: /static/camera-idle.jpg
+                          footer: Kameran sover. Slå PÅ strömmen ovan för att titta.
+                          visible: =items.C425_Carport_PermanentStream.state != 'ON'
+                      - component: oh-label-card
+                        config:
+                          label: Väcker kameran…
+                          icon: f7:hourglass
+                          footer: Bilden kommer när strömmen är igång (10–30 s).
+                          visible: =items.C425_Carport_PermanentStream.state == 'ON' && items.C425_Carport_Ready.state != 'ON'
+                      - component: oh-video-card
+                        config:
+                          title: Carport – C425
+                          footer: Live (HLS, ~5–10 s fördröjning). Stängs av automatiskt efter 2 min.
+                          url: /ipcamera/c425_carport/ipcamera.m3u8
+                          type: application/x-mpegURL
+                          startManually: false
+                          startMuted: true
+                          hideControls: false
+                          playerType: videojs
+                          posterURL: /static/camera-idle.jpg
+                          visible: =items.C425_Carport_Ready.state == 'ON'

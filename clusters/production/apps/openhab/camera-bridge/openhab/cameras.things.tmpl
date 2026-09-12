@@ -46,7 +46,7 @@ Thing ipcamera:generic:c425_landet_baksida "Landet baksida – C425" [
     ffmpegInput="rtsp://camera-bridge.openhab.svc.cluster.local:8554/c425_landet_baksida",
     ffmpegInputOptions="-rtsp_transport tcp",
     ffmpegOutput="/dev/shm/ipcamera/c425_landet_baksida/",
-    hlsOutOptions="-strict -2 -f lavfi -i aevalsrc=0 -map 0:v:0 -map 1:a:0 -acodec aac -vcodec copy -hls_flags delete_segments+append_list+discont_start -hls_time 4 -hls_list_size 6",
+    hlsOutOptions="-strict -2 -f lavfi -i aevalsrc=0 -map 0:v:0 -map 1:a:0 -acodec aac -vcodec copy -hls_flags delete_segments -hls_time 4 -hls_list_size 6",
     updateImageWhen="0",
     gifPreroll=0,
     ipWhitelist="DISABLE"
@@ -68,7 +68,7 @@ Thing ipcamera:generic:c425_carport "Carport – C425" [
     ffmpegInput="rtsp://camera-bridge.openhab.svc.cluster.local:8554/c425_carport",
     ffmpegInputOptions="-rtsp_transport tcp",
     ffmpegOutput="/dev/shm/ipcamera/c425_carport/",
-    hlsOutOptions="-strict -2 -f lavfi -i aevalsrc=0 -map 0:v:0 -map 1:a:0 -acodec aac -vcodec copy -hls_flags delete_segments+append_list+discont_start -hls_time 4 -hls_list_size 6",
+    hlsOutOptions="-strict -2 -f lavfi -i aevalsrc=0 -map 0:v:0 -map 1:a:0 -acodec aac -vcodec copy -hls_flags delete_segments -hls_time 4 -hls_list_size 6",
     updateImageWhen="0",
     gifPreroll=0,
     ipWhitelist="DISABLE"
