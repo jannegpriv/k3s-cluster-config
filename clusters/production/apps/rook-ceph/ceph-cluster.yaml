@@ -101,11 +101,15 @@ spec:
         cpu: "300m"      # Kept CPU request
         memory: "512Mi"
     osd:
+      # Ceph reads POD_MEMORY_REQUEST as osd_memory_target (soft cap; RSS lands
+      # ~10-40 % above it). 2Gi -> 1.5Gi on 2026-09-19: three 8 GB nodes sat at
+      # 72-77 % with an OSD + openHAB/Prometheus each (NodeHighMemoryUsage >85 %).
+      # Limit 3Gi is the hard ceiling (was 4Gi = overcommit on 8 GB nodes).
       limits:
-        memory: "4Gi"    # Kept memory limit, removed CPU limit
+        memory: "3Gi"
       requests:
-        cpu: "1"         # Kept CPU request
-        memory: "2Gi"
+        cpu: "1"
+        memory: "1536Mi"
   
   healthCheck:
     daemonHealth:
