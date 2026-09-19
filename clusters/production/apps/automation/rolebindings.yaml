@@ -2,11 +2,13 @@
 # ai-remediator-write). Reads are cluster-wide via clusterrolebinding.yaml.
 # Adding a namespace here widens what the agent may restart/scale — keep in
 # sync with REMEDIATOR_NAMESPACES in n8n.
+# NOTE: roleRef is immutable - the bindings were renamed ai-remediator ->
+# ai-remediator-write when the ClusterRole was split (Flux prunes the old ones).
 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: ai-remediator
+  name: ai-remediator-write
   namespace: openhab
 subjects:
   - kind: ServiceAccount
@@ -20,7 +22,7 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: ai-remediator
+  name: ai-remediator-write
   namespace: mattermost
 subjects:
   - kind: ServiceAccount
@@ -34,7 +36,7 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: ai-remediator
+  name: ai-remediator-write
   namespace: n8n
 subjects:
   - kind: ServiceAccount
@@ -48,7 +50,7 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: ai-remediator
+  name: ai-remediator-write
   namespace: mosquitto
 subjects:
   - kind: ServiceAccount
@@ -62,7 +64,7 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: ai-remediator
+  name: ai-remediator-write
   namespace: uptime-kuma
 subjects:
   - kind: ServiceAccount
@@ -76,7 +78,7 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: ai-remediator
+  name: ai-remediator-write
   namespace: bitwarden
 subjects:
   - kind: ServiceAccount
@@ -90,7 +92,7 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: ai-remediator
+  name: ai-remediator-write
   namespace: headlamp
 subjects:
   - kind: ServiceAccount
@@ -104,7 +106,7 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: ai-remediator
+  name: ai-remediator-write
   namespace: authelia
 subjects:
   - kind: ServiceAccount
@@ -118,7 +120,7 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: ai-remediator
+  name: ai-remediator-write
   namespace: loki
 subjects:
   - kind: ServiceAccount
@@ -132,7 +134,7 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: ai-remediator
+  name: ai-remediator-write
   namespace: monitoring
 subjects:
   - kind: ServiceAccount
@@ -146,7 +148,7 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: ai-remediator
+  name: ai-remediator-write
   namespace: remediator-test
 subjects:
   - kind: ServiceAccount
