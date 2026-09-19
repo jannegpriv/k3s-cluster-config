@@ -39,3 +39,13 @@ cooldown (Phase 5) bound the blast radius.
 | `COOLDOWN_MINUTES` | 30 |
 | `MAX_ACTIONS_PER_HOUR` | 4 |
 | Approval timeout | 15 min, timeout = deny |
+
+## RBAC (updated 2026-09-19)
+
+Two ClusterRoles in `clusters/production/apps/automation/`:
+- `ai-remediator-read` — bound cluster-wide (`clusterrolebinding.yaml`): get/list
+  pods, pods/log, events, services, endpoints, namespaces, nodes, PVCs, apps
+  workloads, metrics.k8s.io pods+nodes. Diagnosis anywhere; never secrets/exec.
+- `ai-remediator-write` — bound per namespace (`rolebindings.yaml`, the allow-list):
+  pod delete, deployment patch, deployments/scale. Keep in sync with
+  REMEDIATOR_NAMESPACES in the n8n deployment (the code guard is the second fence).

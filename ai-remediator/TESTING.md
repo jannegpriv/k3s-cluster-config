@@ -28,6 +28,27 @@ Revert = remove the env var (GitOps).
 |---|------|-----|----------|--------|
 | 10 | Auto-execute restart_pod | one-shot wrapper `zz_phase8_e2e_test` called restart_pod against db-svc pod in remediator-test | No approval wait; MM notice posted; pod deleted and recreated; result "auto-executed" | ✅ 2026-08-30 (6 s end-to-end: MM notice 19:20:44Z, pod mtwm5→fc5pn, wrapper + test deploy cleaned up) |
 
+## Cluster-wide read access + node tools (2026-09-19)
+
+RBAC split into `ai-remediator-read` (ClusterRoleBinding: pods/logs/events/
+workloads/nodes/namespaces/PVCs + pod & node metrics, every namespace) and
+`ai-remediator-write` (RoleBindings in the 11 allow-listed namespaces, unchanged).
+`kubectl auth can-i --as=system:serviceaccount:automation:ai-remediator`: 9/9 yes
+(list pods -A, pods/log kube-system, nodes, node+pod metrics, events -A, sts openhab,
+delete pods openhab, patch scale n8n), 7/7 no (delete pods kube-system/rook-ceph,
+secrets, exec, patch nodes, delete deployments, patch flux-system).
+Note: RoleBinding roleRef is immutable -> bindings renamed `ai-remediator-write`.
+
+| # | Case | How | Expected | Result |
+|---|------|-----|----------|--------|
+| 11 | get_node_status(k3s-w-5) | one-shot wrapper `zz_read_tools_test` | usage vs allocatable, conditions | ✅ 78% mem (6273/8063 Mi), Ready, no pressure |
+| 12 | get_top_pods(node=k3s-w-5, memory, 5) | same | ranked pods with limits/requests | ✅ openhab 2977 Mi (limit 4Gi), osd-2 2177 Mi (limit 4Gi) … |
+| 13 | get_pod_status(all, node=k3s-w-5) | same | cluster-wide pods filtered by node | ✅ 25 pods across namespaces |
+| 14 | describe_deployment(openhab, openhab-production, statefulset) | same | STS details incl. limits + EXTRA_JAVA_OPTS | ✅ Xmx1500m, limit 4Gi, nodeSelector w-5 |
+| 15 | get_events(all) | same | cluster-wide events | ✅ 20 events incl. flux-system |
+| 16 | get_pod_logs(kube-system, coredns) | same | logs outside old allow-list | ✅ |
+| 17 | restart_pod(kube-system) | same | still refused (write allow-list) | ✅ "outside REMEDIATOR_NAMESPACES allow-list" |
+
 Verified during build (2026-07-10/11):
 - Phase 3 acceptance: synthetic alert -> agent used get_pod_status + get_events
   -> correct "synthetic, no action" conclusion -> structured Swedish report in
