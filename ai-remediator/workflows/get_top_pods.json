@@ -1,0 +1,194 @@
+{
+  "id": "aiRemGetTopPods1",
+  "name": "get_top_pods",
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "node"
+            },
+            {
+              "name": "sortBy"
+            },
+            {
+              "name": "limit"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "prepare",
+      "name": "Prepare",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;\nfunction bad(s){ return !s || typeof s !== \"string\" || !RE.test(s); }\nconst i = $input.first().json;\nconst node = (i.node && String(i.node).trim()) || \"\";\nif (node && bad(node)) return [{json: {blocked: true, ok: false, detail: \"invalid node name\"}}];\nconst sortBy = String(i.sortBy || \"memory\").toLowerCase() === \"cpu\" ? \"cpu\" : \"memory\";\nconst limit = Math.min(Math.max(parseInt(i.limit) || 10, 1), 30);\nlet url = \"https://kubernetes.default.svc/api/v1/pods?limit=1000\";\nif (node) url += `&fieldSelector=${encodeURIComponent(\"spec.nodeName=\" + node)}`;\nreturn [{json: {url, node, sortBy, limit}}];"
+      }
+    },
+    {
+      "id": "http-pods",
+      "name": "K8s GET pods",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "aiRemediatorK8s1",
+          "name": "K8s ai-remediator"
+        }
+      }
+    },
+    {
+      "id": "prep-metrics",
+      "name": "Prepare metrics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nif (r.blocked) return [{json: r}];\nif (r.statusCode >= 400) return [{json: {blocked: true, ok: false, detail: `K8s API ${r.statusCode}: ${JSON.stringify(r.body?.message || r.body).slice(0,200)}`}}];\nreturn [{json: {url: \"https://kubernetes.default.svc/apis/metrics.k8s.io/v1beta1/pods\"}}];"
+      }
+    },
+    {
+      "id": "http-metrics",
+      "name": "K8s GET pod metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "aiRemediatorK8s1",
+          "name": "K8s ai-remediator"
+        }
+      }
+    },
+    {
+      "id": "result",
+      "name": "Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const m = $input.first().json;\nif (m.blocked) return [{json: {ok: false, detail: m.detail}}];\nif (m.statusCode >= 400) return [{json: {ok: false, detail: `metrics API ${m.statusCode} (metrics-server?)`}}];\nconst p = $('Prepare').first().json; const pods = $('K8s GET pods').first().json.body.items || [];\nconst toMi = (q) => { const s = String(q||\"0\"); if (s.endsWith(\"Ki\")) return parseFloat(s)/1024; if (s.endsWith(\"Mi\")) return parseFloat(s); if (s.endsWith(\"Gi\")) return parseFloat(s)*1024; return parseFloat(s)/1048576; };\nconst toM = (q) => { const s = String(q||\"0\"); if (s.endsWith(\"n\")) return parseFloat(s)/1e6; if (s.endsWith(\"u\")) return parseFloat(s)/1e3; if (s.endsWith(\"m\")) return parseFloat(s); return parseFloat(s)*1000; };\nconst info = {}; pods.forEach(x => info[`${x.metadata.namespace}/${x.metadata.name}`] = {node: x.spec.nodeName, limits: (x.spec.containers||[]).map(c => ({name: c.name, memLimit: c.resources?.limits?.memory || \"none\", memReq: c.resources?.requests?.memory || \"none\", cpuLimit: c.resources?.limits?.cpu || \"none\"})), restarts: (x.status.containerStatuses||[]).reduce((a,c)=>a+(c.restartCount||0),0)});\nlet rows = (m.body.items || []).map(x => { const key = `${x.metadata.namespace}/${x.metadata.name}`; const mem = (x.containers||[]).reduce((a,c)=>a+toMi(c.usage.memory),0); const cpu = (x.containers||[]).reduce((a,c)=>a+toM(c.usage.cpu),0); return {pod: key, node: info[key]?.node, memMi: Math.round(mem), cpuM: Math.round(cpu), restarts: info[key]?.restarts, containers: info[key]?.limits, perContainer: (x.containers||[]).map(c => `${c.name}: mem=${Math.round(toMi(c.usage.memory))}Mi cpu=${Math.round(toM(c.usage.cpu))}m`)}; });\nif (p.node) rows = rows.filter(r => r.node === p.node);\nrows.sort((a,b) => p.sortBy === \"cpu\" ? b.cpuM - a.cpuM : b.memMi - a.memMi);\nconst totalMi = rows.reduce((a,r)=>a+r.memMi,0), totalM = rows.reduce((a,r)=>a+r.cpuM,0);\nreturn [{json: {ok: true, node: p.node || \"all nodes\", sortBy: p.sortBy, podsCounted: rows.length, totalMemMi: Math.round(totalMi), totalCpuM: Math.round(totalM), top: rows.slice(0, p.limit)}}];"
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare": {
+      "main": [
+        [
+          {
+            "node": "K8s GET pods",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "K8s GET pods": {
+      "main": [
+        [
+          {
+            "node": "Prepare metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare metrics": {
+      "main": [
+        [
+          {
+            "node": "K8s GET pod metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "K8s GET pod metrics": {
+      "main": [
+        [
+          {
+            "node": "Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "aiRemErrorWf0001"
+  },
+  "active": true
+}

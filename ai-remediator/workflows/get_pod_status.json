@@ -19,6 +19,9 @@
             },
             {
               "name": "selector"
+            },
+            {
+              "name": "node"
             }
           ]
         }
@@ -34,7 +37,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;\nfunction bad(s){ return !s || typeof s !== \"string\" || !RE.test(s); }\nconst i = $input.first().json;\nif (bad(i.namespace)) return [{json: {blocked: true, ok: false, detail: \"invalid or missing namespace\"}}];\nlet url = `https://kubernetes.default.svc/api/v1/namespaces/${i.namespace}/pods`;\nif (i.selector) url += `?labelSelector=${encodeURIComponent(i.selector)}`;\nreturn [{json: {url, namespace: i.namespace}}];"
+        "jsCode": "const RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;\nfunction bad(s){ return !s || typeof s !== \"string\" || !RE.test(s); }\nconst i = $input.first().json;\nconst ns = (i.namespace && !/^(all|\\*|)$/i.test(String(i.namespace).trim())) ? String(i.namespace).trim() : \"\";\nif (ns && bad(ns)) return [{json: {blocked: true, ok: false, detail: \"invalid namespace\"}}];\nconst node = (i.node && String(i.node).trim()) || \"\"; if (node && bad(node)) return [{json: {blocked: true, ok: false, detail: \"invalid node name\"}}];\nlet url = ns ? `https://kubernetes.default.svc/api/v1/namespaces/${ns}/pods` : \"https://kubernetes.default.svc/api/v1/pods\";\nconst q = []; if (i.selector) q.push(`labelSelector=${encodeURIComponent(i.selector)}`); if (node) q.push(`fieldSelector=${encodeURIComponent(\"spec.nodeName=\" + node)}`);\nif (q.length) url += \"?\" + q.join(\"&\");\nreturn [{json: {url, namespace: ns || \"all\"}}];"
       }
     },
     {

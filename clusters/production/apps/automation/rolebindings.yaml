@@ -1,5 +1,7 @@
-# One RoleBinding per in-scope namespace (the allow-list). Adding a namespace
-# here widens the agent's reach — keep in sync with REMEDIATOR_NAMESPACES in n8n.
+# One RoleBinding per in-scope namespace = the WRITE allow-list (ClusterRole
+# ai-remediator-write). Reads are cluster-wide via clusterrolebinding.yaml.
+# Adding a namespace here widens what the agent may restart/scale — keep in
+# sync with REMEDIATOR_NAMESPACES in n8n.
 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -12,7 +14,7 @@ subjects:
     namespace: automation
 roleRef:
   kind: ClusterRole
-  name: ai-remediator
+  name: ai-remediator-write
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -26,7 +28,7 @@ subjects:
     namespace: automation
 roleRef:
   kind: ClusterRole
-  name: ai-remediator
+  name: ai-remediator-write
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -40,7 +42,7 @@ subjects:
     namespace: automation
 roleRef:
   kind: ClusterRole
-  name: ai-remediator
+  name: ai-remediator-write
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -54,7 +56,7 @@ subjects:
     namespace: automation
 roleRef:
   kind: ClusterRole
-  name: ai-remediator
+  name: ai-remediator-write
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -68,7 +70,7 @@ subjects:
     namespace: automation
 roleRef:
   kind: ClusterRole
-  name: ai-remediator
+  name: ai-remediator-write
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -82,7 +84,7 @@ subjects:
     namespace: automation
 roleRef:
   kind: ClusterRole
-  name: ai-remediator
+  name: ai-remediator-write
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -96,7 +98,7 @@ subjects:
     namespace: automation
 roleRef:
   kind: ClusterRole
-  name: ai-remediator
+  name: ai-remediator-write
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -110,7 +112,7 @@ subjects:
     namespace: automation
 roleRef:
   kind: ClusterRole
-  name: ai-remediator
+  name: ai-remediator-write
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -124,7 +126,7 @@ subjects:
     namespace: automation
 roleRef:
   kind: ClusterRole
-  name: ai-remediator
+  name: ai-remediator-write
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -138,7 +140,7 @@ subjects:
     namespace: automation
 roleRef:
   kind: ClusterRole
-  name: ai-remediator
+  name: ai-remediator-write
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -152,5 +154,5 @@ subjects:
     namespace: automation
 roleRef:
   kind: ClusterRole
-  name: ai-remediator
+  name: ai-remediator-write
   apiGroup: rbac.authorization.k8s.io

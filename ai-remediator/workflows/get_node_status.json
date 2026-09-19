@@ -1,0 +1,188 @@
+{
+  "id": "aiRemGetNodeSt01",
+  "name": "get_node_status",
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "node"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "prepare",
+      "name": "Prepare",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;\nfunction bad(s){ return !s || typeof s !== \"string\" || !RE.test(s); }\nconst i = $input.first().json;\nconst node = (i.node && String(i.node).trim()) || \"\";\nif (node && bad(node)) return [{json: {blocked: true, ok: false, detail: \"invalid node name\"}}];\nreturn [{json: {url: node ? `https://kubernetes.default.svc/api/v1/nodes/${node}` : \"https://kubernetes.default.svc/api/v1/nodes\", node}}];"
+      }
+    },
+    {
+      "id": "http-nodes",
+      "name": "K8s GET nodes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "aiRemediatorK8s1",
+          "name": "K8s ai-remediator"
+        }
+      }
+    },
+    {
+      "id": "prep-metrics",
+      "name": "Prepare metrics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nif (r.blocked) return [{json: r}];\nif (r.statusCode >= 400) return [{json: {blocked: true, ok: false, detail: `K8s API ${r.statusCode}: ${JSON.stringify(r.body?.message || r.body).slice(0,200)}`}}];\nreturn [{json: {url: \"https://kubernetes.default.svc/apis/metrics.k8s.io/v1beta1/nodes\"}}];"
+      }
+    },
+    {
+      "id": "http-metrics",
+      "name": "K8s GET node metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "aiRemediatorK8s1",
+          "name": "K8s ai-remediator"
+        }
+      }
+    },
+    {
+      "id": "result",
+      "name": "Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const m = $input.first().json;\nif (m.blocked) return [{json: {ok: false, detail: m.detail}}];\nconst n = $('K8s GET nodes').first().json;\nconst items = n.body.items || (n.body.kind === \"Node\" ? [n.body] : []);\nconst usage = {}; (m.statusCode < 400 ? (m.body.items || []) : []).forEach(x => usage[x.metadata.name] = x.usage);\nconst toMi = (q) => { if (!q) return null; const s = String(q); if (s.endsWith(\"Ki\")) return Math.round(parseFloat(s)/1024); if (s.endsWith(\"Mi\")) return Math.round(parseFloat(s)); if (s.endsWith(\"Gi\")) return Math.round(parseFloat(s)*1024); return Math.round(parseFloat(s)/1048576); };\nconst toM = (q) => { if (!q) return null; const s = String(q); if (s.endsWith(\"n\")) return Math.round(parseFloat(s)/1e6); if (s.endsWith(\"u\")) return Math.round(parseFloat(s)/1e3); if (s.endsWith(\"m\")) return Math.round(parseFloat(s)); return Math.round(parseFloat(s)*1000); };\nconst nodes = items.map(nd => {\n  const u = usage[nd.metadata.name] || {};\n  const allocMi = toMi(nd.status.allocatable?.memory), usedMi = toMi(u.memory);\n  const allocM = toM(nd.status.allocatable?.cpu), usedM = toM(u.cpu);\n  const cond = (nd.status.conditions||[]).filter(c => c.type === \"Ready\" ? c.status !== \"True\" : c.status === \"True\").map(c => `${c.type}=${c.status} (${c.reason||\"\"})`);\n  return {name: nd.metadata.name, roles: Object.keys(nd.metadata.labels||{}).filter(k => k.startsWith(\"node-role.kubernetes.io/\")).map(k => k.split(\"/\")[1]),\n    ready: (nd.status.conditions||[]).some(c => c.type === \"Ready\" && c.status === \"True\"), problemConditions: cond,\n    memory: usedMi !== null && allocMi ? `${usedMi} Mi of ${allocMi} Mi allocatable (${Math.round(usedMi/allocMi*100)}%)` : \"n/a\",\n    cpu: usedM !== null && allocM ? `${usedM}m of ${allocM}m (${Math.round(usedM/allocM*100)}%)` : \"n/a\",\n    kernel: nd.status.nodeInfo?.kernelVersion, kubelet: nd.status.nodeInfo?.kubeletVersion, arch: nd.status.nodeInfo?.architecture,\n    unschedulable: !!nd.spec.unschedulable, taints: (nd.spec.taints||[]).map(t => `${t.key}=${t.value||\"\"}:${t.effect}`)};\n});\nreturn [{json: {ok: true, count: nodes.length, nodes, hint: \"Node memory % is the kubelet/metrics-server view (working set). Use get_top_pods with node=<name> to see which pods consume it.\"}}];"
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare": {
+      "main": [
+        [
+          {
+            "node": "K8s GET nodes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "K8s GET nodes": {
+      "main": [
+        [
+          {
+            "node": "Prepare metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare metrics": {
+      "main": [
+        [
+          {
+            "node": "K8s GET node metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "K8s GET node metrics": {
+      "main": [
+        [
+          {
+            "node": "Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "aiRemErrorWf0001"
+  },
+  "active": true
+}

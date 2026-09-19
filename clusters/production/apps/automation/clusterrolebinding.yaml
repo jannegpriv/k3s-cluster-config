@@ -1,0 +1,13 @@
+# Cluster-wide READ for the agent (diagnosis only). Writes stay per-namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ai-remediator-read
+subjects:
+  - kind: ServiceAccount
+    name: ai-remediator
+    namespace: automation
+roleRef:
+  kind: ClusterRole
+  name: ai-remediator-read
+  apiGroup: rbac.authorization.k8s.io

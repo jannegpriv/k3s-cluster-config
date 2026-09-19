@@ -34,7 +34,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;\nfunction bad(s){ return !s || typeof s !== \"string\" || !RE.test(s); }\nconst i = $input.first().json;\nif (bad(i.namespace)) return [{json: {blocked: true, ok: false, detail: \"invalid or missing namespace\"}}];\nlet url = `https://kubernetes.default.svc/api/v1/namespaces/${i.namespace}/events`;\nif (i.name && !bad(i.name)) url += `?fieldSelector=${encodeURIComponent(\"involvedObject.name=\" + i.name)}`;\nreturn [{json: {url}}];"
+        "jsCode": "const RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;\nfunction bad(s){ return !s || typeof s !== \"string\" || !RE.test(s); }\nconst i = $input.first().json;\nconst ns = (i.namespace && !/^(all|\\*|)$/i.test(String(i.namespace).trim())) ? String(i.namespace).trim() : \"\";\nif (ns && bad(ns)) return [{json: {blocked: true, ok: false, detail: \"invalid namespace\"}}];\nlet url = ns ? `https://kubernetes.default.svc/api/v1/namespaces/${ns}/events` : \"https://kubernetes.default.svc/api/v1/events\";\nif (i.name && !bad(i.name)) url += `?fieldSelector=${encodeURIComponent(\"involvedObject.name=\" + i.name)}`;\nreturn [{json: {url}}];"
       }
     },
     {
