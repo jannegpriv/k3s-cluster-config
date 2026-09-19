@@ -5,7 +5,7 @@ import hashlib
 import io
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import shlex
 import sqlite3
 import subprocess
@@ -52,6 +52,12 @@ def snapshot(root):
 
 def verify_archive(archive):
     with tarfile.open(archive, "r:gz") as tar:
+        for member in tar.getmembers():
+            path = PurePosixPath(member.name)
+            allowed = member.name in {"manifest.json", "config/config.json"} or (
+                len(path.parts) > 1 and path.parts[0] == "memory")
+            if not member.isfile() or path.is_absolute() or ".." in path.parts or not allowed:
+                raise RuntimeError("Unsafe archive member")
         manifest = json.load(tar.extractfile("manifest.json"))
         expected = manifest["sha256"]
         if sorted(tar.getnames()) != sorted([*expected, "manifest.json"]):
