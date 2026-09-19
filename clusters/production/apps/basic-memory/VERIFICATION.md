@@ -21,8 +21,11 @@ merged revision `7b35e6cdc651a588690df670e8b826c1e01fb30b`.
 
 The first tested NAS archive was `basic-memory-20260919T200414284520Z.tar.gz`,
 SHA256 `91b77d58c0ba08eeea94a6632c5f47bf3cae1c7a85df11b70bf994996661d501`.
-It contained a synthetic persistence note and configuration; production notes are
-covered by subsequent backups. Scheduled backups run at 03:30 Europe/Stockholm;
+It contained a synthetic persistence note and configuration. After the seven
+approved notes were added, `basic-memory-20260919T201352832176Z.tar.gz` completed in
+13s and its eight files were downloaded and verified against the archive manifest.
+Its SHA256 is `daa8cf15fe792f7f1a90f76c458dce29b726ed7b4222ed3e0ff205138d02d15d`.
+Scheduled backups run at 03:30 Europe/Stockholm;
 manual Jobs do not update the CronJob's last-successful timestamp.
 
 ## Local client handoff
@@ -31,8 +34,12 @@ Remote.it SSH configuration was archived and its Include removed. Direct
 `ssh janne@k3s-m-1` now works through the existing Tailscale subnet route.
 
 Both credentials are in the Mac login Keychain. The Codex config and header helper
-were parsed/executed successfully without printing credentials. An administrator
-must still add `192.168.50.75 memory.k3s.nu` to the Mac's `/etc/hosts`; unattended
-sudo requires a password. Acceptance requests used a connection-IP override while
-preserving the real Host, SNI and certificate verification. A new interactive
-Codex task can use the configured MCP server after name resolution is installed.
+were parsed/executed successfully without printing credentials. The desktop app's
+bundled Codex 0.155.0-alpha.9.2 recognizes the header helper, and `basic_memory` is
+enabled. The separately installed CLI 0.146.0 lacks this feature; it was not upgraded.
+
+After macOS administrator authorization, `192.168.50.75 memory.k3s.nu` was added to
+`/etc/hosts`, with backup `/etc/hosts.before-basic-memory-20260919-231552`.
+System DNS resolved the private address, and both accounts initialized MCP and
+discovered 21 tools **without** a connection-IP override. Unauthenticated ordinary
+HTTPS returned 401. A new desktop Codex task can load the configured memory server.

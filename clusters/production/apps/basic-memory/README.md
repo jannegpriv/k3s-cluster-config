@@ -21,6 +21,9 @@ from other cluster workloads too.
 On Jan's Mac the passwords are in the login Keychain, service
 `basic-memory.k3s.nu`, accounts `codex` and `agent`. Codex uses a header helper in
 `~/.codex/helpers/basic-memory-headers.py`, rather than plaintext configuration.
+This was verified with the desktop app's bundled Codex 0.155.0-alpha.9.2. The
+separate CLI 0.146.0 does not support header helpers and needs a compatible version
+before it can use this authentication configuration.
 Own agents should read their account from a secret store and never log headers.
 Do not put personal notes, passwords, or decrypted Secrets in Git.
 
