@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: basic-memory
+  namespace: basic-memory
+  labels:
+    app.kubernetes.io/name: basic-memory
+    app.kubernetes.io/instance: basic-memory
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: &id001
+      app.kubernetes.io/name: basic-memory
+      app.kubernetes.io/instance: basic-memory
+  template:
+    metadata:
+      labels: *id001
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: DoesNotExist
+      containers:
+      - name: basic-memory
+        image: ghcr.io/basicmachines-co/basic-memory:0.23.2@sha256:939f1173d96626c280763e14622f2381d49fbbb7db17cae2e832f4f639405643
+        command:
+        - /bin/sh
+        - -ec
+        args:
+        - 'mkdir -p /data/memory/profile /data/memory/preferences /data/memory/projects
+          /data/config
+
+          exec basic-memory mcp --transport streamable-http --host 0.0.0.0 --port
+          8000 --path /mcp --project main
+
+          '
+        env:
+        - name: BASIC_MEMORY_HOME
+          value: /data/memory
+        - name: BASIC_MEMORY_PROJECT_ROOT
+          value: /data/memory
+        - name: BASIC_MEMORY_CONFIG_DIR
+          value: /data/config
+        - name: BASIC_MEMORY_DEFAULT_PROJECT
+          value: main
+        - name: BASIC_MEMORY_DATABASE_BACKEND
+          value: sqlite
+        - name: BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED
+          value: 'false'
+        - name: BASIC_MEMORY_INDEX_CHANGES
+          value: 'true'
+        - name: BASIC_MEMORY_LOGFIRE_ENABLED
+          value: 'false'
+        - name: BASIC_MEMORY_LOGFIRE_SEND_TO_LOGFIRE
+          value: 'false'
+        - name: BASIC_MEMORY_ENV
+          value: user
+        - name: TZ
+          value: Europe/Stockholm
+        ports:
+        - name: mcp
+          containerPort: 8000
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: '1'
+            memory: 1Gi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        startupProbe:
+          tcpSocket:
+            port: mcp
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 36
+        readinessProbe:
+          tcpSocket:
+            port: mcp
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        livenessProbe:
+          tcpSocket:
+            port: mcp
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: basic-memory-data

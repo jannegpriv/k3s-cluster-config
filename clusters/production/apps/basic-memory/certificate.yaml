@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: basic-memory-tls
+  namespace: basic-memory
+  labels:
+    app.kubernetes.io/name: basic-memory
+    app.kubernetes.io/instance: basic-memory
+spec:
+  secretName: basic-memory-tls
+  dnsNames:
+  - memory.k3s.nu
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-dns
