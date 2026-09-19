@@ -1,0 +1,43 @@
+name: Basic Memory
+on:
+  pull_request:
+    paths:
+      - 'clusters/production/apps/basic-memory/**'
+      - 'clusters/production/apps/kustomization.yaml'
+      - '.github/workflows/basic-memory.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'clusters/production/apps/basic-memory/**'
+      - '.github/workflows/basic-memory.yml'
+  workflow_dispatch:
+    inputs:
+      public_ipv4:
+        description: Current public IPv4 of the home router
+        required: true
+        default: '82.183.35.198'
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test backup consistency and exclusions
+        run: python3 -m unittest discover -s clusters/production/apps/basic-memory/tests -v
+      - name: Render manifests with matching Kubernetes minor version
+        run: |
+          curl -fLsS https://dl.k8s.io/release/v1.34.3/bin/linux/amd64/kubectl -o /tmp/kubectl
+          curl -fLsS https://dl.k8s.io/release/v1.34.3/bin/linux/amd64/kubectl.sha256 -o /tmp/kubectl.sha256
+          printf '%s  /tmp/kubectl\n' "$(cat /tmp/kubectl.sha256)" | sha256sum -c -
+          chmod +x /tmp/kubectl
+          /tmp/kubectl kustomize clusters/production/apps/basic-memory >/tmp/basic-memory.yaml
+  public-boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require private access from an independent public network
+        env:
+          PUBLIC_IPV4: ${{ inputs.public_ipv4 || '82.183.35.198' }}
+        run: python3 clusters/production/apps/basic-memory/scripts/check-public-boundary.py

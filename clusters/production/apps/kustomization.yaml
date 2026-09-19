@@ -13,3 +13,4 @@ resources:
   - mattermost
   - authelia
   - automation
+  - basic-memory

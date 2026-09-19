@@ -1,0 +1,35 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: basic-memory-auth
+  namespace: basic-memory
+  labels:
+    app.kubernetes.io/name: basic-memory
+    app.kubernetes.io/instance: basic-memory
+spec:
+  basicAuth:
+    secret: basic-memory-auth
+    removeHeader: true
+    realm: Basic Memory
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: basic-memory
+  namespace: basic-memory
+  labels:
+    app.kubernetes.io/name: basic-memory
+    app.kubernetes.io/instance: basic-memory
+spec:
+  entryPoints:
+  - websecure
+  routes:
+  - kind: Rule
+    match: Host(`memory.k3s.nu`) && (Path(`/mcp`) || PathPrefix(`/mcp/`))
+    middlewares:
+    - name: basic-memory-auth
+    services:
+    - name: basic-memory
+      port: 8000
+  tls:
+    secretName: basic-memory-tls

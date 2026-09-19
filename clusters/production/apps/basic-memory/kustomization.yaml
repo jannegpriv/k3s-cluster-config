@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- storage.yaml
+- deployment.yaml
+- service.yaml
+- network-policy.yaml
+- certificate.yaml
+- ingress.yaml
+- auth.secret.sops.yaml
+- nas.secret.sops.yaml
+- backup.yaml
+- monitoring.yaml
+configMapGenerator:
+- name: basic-memory-backup-scripts
+  namespace: basic-memory
+  files:
+  - backup.py=scripts/backup.py
+- name: basic-memory-nas-hostkey
+  namespace: basic-memory
+  files:
+  - known_hosts=scripts/known_hosts

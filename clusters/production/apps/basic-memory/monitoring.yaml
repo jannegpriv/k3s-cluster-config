@@ -1,0 +1,40 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: basic-memory
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: basic-memory
+    app.kubernetes.io/instance: basic-memory
+    release: kube-prometheus-stack
+    prometheus: kube-prometheus-stack-prometheus
+spec:
+  groups:
+  - name: basic-memory
+    rules:
+    - alert: BasicMemoryUnavailable
+      expr: kube_deployment_status_replicas_available{namespace="basic-memory",deployment="basic-memory"}
+        < 1
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: Basic Memory has been unavailable for five minutes
+    - alert: BasicMemoryBackupStale
+      expr: (time() - kube_cronjob_status_last_successful_time{namespace="basic-memory",cronjob="basic-memory-backup"}
+        > 108000) or ((time() - kube_cronjob_created{namespace="basic-memory",cronjob="basic-memory-backup"}
+        > 108000) unless on(namespace,cronjob) kube_cronjob_status_last_successful_time{namespace="basic-memory",cronjob="basic-memory-backup"})
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: Basic Memory has no successful NAS backup within 30 hours
+    - alert: BasicMemoryStorageHigh
+      expr: 100 * kubelet_volume_stats_used_bytes{namespace="basic-memory",persistentvolumeclaim="basic-memory-data"}
+        / kubelet_volume_stats_capacity_bytes{namespace="basic-memory",persistentvolumeclaim="basic-memory-data"}
+        > 80
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: Basic Memory volume is over 80 percent full
