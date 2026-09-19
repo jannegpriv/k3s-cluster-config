@@ -1,8 +1,10 @@
 import importlib.util
 import json
+import io
 from pathlib import Path
 import sqlite3
 import tempfile
+import tarfile
 import unittest
 from unittest.mock import patch
 
@@ -55,6 +57,14 @@ class BackupTest(unittest.TestCase):
         (self.root / "memory/link").symlink_to(self.root / "config/config.json")
         with self.assertRaises(RuntimeError):
             backup.create_archive(self.root, self.archive, attempts=1)
+
+    def test_restore_rejects_path_traversal(self):
+        with tarfile.open(self.archive, "w:gz") as tar:
+            info = tarfile.TarInfo("memory/../../outside")
+            info.size = 1
+            tar.addfile(info, io.BytesIO(b"x"))
+        with self.assertRaisesRegex(RuntimeError, "Unsafe archive"):
+            backup.verify_archive(self.archive)
 
 
 if __name__ == "__main__":
