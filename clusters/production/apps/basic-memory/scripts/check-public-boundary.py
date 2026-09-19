@@ -14,7 +14,7 @@ subprocess.run(["curl", "--fail", "--silent", "--show-error", "--max-time", "20"
 try:
     socket.getaddrinfo("memory.k3s.nu", 443)
 except socket.gaierror as error:
-    if error.errno != socket.EAI_NONAME:
+    if error.errno not in {socket.EAI_NONAME, getattr(socket, "EAI_NODATA", socket.EAI_NONAME)}:
         raise
 else:
     raise SystemExit("Unexpected public DNS record for memory.k3s.nu")
