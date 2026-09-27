@@ -36,11 +36,25 @@
   separat OAuth-lager. Första podstarten hann före nätverksreglerna och blev
   därför inte Ready. `startup_wait_timeout: 60s` lades till enligt klientens
   dokumentation för att vänta in anslutningen före den första upptäckten.
+- Efter ändringen blev Deployment Ready (1/1), utan omstarter, och `/readyz`
+  svarade `ready`. CI för ändringen godkändes.
+- En tillfällig obehörig pod kunde varken ansluta till Basic Memorys port 8000
+  eller tunnelklientens administrationsport 8080. Testpodden togs bort efteråt.
+- Basic Memory skapades och anslöts i ChatGPT. Pluginen visas under Installed:
+  `https://chatgpt.com/plugins/plugin_asdk_app_6ab90ce7a1bc81919e48a57fb95414e8`.
+- En vanlig ChatGPT-textchatt kunde läsa minneskonventionerna samt söka och
+  läsa relevanta anteckningar via den nya pluginen. Skrivverktygen upptäcktes.
+- På Jannes uttryckliga begäran uppdaterade samma ChatGPT-anslutning den
+  befintliga anteckningen **AI-minne - drift i K3s** med anslutningens lösning,
+  åtkomstgräns och genomförda kontroller. Skrivning och återläsning lyckades.
+  En oberoende läsning genom den befintliga MCP-anslutningen bekräftade att
+  tillägget sparats och att den tidigare texten fanns kvar. Inga hemligheter
+  ingår i anteckningen.
 
-## Återstår före klart
+## Återstående kontroll
 
-- Faktisk Ready-status och verktygsupptäckt i ChatGPT.
-- Läsanrop från ChatGPT och Voice-test på användarens avsedda enhet.
-- Kontroll av nätverksisolering och offentlig nätverksgräns efter aktivering.
+- Praktiskt Voice-test på användarens avsedda enhet.
+  Fungerande läsning och skrivning i textchatten verifierar inte Voice.
 
-Inga produktionsresurser eller minnesanteckningar ändrades under förberedelsen.
+Efter Jannes godkännande aktiverades produktionsresurserna via GitOps och
+minnesanteckningen uppdaterades via ChatGPT-pluginen.

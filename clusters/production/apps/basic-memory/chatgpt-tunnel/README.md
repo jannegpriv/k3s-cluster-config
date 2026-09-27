@@ -6,6 +6,9 @@ Tunnel och begränsad runtime-nyckel har skapats efter Jannes godkännande.
 Tunnel-ID: `tunnel_6ab9098ae97c81919f35baff12de6513`.
 Janne har matat in nyckeln lokalt och den lagras SOPS-krypterad i Git.
 Den här katalogen ingår i Basic Memorys överordnade `kustomization.yaml`.
+Tunnelklienten är Ready och den personliga Basic Memory-pluginen är ansluten
+i ChatGPT. Läsning, skrivning och återläsning har verifierats i en vanlig
+ChatGPT-textchatt. Ett faktiskt Voice-test på Jannes enhet återstår.
 Genomförda driftskontroller och återstående verifiering finns i `VERIFICATION.md`.
 
 OpenAI Secure MCP Tunnel ansluter utgående från k3s till OpenAI. Basic Memory
@@ -30,7 +33,8 @@ python3 /Users/jan.gustafsson/git/k3s-basic-memory-chatgpt/clusters/production/a
 - Platform-organisation: `Personal`, `org-Ij9Q17ytubRQMo7EVcVMSvv5`.
 - Janne var ensam medlem och ägare vid kontroll i Platform 2026-09-27.
 - Kontots tillgängliga ChatGPT-arbetsyta:
-  `f60bc182-7ab7-4639-9cba-54b9870c3d90`. Kontrollera kopplingen innan aktivering.
+  `f60bc182-7ab7-4639-9cba-54b9870c3d90`. Tunnelns metadata har kontrollerats
+  mot exakt denna arbetsyta och ovanstående organisation.
 - Tunneln ska endast kopplas till dessa två kontexter. Ingen delning eller
   publicering av pluginen. Inga andra medlemmar eller tunnelroller får tilldelas.
 - En separat **Restricted** runtime-nyckel med enbart **Tunnels Read + Use**.
