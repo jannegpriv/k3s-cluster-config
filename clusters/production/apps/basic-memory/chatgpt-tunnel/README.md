@@ -4,21 +4,22 @@
 
 Tunnel och begränsad runtime-nyckel har skapats efter Jannes godkännande.
 Tunnel-ID: `tunnel_6ab9098ae97c81919f35baff12de6513`.
-Nyckeln väntar på säker lokal inmatning och kryptering. Den här katalogen ingår
-ännu inte i Basic Memorys överordnade `kustomization.yaml` och ingen ny
-nätverksåtkomst har öppnats i klustret.
+Janne har matat in nyckeln lokalt och den lagras SOPS-krypterad i Git.
+Den här katalogen ingår i Basic Memorys överordnade `kustomization.yaml`.
+Genomförda driftskontroller och återstående verifiering finns i `VERIFICATION.md`.
 
 OpenAI Secure MCP Tunnel ansluter utgående från k3s till OpenAI. Basic Memory
 behåller sin privata adress, sin befintliga inloggning för lokala klienter och
 sin befintliga offentliga nätverksgräns. Ingen publik DNS-post, Cloudflare-route
 eller ny ingress behövs.
 
-## Nästa steg på Macen
+## Säker inmatning av den första nyckeln
 
 Öppna Terminal och kör följande kommando. När programmet frågar efter nyckeln,
 klicka **Copy** på den öppna OpenAI-sidan som visar den nya tunnelnyckeln.
 Klistra in i Terminal och tryck Enter. Inmatningen visas inte. Nyckeln ska inte
-klistras in i chatten. Skriv **klart** i chatten när krypteringen bekräftats.
+klistras in i chatten. Skriptet skriver bara en krypterad fil och vägrar skriva
+över en befintlig sådan. Vid framtida nyckelbyte används det ordinarie SOPS-flödet.
 
 ```bash
 python3 /Users/jan.gustafsson/git/k3s-basic-memory-chatgpt/clusters/production/apps/basic-memory/scripts/prepare-chatgpt-tunnel-secret.py --tunnel-id tunnel_6ab9098ae97c81919f35baff12de6513

@@ -21,11 +21,17 @@
 - Runtime-nyckeln skapades som Restricted. Bekräftelsesidan visade exakt två
   rättigheter: Tunnels Read och Use. Alla andra behörighetsområden visade None.
   Nyckeln har inte skrivits i chatt, loggar eller okrypterade filer.
+- Janne förde in nyckeln i den dolda lokala terminalinmatningen. Den resulterande
+  filen kontrollerades med SOPS och innehåller krypterade värden för både
+  `api-key` och `tunnel-id`.
+- Hela Basic Memory-konfigurationen renderades med den aktiverade underkatalogen.
+  Klustrets servervalidering godkände alla fem tunnelresurser; hemliga värden
+  ersattes med testvärden under denna dry run.
 
 ## Återstår före klart
 
 - Verifiera personlig ChatGPT-arbetsyta och tunnelns faktiska tilldelningar.
-- Lagra den skapade nyckeln med SOPS och aktivera via Flux.
+- Aktivera via Flux.
 - Faktisk Ready-status och verktygsupptäckt i ChatGPT.
 - Läsanrop från ChatGPT och Voice-test på användarens avsedda enhet.
 - Kontroll av nätverksisolering och offentlig nätverksgräns efter aktivering.

@@ -11,6 +11,7 @@ resources:
 - nas.secret.sops.yaml
 - backup.yaml
 - monitoring.yaml
+- chatgpt-tunnel
 configMapGenerator:
 - name: basic-memory-backup-scripts
   namespace: basic-memory

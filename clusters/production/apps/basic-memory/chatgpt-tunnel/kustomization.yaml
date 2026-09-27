@@ -4,6 +4,7 @@ namespace: basic-memory
 resources:
 - deployment.yaml
 - network-policy.yaml
+- credentials.secret.sops.yaml
 configMapGenerator:
 - name: basic-memory-chatgpt-tunnel
   files:
