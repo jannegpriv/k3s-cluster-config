@@ -16,12 +16,16 @@
   SOPS rapporterade giltig krypterad fil, båda värdena var krypterade, filens
   rättigheter var 0600 och testnyckeln förekom inte i den sparade filen.
 - Basic Memorys fem befintliga backuptester godkändes.
+- Janne godkände aktiveringen i chatten. Tunneln skapades med enbart den
+  personliga organisationen och den valda ChatGPT-arbetsytan.
+- Runtime-nyckeln skapades som Restricted. Bekräftelsesidan visade exakt två
+  rättigheter: Tunnels Read och Use. Alla andra behörighetsområden visade None.
+  Nyckeln har inte skrivits i chatt, loggar eller okrypterade filer.
 
 ## Återstår före klart
 
-- Slutligt användargodkännande av åtkomstkopplingen i webbläsaren.
 - Verifiera personlig ChatGPT-arbetsyta och tunnelns faktiska tilldelningar.
-- Skapa tunnel och begränsad runtime-nyckel, lagra med SOPS, aktivera via Flux.
+- Lagra den skapade nyckeln med SOPS och aktivera via Flux.
 - Faktisk Ready-status och verktygsupptäckt i ChatGPT.
 - Läsanrop från ChatGPT och Voice-test på användarens avsedda enhet.
 - Kontroll av nätverksisolering och offentlig nätverksgräns efter aktivering.

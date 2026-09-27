@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Encrypt a restricted tunnel runtime key without writing plaintext to disk."""
 
+import argparse
 import getpass
 import json
 import os
@@ -10,10 +11,13 @@ import subprocess
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--tunnel-id", help="Tunnel ID copied from the Platform tunnel settings")
+    args = parser.parse_args()
     target = Path(__file__).resolve().parents[1] / "chatgpt-tunnel" / "credentials.secret.sops.yaml"
     if target.exists():
         raise SystemExit("Encrypted credentials already exist; use the normal SOPS rotation process.")
-    tunnel_id = input("Tunnel ID: ").strip()
+    tunnel_id = (args.tunnel_id or input("Tunnel ID: ")).strip()
     if not re.fullmatch(r"tunnel_[0-9a-f]{32}", tunnel_id):
         raise SystemExit("Invalid tunnel ID.")
     key = getpass.getpass("Restricted OpenAI runtime key (Tunnels Read + Use only): ").strip()
@@ -27,7 +31,8 @@ def main():
         "stringData": {"tunnel-id": tunnel_id, "api-key": key},
     }
     result = subprocess.run(
-        ["sops", "--encrypt", "--pgp", "BE7CC9C5400AF50610072526D7332A14FB23EE47",
+        ["sops", "--config", str(Path(__file__).resolve().parents[5] / ".sops.yaml"),
+         "--encrypt", "--pgp", "BE7CC9C5400AF50610072526D7332A14FB23EE47",
          "--encrypted-regex", "^(data|stringData)$", "--input-type", "json",
          "--filename-override", "clusters/production/apps/basic-memory/chatgpt-tunnel/credentials.secret.sops.yaml",
          "--output-type", "yaml", "/dev/stdin"],
