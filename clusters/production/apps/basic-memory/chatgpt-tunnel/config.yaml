@@ -11,6 +11,8 @@ log:
   level: info
   format: json
 mcp:
+  # NetworkPolicy rules may settle just after the first container starts.
+  startup_wait_timeout: 60s
   server_urls:
   - channel: main
     url: http://basic-memory.basic-memory.svc.cluster.local:8000/mcp

@@ -27,11 +27,18 @@
 - Hela Basic Memory-konfigurationen renderades med den aktiverade underkatalogen.
   Klustrets servervalidering godkände alla fem tunnelresurser; hemliga värden
   ersattes med testvärden under denna dry run.
+- PR #5 godkändes av konfigurationskontroll, automatisk kodgranskning och
+  offentlig nätverkskontroll. Flux tog in ändringen från main.
+- Tunnelns metadata lästes med runtime-nyckeln i klustret. Exakt den förväntade
+  organisationen och ChatGPT-arbetsytan returnerades, utan andra kontexter.
+  Anrop till tunnelmetadata utan inloggning nekades med HTTP 401.
+- Klientens `doctor` godkände Basic Memory-anslutningen och dess avsaknad av
+  separat OAuth-lager. Första podstarten hann före nätverksreglerna och blev
+  därför inte Ready. `startup_wait_timeout: 60s` lades till enligt klientens
+  dokumentation för att vänta in anslutningen före den första upptäckten.
 
 ## Återstår före klart
 
-- Verifiera personlig ChatGPT-arbetsyta och tunnelns faktiska tilldelningar.
-- Aktivera via Flux.
 - Faktisk Ready-status och verktygsupptäckt i ChatGPT.
 - Läsanrop från ChatGPT och Voice-test på användarens avsedda enhet.
 - Kontroll av nätverksisolering och offentlig nätverksgräns efter aktivering.
