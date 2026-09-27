@@ -1,0 +1,16 @@
+config_version: 1
+control_plane:
+  base_url: https://api.openai.com
+  api_key: file:/run/secrets/openai/api-key
+  # CONTROL_PLANE_TUNNEL_ID comes from the encrypted Kubernetes Secret.
+health:
+  listen_addr: :8080
+admin_ui:
+  open_browser: false
+log:
+  level: info
+  format: json
+mcp:
+  server_urls:
+  - channel: main
+    url: http://basic-memory.basic-memory.svc.cluster.local:8000/mcp
