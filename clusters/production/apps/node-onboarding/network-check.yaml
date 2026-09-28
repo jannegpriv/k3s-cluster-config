@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k3s-w-6-network-check
+  namespace: default
+spec:
+  backoffLimit: 1
+  activeDeadlineSeconds: 300
+  template:
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k3s-w-6
+      tolerations:
+        - key: onboarding.k3s.nu/pending
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: check
+          image: busybox:1.36
+          command:
+            - sh
+            - -ec
+            - |
+              nslookup kubernetes.default.svc.cluster.local
+              wget -q -T 15 -O - http://mattermost.mattermost.svc.cluster.local:8065/api/v4/system/ping | grep -q '"status":"OK"'
+              echo 'PASS: cluster DNS and cross-node HTTP to Mattermost'
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 32Mi
