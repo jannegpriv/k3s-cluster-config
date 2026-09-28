@@ -95,6 +95,13 @@ used size 3, min_size 2 and the `replicapool_host` CRUSH rule (host failure doma
 Existing CRUSH weights and reweights are preserved; the new OSD uses its normal
 capacity-derived weight. Ceph/Rook versions and recovery limits remain unchanged.
 
+The installed Rook 1.14.8 ignores `storage.nodes` while `useAllNodes` is true
+(confirmed in its operator log and tagged source). Disable both automatic node
+and device discovery and enumerate all six existing/intended OSD partitions.
+Ceph OSD metadata verified m-1 `/dev/sda1`, w-1 `/dev/sda3`, and w-3 through w-6
+`/dev/nvme0n1p3`. OSD 5 was created on w-6's intended p3; no other w-6 partition
+was selected. This also prevents a future empty disk from being consumed silently.
+
 Keep the node taint until six OSDs are up/in and rebalance completes with healthy
 PGs. Then sync the final node config, remove the live onboarding taint, and verify
 the AMD64 storage drivers before moving applications. openHAB remains on w-5.

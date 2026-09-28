@@ -55,11 +55,23 @@ spec:
   
   skipUpgradeChecks: true
   storage:
-    useAllDevices: true
-    useAllNodes: true
-    # Note: Manual CRUSH weight adjustments have been made:
-    # - OSD.2 CRUSH weight and REWEIGHT both reduced to 0.25 (2025-04-13) to address storage imbalance and nearfull warnings
+    # Rook 1.14 ignores node overrides when useAllNodes is true.
+    # Explicitly preserve each existing OSD partition and add only w-6's p3.
+    useAllDevices: false
+    useAllNodes: false
     nodes:
+    - name: k3s-m-1
+      devices:
+      - name: /dev/sda1
+    - name: k3s-w-1
+      devices:
+      - name: /dev/sda3
+    - name: k3s-w-3
+      devices:
+      - name: /dev/nvme0n1p3
+    - name: k3s-w-4
+      devices:
+      - name: /dev/nvme0n1p3
     - name: k3s-w-5
       devices:
       - name: /dev/nvme0n1p3
