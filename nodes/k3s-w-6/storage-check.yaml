@@ -1,0 +1,89 @@
+# Reference only. Temporarily include a copy under the Flux app tree after the
+# onboarding taint is removed; prune all three objects after a successful check.
+# Same CSI/pool parameters as rook-ceph-block, with Delete for this disposable test.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: k3s-w-6-storage-check
+provisioner: rook-ceph.rbd.csi.ceph.com
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+parameters:
+  clusterID: rook-ceph
+  pool: replicapool
+  imageFormat: "2"
+  imageFeatures: layering
+  csi.storage.k8s.io/fstype: ext4
+  csi.storage.k8s.io/provisioner-secret-name: rook-csi-rbd-provisioner
+  csi.storage.k8s.io/provisioner-secret-namespace: rook-ceph
+  csi.storage.k8s.io/controller-expand-secret-name: rook-csi-rbd-provisioner
+  csi.storage.k8s.io/controller-expand-secret-namespace: rook-ceph
+  csi.storage.k8s.io/node-stage-secret-name: rook-csi-rbd-node
+  csi.storage.k8s.io/node-stage-secret-namespace: rook-ceph
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: k3s-w-6-storage-check
+  namespace: default
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: k3s-w-6-storage-check
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k3s-w-6-storage-check
+  namespace: default
+spec:
+  backoffLimit: 1
+  activeDeadlineSeconds: 600
+  template:
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k3s-w-6
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: check
+        image: busybox:1.36
+        command:
+        - sh
+        - -ec
+        - |
+          cd /data
+          dd if=/dev/urandom of=payload.bin bs=1M count=32
+          sha256sum payload.bin > payload.sha256
+          sync
+          sha256sum -c payload.sha256
+          nslookup kubernetes.default.svc.cluster.local
+          echo 'PASS: AMD64 Ceph RBD provisioning, mount, write/read checksum and cluster DNS'
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: [ALL]
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+          limits:
+            cpu: 200m
+            memory: 64Mi
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: k3s-w-6-storage-check

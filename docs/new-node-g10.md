@@ -76,8 +76,8 @@ Do not format or mount partition 3 as a normal filesystem.
 
 ## Follow-up work
 
-- Add the raw Ceph partition explicitly via GitOps, preserving Ceph 18.2.2,
-  replication size 3 and the current OSD memory limits. Verify health and rebalance.
+- Finish the Ceph rebalance and storage-client validation described below before
+  removing the onboarding restriction for normal workloads.
 - Migrate openHAB in a separate controlled step, retaining its 4 GiB memory limit.
 - Do not upgrade Ceph or change the existing ARM workers as part of this join.
 
@@ -105,6 +105,46 @@ was selected. This also prevents a future empty disk from being consumed silentl
 Keep the node taint until six OSDs are up/in and rebalance completes with healthy
 PGs. Then sync the final node config, remove the live onboarding taint, and verify
 the AMD64 storage drivers before moving applications. openHAB remains on w-5.
+
+### Verified rollout status at 23:53 Europe/Stockholm
+
+- Flux reconciled `231574c`; all three Kustomizations are Ready.
+- OSD 5 is Ready on w-6, raw BlueStore on `/dev/nvme0n1p3`.
+  OSD UUID: `c92d7e75-5e3c-4e39-8206-e4669b407379`.
+- All six OSDs are up/in. Ceph reports `HEALTH_OK`, with data still backfilling;
+  **rebalance is not complete**. Existing OSD weights are unchanged.
+- Raw capacity increased from 2,023,608,688,640 to 2,831,940,198,400 bytes.
+  This is raw capacity, not usable capacity after three replicas.
+- The latest w-6 prepare Job explicitly selected only `/dev/nvme0n1p3` and
+  completed successfully. SSH/lsblk confirmed root and EFI remain mounted with
+  their original sizes and filesystem types. The K3s agent remains active.
+- All six nodes and running application containers are Ready; Mattermost stays
+  on w-3 and openHAB stays on w-5. The onboarding taint remains on w-6.
+- `nodes/k3s-w-6/storage-check.yaml` is a prepared, server-dry-run-validated
+  reference, **not deployed or executed yet**. After rebalance, deploy a copy
+  through the Flux app tree to test AMD64 CSI provisioning/mounting and a 32 MiB
+  write/read checksum. Its separate StorageClass matches `rook-ceph-block` but
+  uses `Delete` for disposable test data. Prune all three test resources via Flux
+  and verify their PV/RBD image are removed afterwards.
+
+### Completion procedure
+
+1. Recheck six OSDs up/in, `HEALTH_OK`, all PGs active+clean (scrubbing is fine),
+   zero remapped/misplaced/degraded objects, three monitors in quorum and all
+   nodes Ready. Do not accelerate recovery by changing cluster limits.
+2. Commit removal of `node-taint` from `nodes/k3s-w-6/config.yaml`; copy that
+   exact file to the verified w-6 machine as root, mode 0600. Keep its existing
+   `agent-token` file untouched. No restart is needed for this step.
+3. Through m-1, remove only `onboarding.k3s.nu/pending:NoSchedule` from Node w-6
+   with `kubectl taint node k3s-w-6 onboarding.k3s.nu/pending:NoSchedule-`.
+   This is an operational Node change; agent registration flags alone do not
+   remove an existing taint. Record the execution and checks here in Git.
+4. Verify the RBD/CephFS CSI DaemonSets start on AMD64, run the storage-check Job
+   via Flux and clean it up. Verify metrics, Ceph health and normal scheduling.
+5. The narrow OSD/prepareosd tolerations may stay: they only match the onboarding
+   taint and avoid an unnecessary second restart of existing OSD pods.
+6. Update this runbook and shared memory with the actual outcome. Migrating
+   openHAB is a separate step and is not authorized as part of this rollout.
 
 ## References
 
