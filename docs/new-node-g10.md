@@ -51,6 +51,29 @@ Do not format or mount partition 3 as a normal filesystem.
 7. Once these checks pass, remove the onboarding taint both from this config and
    from the live Node. K3s applies `node-taint` only at initial registration.
 
+## Verified after join, 2026-09-28
+
+- `k3s-agent` is enabled and active. Kubernetes reports `Ready`, architecture
+  `amd64`, 8 logical CPUs and 15,792,572 KiB memory (about 15.1 GiB).
+- Pod CIDR is `10.42.2.0/24`. A Job on w-6 resolved the Kubernetes service through
+  cluster DNS and received a healthy HTTP response from Mattermost on w-3.
+  Its first attempt timed out on DNS during initial networking setup; its retry
+  completed. The test was deployed and pruned through Flux; its manifest is kept
+  in `nodes/k3s-w-6/network-check.yaml` for reference, outside the active app tree.
+- `kubectl top node k3s-w-6` returned CPU and memory samples; node-exporter is Ready.
+- All six nodes are Ready. All five existing OSDs are Ready and Ceph is `HEALTH_OK`.
+- Mattermost's ARM64 selector is reconciled and its replacement pod is Ready on w-3.
+- Systemd reports `running`, with no failed services. Sleep, suspend, hibernate
+  and hybrid-sleep targets are masked; swap remains disabled.
+- `/dev/nvme0n1p3` is still raw/unmounted. No new Ceph OSD has been created.
+- **The onboarding NoSchedule taint remains.** Rook currently has `useAllNodes`
+  and `useAllDevices` enabled, which can automatically consume raw partitions.
+  Configure the intended device explicitly and review the storage rollout before
+  removing the taint. Only explicitly tolerating workloads run here for now.
+- Do not set `node-role.kubernetes.io/worker` through kubelet `node-label`:
+  Kubernetes 1.34 rejects this reserved label. An agent still acts as a worker
+  without the cosmetic role label (`kubectl get nodes` displays `<none>`).
+
 ## Follow-up work
 
 - Add the raw Ceph partition explicitly via GitOps, preserving Ceph 18.2.2,
