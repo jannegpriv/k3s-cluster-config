@@ -63,8 +63,25 @@ spec:
     - name: k3s-w-5
       devices:
       - name: /dev/nvme0n1p3
+    - name: k3s-w-6
+      devices:
+      # Only the reserved 752.8 GiB partition; p1 is Ubuntu and p2 is EFI.
+      - name: /dev/nvme0n1p3
   
   placement:
+    # Bring storage online while ordinary applications remain blocked on w-6.
+    osd:
+      tolerations:
+      - key: onboarding.k3s.nu/pending
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+    prepareosd:
+      tolerations:
+      - key: onboarding.k3s.nu/pending
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
     mgr:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:

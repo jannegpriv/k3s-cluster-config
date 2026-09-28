@@ -81,6 +81,24 @@ Do not format or mount partition 3 as a normal filesystem.
 - Migrate openHAB in a separate controlled step, retaining its 4 GiB memory limit.
 - Do not upgrade Ceph or change the existing ARM workers as part of this join.
 
+## Ceph rollout, 2026-09-28
+
+Janne approved adding the reserved partition and then enabling ordinary scheduling.
+The initial change explicitly selects `/dev/nvme0n1p3` on w-6 and lets only OSD
+preparation and OSD pods tolerate the onboarding taint. Existing OSD placements
+receive this same narrow toleration; Rook manages their rollout.
+
+Preflight verified the machine-id and SSD serial above, the exact partition size,
+no filesystem signatures or mounts on p3, and no existing LVM physical volumes.
+All five existing OSDs were up/in, Ceph reported `HEALTH_OK`, and `replicapool`
+used size 3, min_size 2 and the `replicapool_host` CRUSH rule (host failure domain).
+Existing CRUSH weights and reweights are preserved; the new OSD uses its normal
+capacity-derived weight. Ceph/Rook versions and recovery limits remain unchanged.
+
+Keep the node taint until six OSDs are up/in and rebalance completes with healthy
+PGs. Then sync the final node config, remove the live onboarding taint, and verify
+the AMD64 storage drivers before moving applications. openHAB remains on w-5.
+
 ## References
 
 - https://docs.k3s.io/quick-start
