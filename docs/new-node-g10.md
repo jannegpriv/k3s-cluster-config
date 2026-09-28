@@ -120,6 +120,10 @@ the AMD64 storage drivers before moving applications. openHAB remains on w-5.
   their original sizes and filesystem types. The K3s agent remains active.
 - All six nodes and running application containers are Ready; Mattermost stays
   on w-3 and openHAB stays on w-5. The onboarding taint remains on w-6.
+- Registry manifests were checked at 23:59 on 2026-09-28 for container and init
+  images from Deployments, StatefulSets, DaemonSets and CronJobs eligible for w-6
+  by their node selectors. All advertise Linux AMD64. This checks the current
+  tags/digests, not a permanent guarantee for mutable tags or runtime behavior.
 - `nodes/k3s-w-6/storage-check.yaml` is a prepared, server-dry-run-validated
   reference, **not deployed or executed yet**. After rebalance, deploy a copy
   through the Flux app tree to test AMD64 CSI provisioning/mounting and a 32 MiB
