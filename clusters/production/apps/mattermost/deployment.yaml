@@ -18,6 +18,9 @@ spec:
       labels:
         app: mattermost
     spec:
+      # This custom image is built only for ARM64; the cluster also has AMD64 workers.
+      nodeSelector:
+        kubernetes.io/arch: arm64
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:

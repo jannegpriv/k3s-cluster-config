@@ -1,0 +1,11 @@
+# Install as /etc/rancher/k3s/config.yaml; keep the token in a separate root-only file.
+server: https://192.168.50.75:6443
+token-file: /etc/rancher/k3s/agent-token
+node-name: k3s-w-6
+node-ip: 192.168.50.168
+flannel-iface: eno1
+node-label:
+  - node-role.kubernetes.io/worker=true
+# Initial registration is isolated until networking and storage checks are complete.
+node-taint:
+  - onboarding.k3s.nu/pending=true:NoSchedule
