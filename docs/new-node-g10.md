@@ -150,6 +150,20 @@ the AMD64 storage drivers before moving applications. openHAB remains on w-5.
 6. Update this runbook and shared memory with the actual outcome. Migrating
    openHAB is a separate step and is not authorized as part of this rollout.
 
+## Final validation, 2026-09-29
+
+At 09:22 Europe/Stockholm, Ceph reported `HEALTH_OK`, all six OSDs up/in,
+all 129 PGs `active+clean`, no remapped PGs, no remaining misplaced/degraded
+objects and three monitors in quorum. All six nodes and running application
+containers were Ready. Disk utilization was 42.0–48.5 percent across OSDs.
+
+The final rollout removes the initial taint from the versioned agent config.
+After copying that exact config to w-6, remove its live Node taint using the
+completion procedure above. The temporary `node-onboarding` Flux app runs the
+prepared storage check without any onboarding toleration, thus checking normal
+scheduling as well. The test result and cleanup must be verified before declaring
+onboarding complete. openHAB remains on w-5.
+
 ## References
 
 - https://docs.k3s.io/quick-start
