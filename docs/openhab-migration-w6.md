@@ -299,3 +299,13 @@ Ingen av dessa kringändringar ska fördröja en säker återgång.
   Konfiguration, JSONDB och persistens oförändrade.
 - W6-selector, multiarch-index och openHABs nodlarm förberedda med repliker=0.
   Tar nu bort förberedelse-/underhållsjobben och inväntar lossade volymer.
+
+- 11:37:32 CEST: openHAB-container startad på w6; Promtail startad 11:39:04.
+  Alla fyra PV:er anslutna till w6. Vid kontroll 11:43:09 svarar API/UI och
+  innehållet är kvar: 244 Things, 987 Items, 64 regler och 30 sidor, inga
+  containeromstarter. Vissa integrationer återansluter fortfarande.
+- Primary Address ändrad via stödd REST till 192.168.50.168/24; övriga
+  nätverksvärden bevarade och ändringen läst tillbaka.
+- Aktiverar ett separat backupjobb från den befintliga w5-baserade mallen
+  för att verifiera backup av openHAB som nu kör på w6. Ordinarie CronJob
+  och remediator-guard återställs efter godkänt resultat.
