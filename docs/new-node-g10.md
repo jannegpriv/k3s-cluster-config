@@ -164,6 +164,21 @@ prepared storage check without any onboarding toleration, thus checking normal
 scheduling as well. The test result and cleanup must be verified before declaring
 onboarding complete. openHAB remains on w-5.
 
+### Ubuntu module-loading compatibility
+
+The first storage test exposed Ceph-CSI 3.11.0 failing to load `rbd` with
+`Exec format error`. Ubuntu supplies `rbd.ko.zst`; the host has kmod 31 with
+ZSTD support and matching kernel vermagic. Kernel logs showed invalid ELF magic
+when the older container tried to insert the compressed module. This matches
+the upstream report: https://github.com/ceph/ceph-csi/issues/4679.
+
+While resolving this, temporarily cordon w-6 to prevent new ordinary workloads.
+Install `nodes/k3s-w-6/rook-ceph.conf` as `/etc/modules-load.d/rook-ceph.conf`,
+root:root mode 0644, and load `rbd` and `ceph` with the host's `modprobe`.
+The file persists loading across reboots; do not change Ceph/CSI versions or
+decompress/replace packaged module files. Let the CSI containers retry, verify
+they register successfully, then uncordon w-6 and finish the storage test.
+
 ## References
 
 - https://docs.k3s.io/quick-start
