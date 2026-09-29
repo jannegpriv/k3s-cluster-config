@@ -1,7 +1,8 @@
 # k3s-w-6: GMKtec G10
 
 Installation date: 2026-09-28. This runbook covers the first AMD64 worker in
-the existing ARM64 cluster. Ceph deployment and openHAB migration are separate steps.
+the existing ARM64 cluster. Ceph rebalance and the storage test passed on
+2026-09-29. The node is schedulable; openHAB migration remains a separate step.
 
 ## Identity and installed OS
 
@@ -76,8 +77,6 @@ Do not format or mount partition 3 as a normal filesystem.
 
 ## Follow-up work
 
-- Finish the Ceph rebalance and storage-client validation described below before
-  removing the onboarding restriction for normal workloads.
 - Migrate openHAB in a separate controlled step, retaining its 4 GiB memory limit.
 - Do not upgrade Ceph or change the existing ARM workers as part of this join.
 
@@ -189,6 +188,27 @@ The first Job exceeded its ten-minute deadline while CSI was unavailable. Reuse
 only its disposable test PVC and run `k3s-w-6-storage-check-2` through Flux.
 Recreate the failed RBD CSI pod on w-6 (only that node) to clear its crash backoff;
 no application had successfully mounted a volume on w-6 at this point.
+
+### Successful storage check and cleanup
+
+Verified on 2026-09-29 before 09:43 Europe/Stockholm:
+
+- The exact versioned agent config is installed as root:root mode 0600,
+  SHA-256 `86134970fcf4ec75e18d7c85783723e3ba3bd7f0fda73f449e6d5b250ad465ef`.
+  The join token was not modified. The live onboarding taint is removed.
+- The replacement RBD CSI pod is 2/2 Ready without restarts; CephFS CSI is 2/2
+  Ready. Both drivers are registered in the w-6 CSINode object.
+- w-6 was uncordoned after driver verification. The test Job then scheduled
+  normally on w-6 and completed successfully: RBD provision/mount, 32 MiB random
+  data written and synced, SHA-256 readback matched, cluster DNS resolved.
+- The temporary Flux app is removed by this cleanup change. Keep the reference
+  manifest in `nodes/k3s-w-6/storage-check.yaml` outside the active app tree.
+  Flux prunes its Job, PVC and disposable StorageClass; CSI's Delete policy also
+  removes the test PV/RBD image. Check their absence after reconciliation.
+- Cleanup identifiers: PV `pvc-e1e5c142-4cde-4f5e-b7d1-53ea3d1c3060`, pool
+  `replicapool`, image `csi-vol-d6f1004b-1f34-43ed-bc0a-7a736173571d`.
+- No Ceph, Rook, CSI or K3s version was changed. Existing OSD weights and the
+  three-host replication policy are preserved. openHAB remains on w-5.
 
 ## References
 
