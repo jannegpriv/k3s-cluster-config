@@ -8,7 +8,6 @@ metadata:
   annotations:
     promtail.grafana.com/scrape: "true"
 spec:
-  suspend: true  # Temporary: approved openHAB migration 2026-09-29
   schedule: "0 2 * * *"  # Run at 2 AM every day
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3

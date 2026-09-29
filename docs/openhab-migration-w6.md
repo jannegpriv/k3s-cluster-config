@@ -1,6 +1,6 @@
-# Plan: flytta openHAB från w5 till w6
+# Flytt av openHAB från w5 till w6
 
-Status: **genomförande godkänt och påbörjat 2026-09-29**.
+Status: **openHAB kör på w6 sedan 2026-09-29; slutkontroller pågår**.
 Janne godkände genomförande och avbrott med ”Jag tycker vi kör nu!”.
 Nedan bevaras planen; genomförandeloggen anger vad som faktiskt är gjort.
 
@@ -309,3 +309,46 @@ Ingen av dessa kringändringar ska fördröja en säker återgång.
 - Aktiverar ett separat backupjobb från den befintliga w5-baserade mallen
   för att verifiera backup av openHAB som nu kör på w6. Ordinarie CronJob
   och remediator-guard återställs efter godkänt resultat.
+
+- 11:49:23 CEST: extra backupjobbet slutfört. Ny ZIP från w6:
+  `openhab-backup-26_09_29-11_47_21.zip`, 525304859 byte, SHA-256
+  `e5787ee2bdf3d7435f779b96ad210e8667fcbf56081ff7f68385e526fba4a992`.
+  ZIP-integritet godkänd i podden och identisk storlek/checksumma på NAS.
+  Den ordinarie mallens retention kördes för ZIP-filer; migrationsarkivet
+  `.tar.gz` och de fyra snapshots är kvar.
+- 11:47 CEST: stickprov av Hue-, Verisure- och SigenStor-historik visar både
+  tidigare värden och nya värden efter starten. Alla 64 REST-regler IDLE,
+  oförändrat antal Things/Items/sidor. Inga kommandon till fysisk utrustning
+  skickades som del av verifieringen.
+- 11:56 CEST: MQTT, Modbus/IVT, Remote openHAB-servern och alla fem
+  IP Camera-Things ONLINE. ffmpeg 7.1.5-0+deb13u1 installerat och körbart.
+  Lynk & Co krävde ny inloggning; Janne genomförde den och både API- och
+  fordons-Thing har därefter verifierats ONLINE.
+- Kvar att kontrollera: autentiserad extern åtkomst (Cloudflare Access-kod
+  uteblev och kodförsöket löpte ut), en Chromecast med anslutningstimeout,
+  två Verisure-Things med UNKNOWN samt minst 30 minuters stabil drift.
+  Verisure-bryggan är ONLINE. Chromecast-porten svarar varken från m-1
+  eller w6, vilket inte ensamt avgör om statusändringen hör ihop med flytten.
+- Nästa nattbackup 2026-09-30 återstår. Migrationsarkiv och snapshots behålls
+  tills även den är verifierad och Janne godkänt utfallet.
+
+- 11:58 CEST: Loki tar emot aktuella openHAB-loggar och händelser (92 respektive
+  1430 rader i de senaste fem minuterna). Chromecast 192.168.50.173:8009 ger
+  timeout även från gamla w5 samt m-1; felet är alltså inte begränsat till w6.
+- 12:05 CEST: två Verisure-Things visar UNKNOWN, men den berörda rökgivarens
+  tre Item-värden är identiska med referensbilden. Ingen färsk uppdatering av
+  just dessa värden har därmed bevisats; Verisure-bryggan och övriga sensorer
+  fungerar. Inga larm-/enhetskommandon skickades.
+- 12:07 CEST: Cloudflare-panelen visar att policyn `Sweden Email` för openhab
+  kräver anslutning från Sverige och e-post `janne@k3s.nu`. Inloggningsförsöken
+  använde en annan adress, vilket förklarar utebliven kod. Ingen Access-policy,
+  tunnel eller DNS ändrades. Janne ombedd prova den redan tillåtna adressen.
+
+- 12:08 CEST: mer än 30 minuters drift sedan 11:37:32, båda containrar Ready
+  och noll omstarter. Förberedd återställning av ordinarie backup/remediator
+  validerad mot API-servern. Kustomize-bygget lyckas; en full torrkörning utan
+  Flux-dekryptering avbryts av befintliga SOPS-dokument, varför just ändrade
+  CronJob/RoleBindings också torrkördes separat och godkändes.
+- Git-fas D: tar bort det slutförda extra backupjobbet från aktiv GitOps,
+  återställer ordinarie CronJob och remediatorns tidigare openhab-behörighet.
+  Referensmanifest, migrationsarkiv och snapshots behålls.

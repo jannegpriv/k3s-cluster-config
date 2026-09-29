@@ -2,7 +2,8 @@
 
 Installation date: 2026-09-28. This runbook covers the first AMD64 worker in
 the existing ARM64 cluster. Ceph rebalance and the storage test passed on
-2026-09-29. The node is schedulable; openHAB migration remains a separate step.
+2026-09-29. The node is schedulable and openHAB now runs on it. See the
+[openHAB migration log](openhab-migration-w6.md) for validation and follow-up.
 
 ## Identity and installed OS
 
@@ -77,9 +78,9 @@ Do not format or mount partition 3 as a normal filesystem.
 
 ## Follow-up work
 
-- Migrate openHAB in a separate controlled step, retaining its 4 GiB memory limit.
-  See the [proposed migration plan](openhab-migration-w6.md); execution requires
-  approval of the maintenance window.
+- openHAB was migrated with separate approval on 2026-09-29, retaining its
+  4 GiB memory limit and -Xmx1500m. See the
+  [migration log and remaining checks](openhab-migration-w6.md).
 - Do not upgrade Ceph or change the existing ARM workers as part of this join.
 
 ## Ceph rollout, 2026-09-28

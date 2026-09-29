@@ -9,7 +9,6 @@ resources:
   - openhab-traefik.yaml
   - openhab-middleware.yaml
   - backup-cronjob.yaml
-  - postflight-backup.json
   - backup-rbac.yaml
   - promtail-sidecar-configmap.yaml
   - camera-bridge

@@ -10,8 +10,10 @@ kind: RoleBinding
 metadata:
   name: ai-remediator-write
   namespace: openhab
-# Temporary migration guard: restore the automation subject after validation.
-subjects: []
+subjects:
+  - kind: ServiceAccount
+    name: ai-remediator
+    namespace: automation
 roleRef:
   kind: ClusterRole
   name: ai-remediator-write
