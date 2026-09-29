@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openhab-w6-preflight
+  namespace: openhab
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 900
+  template:
+    metadata:
+      labels:
+        app: openhab-w6-preflight
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k3s-w-6
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      containers:
+        - name: check
+          image: openhab/openhab:5.2.1-debian@sha256:bfd4a60e90da18cf917a9004bbc22354fc818825f3c6f0351e471a2e938d6c3c
+          command: ["/bin/bash", "-ec"]
+          args:
+            - |
+              test "$(uname -m)" = x86_64
+              if ! (apt-get update -qq && apt-get install -y -qq ffmpeg) >/tmp/packages.log 2>&1; then
+                tail -40 /tmp/packages.log
+                exit 1
+              fi
+              ffmpeg -version | head -1
+              getent ahostsv4 mosquitto.mosquitto.svc.cluster.local
+              getent ahostsv4 camera-bridge.openhab.svc.cluster.local
+              timeout 5 bash -c 'exec 3<>/dev/tcp/mosquitto.mosquitto.svc.cluster.local/1883'
+              timeout 5 bash -c 'exec 3<>/dev/tcp/camera-bridge.openhab.svc.cluster.local/8554'
+              timeout 5 bash -c 'exec 3<>/dev/tcp/192.168.50.25/4711'
+              echo "AMD64 image, ffmpeg, cluster DNS, MQTT, camera bridge and NAS connection checks passed"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 768Mi

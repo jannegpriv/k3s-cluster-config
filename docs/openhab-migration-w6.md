@@ -1,8 +1,8 @@
 # Plan: flytta openHAB från w5 till w6
 
-Status: **förslag, inte genomfört**. Plan och läsande kontroller: 2026-09-29.
-Janne har beställt planeringen. Produktionsändringar och avbrott inväntar hans
-godkännande av genomförandet och en lämplig tid.
+Status: **genomförande godkänt och påbörjat 2026-09-29**.
+Janne godkände genomförande och avbrott med ”Jag tycker vi kör nu!”.
+Nedan bevaras planen; genomförandeloggen anger vad som faktiskt är gjort.
 
 ## Mål och avgränsning
 
@@ -262,3 +262,14 @@ Ingen av dessa kringändringar ska fördröja en säker återgång.
 - [openHABs backup/restore-dokumentation](https://www.openhab.org/docs/installation/linux#backup-and-restore)
   samt den faktiskt installerade `/openhab/runtime/bin/backup` användes för att
   kontrollera vad dagens backup omfattar.
+
+## Genomförandelogg 2026-09-29
+
+- 11:13 CEST: samtliga noder Ready, Flux synkroniserat, Ceph HEALTH_OK och
+  129 PG active+clean. openHAB fortfarande på w5; inget aktivt backupjobb.
+- NAS-kopian av nattens ZIP är 528712689 byte och har exakt samma SHA-256
+  som det tidigare integritetstestade podarkivet. Cirka 1,9 TB ledigt på NAS.
+- Förberedelse: backup schemaläggning pausas, remediatorns RoleBinding i
+  endast openhab får tillfälligt tom subjects-lista. Övriga namespace lämnas
+  oförändrade. Ett isolerat förberedelsejobb på w6 startar inte openHAB och
+  monterar inga produktionsvolymer.

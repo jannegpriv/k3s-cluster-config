@@ -14,3 +14,4 @@ resources:
   - authelia
   - automation
   - basic-memory
+  - openhab-migration
