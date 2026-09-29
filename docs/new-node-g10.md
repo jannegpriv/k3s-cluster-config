@@ -179,6 +179,17 @@ The file persists loading across reboots; do not change Ceph/CSI versions or
 decompress/replace packaged module files. Let the CSI containers retry, verify
 they register successfully, then uncordon w-6 and finish the storage test.
 
+Host loading of both modules succeeded; the persistent file's SHA-256 is
+`12cfe3f8a2fcb0e8b8688bf2b282919ef55d7f3427ebfed622feb4c38928a311`.
+The container's kmod was verified as version 25 without ZSTD support.
+`systemd-modules-load.service` runs before `sysinit.target`, which the K3s agent
+starts after. Reboot behavior is configured, not yet tested by rebooting.
+
+The first Job exceeded its ten-minute deadline while CSI was unavailable. Reuse
+only its disposable test PVC and run `k3s-w-6-storage-check-2` through Flux.
+Recreate the failed RBD CSI pod on w-6 (only that node) to clear its crash backoff;
+no application had successfully mounted a volume on w-6 at this point.
+
 ## References
 
 - https://docs.k3s.io/quick-start

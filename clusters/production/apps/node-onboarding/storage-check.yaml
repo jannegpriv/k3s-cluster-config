@@ -35,7 +35,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: k3s-w-6-storage-check
+  name: k3s-w-6-storage-check-2
   namespace: default
 spec:
   backoffLimit: 1
