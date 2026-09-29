@@ -273,3 +273,12 @@ Ingen av dessa kringändringar ska fördröja en säker återgång.
   endast openhab får tillfälligt tom subjects-lista. Övriga namespace lämnas
   oförändrade. Ett isolerat förberedelsejobb på w6 startar inte openHAB och
   monterar inga produktionsvolymer.
+
+- 11:20 CEST: x86-förberedelsejobb godkänt (ffmpeg, DNS, MQTT, kamerabrygga,
+  NAS). Tunnelns mottagna konfiguration pekar på
+  `https://openhab-production.openhab:8443`, inte en nod-IP. Extern åtkomst
+  visar ordinarie Cloudflare Access-inloggning; autentiserat sluttest återstår.
+- Referensbild säkrad privat: 244 Things (174 ONLINE), 987 Items, 64 regler och
+  30 UI-sidor. Backup pausad utan aktivt jobb; remediator kan inte radera poddar
+  i openhab under underhållet. Förberedelsemanifest för underhållsjobb
+  servervaliderat. Nästa fas stoppar openHAB genom Git/Flux.

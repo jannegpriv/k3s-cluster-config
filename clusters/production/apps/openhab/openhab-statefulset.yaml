@@ -7,7 +7,7 @@ metadata:
    app: openhab-production
 spec:
   serviceName: openhab-production
-  replicas: 1
+  replicas: 0  # Approved migration: stopped for consistent backup
   selector:
     matchLabels:
       app: openhab-production
