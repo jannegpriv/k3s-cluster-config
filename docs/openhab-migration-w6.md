@@ -289,3 +289,13 @@ Ingen av dessa kringändringar ska fördröja en säker återgång.
 - Modbus TCP från w6 till 192.168.50.242:502 lyckades vid omkontroll efter
   initialt anslutningsfel. Kontroll av bindingen efter start krävs fortfarande.
 - Aktiverar underhållsjobbet på w5 för kall backup; openHAB förblir stoppat.
+
+- 11:32:12 CEST: kallt arkiv av samtliga fyra datavolymer verifierat på NAS:
+  `openhab-migration-20260929-112344.tar.gz`, 529851553 byte, SHA-256
+  `f62609b0c4ebe0a12a1223ec1a2447ef386ee4687415033f6bb8e9dfa34dc4f1`.
+  Gzip och tar-innehåll kontrollerade; gamla rekursiva backupkatalogen exkluderad.
+- Cache och tmp tömda först efter ny kontroll av stoppad app, snapshots och
+  identisk lokal/NAS-checksumma. Katalogernas 9001:9001/0755 bevarade.
+  Konfiguration, JSONDB och persistens oförändrade.
+- W6-selector, multiarch-index och openHABs nodlarm förberedda med repliker=0.
+  Tar nu bort förberedelse-/underhållsjobben och inväntar lossade volymer.
