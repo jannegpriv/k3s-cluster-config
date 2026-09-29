@@ -3,3 +3,8 @@ kind: Kustomization
 namespace: openhab
 resources:
   - preflight.yaml
+  - maintenance.yaml
+configMapGenerator:
+  - name: openhab-migration-nas-hostkey
+    files:
+      - nas-known-hosts

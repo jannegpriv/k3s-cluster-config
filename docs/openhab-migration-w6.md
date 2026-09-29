@@ -282,3 +282,10 @@ Ingen av dessa kringändringar ska fördröja en säker återgång.
   30 UI-sidor. Backup pausad utan aktivt jobb; remediator kan inte radera poddar
   i openhab under underhållet. Förberedelsemanifest för underhållsjobb
   servervaliderat. Nästa fas stoppar openHAB genom Git/Flux.
+
+- 11:23:42 CEST: StatefulSet=0, ingen openHAB-pod och inga VolumeAttachments
+  för dess fyra PV:er. Fyra snapshots `openhab-pre-w6-20260929-112344` skapade
+  och verifierade med openHAB stoppat. Ingen tvingad frånkoppling användes.
+- Modbus TCP från w6 till 192.168.50.242:502 lyckades vid omkontroll efter
+  initialt anslutningsfel. Kontroll av bindingen efter start krävs fortfarande.
+- Aktiverar underhållsjobbet på w5 för kall backup; openHAB förblir stoppat.
