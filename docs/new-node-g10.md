@@ -210,6 +210,13 @@ Verified on 2026-09-29 before 09:43 Europe/Stockholm:
 - No Ceph, Rook, CSI or K3s version was changed. Existing OSD weights and the
   three-host replication policy are preserved. openHAB remains on w-5.
 
+Final verification at 09:46 Europe/Stockholm, 2026-09-29: Flux reconciled cleanup
+commit `d0202b8` and all Kustomizations were Ready. Test Job, PVC, PV and StorageClass
+were absent; the test RBD image was absent from both the pool and its trash.
+All six nodes were Ready, uncordoned and without taints; w-6's running containers
+were Ready. Ceph remained `HEALTH_OK`, six OSDs up/in, 129 PGs `active+clean` and
+three monitors in quorum. **w-6 onboarding is complete.**
+
 ## References
 
 - https://docs.k3s.io/quick-start
