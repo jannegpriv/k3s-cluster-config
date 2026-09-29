@@ -78,6 +78,8 @@ Do not format or mount partition 3 as a normal filesystem.
 ## Follow-up work
 
 - Migrate openHAB in a separate controlled step, retaining its 4 GiB memory limit.
+  See the [proposed migration plan](openhab-migration-w6.md); execution requires
+  approval of the maintenance window.
 - Do not upgrade Ceph or change the existing ARM workers as part of this join.
 
 ## Ceph rollout, 2026-09-28
