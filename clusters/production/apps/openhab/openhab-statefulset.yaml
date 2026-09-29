@@ -24,10 +24,10 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: default
       nodeSelector:
-        kubernetes.io/hostname: k3s-w-5
+        kubernetes.io/hostname: k3s-w-6
       containers:
       - name: openhab514
-        image: openhab/openhab:5.2.1-debian
+        image: openhab/openhab:5.2.1-debian@sha256:bfd4a60e90da18cf917a9004bbc22354fc818825f3c6f0351e471a2e938d6c3c
         imagePullPolicy: Always
         lifecycle:
           postStart:
@@ -76,7 +76,7 @@ spec:
           mountPath: /openhab/.karaf
           readOnly: false
       - name: promtail
-        image: grafana/promtail:2.9.2
+        image: grafana/promtail:2.9.2@sha256:3ec78a089e5cb5173f5348ee29de4d3cdab29493776ac5704db8727fa0cda60f
         imagePullPolicy: IfNotPresent
         args:
         - -config.file=/etc/promtail/promtail.yaml
