@@ -1,6 +1,6 @@
 # Flytt av openHAB från w5 till w6
 
-Status: **openHAB kör på w6 sedan 2026-09-29; slutkontroller pågår**.
+Status: **driftsatt och kontrollerad på w6 2026-09-29; nästa nattbackup och tre enhetsstatusar återstår att följa upp**.
 Janne godkände genomförande och avbrott med ”Jag tycker vi kör nu!”.
 Nedan bevaras planen; genomförandeloggen anger vad som faktiskt är gjort.
 
@@ -352,3 +352,21 @@ Ingen av dessa kringändringar ska fördröja en säker återgång.
 - Git-fas D: tar bort det slutförda extra backupjobbet från aktiv GitOps,
   återställer ordinarie CronJob och remediatorns tidigare openhab-behörighet.
   Referensmanifest, migrationsarkiv och snapshots behålls.
+
+- 12:11 CEST: Flux apps/infrastructure/flux-system har tillämpat revision
+  `6910346`. CronJob suspend=false, remediatorns delete-pod-behörighet i
+  openhab återställd och det extra backupjobbet prunat. Janne bekräftade
+  fungerande extern inloggning på openhab.k3s.nu med korrekt e-postadress.
+- 12:12 CEST: Janne rapporterade NodeCPUThrottling FIRING 11:47 och RESOLVED
+  11:57. Prometheus bekräftar inget aktivt larm. Senaste 5-minuters CPU-medel
+  cirka 0,285 kärnor, throttlade perioder cirka 0,183 %. Vid uppstart nådde
+  5-minutersandelen cirka 29,1 % (CPU-medel som mest cirka 2,31 kärnor;
+  korta toppar kan ändå nå CPU-kvoten). Mönstret är förenligt med tillfällig
+  uppstartsbelastning. Regeln larmar på >10 throttlade perioder på fem minuter
+  ihållande i fem minuter, inte på en procentsats. Ingen CPU-/minnesgräns
+  eller larmregel ändrad för detta.
+- Delat minne uppdaterat i befintliga anteckningar om openHAB och K3s.
+  Flytten är driftsatt; full slutmarkering väntar på nästa nattbackup.
+  Noterade enhetsavvikelser: Chromecast c2f7b2073b timeout och Verisure
+  gateway 26DUK7BD/smokeDetector 2AU3W2KC UNKNOWN. Övriga kontroller enligt
+  ovan godkända. Bevarade återställningspunkter ska inte städas automatiskt.
