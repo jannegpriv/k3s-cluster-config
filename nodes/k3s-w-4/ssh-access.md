@@ -57,3 +57,24 @@ eftersom den befintliga remote.it-konfigurationen har en felaktig rad.
 Återställning vid behov: återställ originalets `authorized_keys` från den
 root-skyddade backupen med ägare `janne:janne` och 0600. Ta endast bort den
 specifikt tillagda IP-posten ur m-1:s `known_hosts` om även den ska återställas.
+
+## Genomfört och verifierat 2026-10-02
+
+- Båda publika klientnycklarna är tillagda; originalnyckeln är bevarad.
+  Efterkontroll med installationsskriptet visade noll återstående tillägg.
+- Originalfilens backup på w-4:
+  `/root/janne-ssh-backup-20261002T152952623105Z/authorized_keys`.
+- Verifierad ED25519-värdnyckel för `192.168.50.243` tillagd i m-1:s
+  `known_hosts`. Namnets befintliga värdnycklar och namnuppslagning behölls.
+  Backup: `/home/janne/.ssh/known_hosts.before-w4-ip-20261002` på m-1.
+- Mac → w-4 och m-1 → w-4 verifierades med respektive explicit identitet,
+  `BatchMode=yes` och strikt värdnyckelkontroll. Testet från m-1 använde
+  `IdentityAgent=none` för att verifiera dess egen privata nyckel.
+- Båda sessionerna visade `janne`, rätt värdnamn och machine-id;
+  `sudo -n id -u` gav `0`. Vanlig nyckelupptäckt på m-1 testades dessutom
+  för både IP-adressen och namnet `k3s-w-4`.
+- SSH-serverns och sudo:s inställningar ändrades inte. Ingen tjänste- eller
+  nodomstart och ingen certifikatförnyelse ingick i arbetet.
+
+Från m-1: `ssh janne@k3s-w-4` eller `ssh janne@192.168.50.243`.
+Från Macen: `ssh -F /dev/null janne@192.168.50.243`.
