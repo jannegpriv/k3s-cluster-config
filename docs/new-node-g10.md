@@ -244,4 +244,25 @@ Compare pod/container identities and restarts afterwards; also check Node Ready,
 Ceph health, LAN HTTP 200, and the actual Prometheus pushprox target after a
 fresh scrape. This change does not alter Prometheus rules or other nodes.
 
-Application and post-change verification: pending.
+Applied commit `321d582` on 2026-10-02 at 12:43:50 Europe/Stockholm. The
+pre-change file matched the versioned config above. Backup:
+`/etc/rancher/k3s/config.yaml.bak-20261002T124350` (root-only). The installed
+config SHA-256 is
+`1d6c8274914e303be8a77dca2db77957a0593bfa9e80cbe75b5a694201146364`.
+
+Post-change verification on 2026-10-02 after 12:45 Europe/Stockholm:
+
+- `k3s-agent` is active; port 10249 listens on the network interfaces and
+  `http://192.168.50.168:10249/metrics` returns HTTP 200 from the master.
+- All six nodes are Ready; Ceph reports `HEALTH_OK`.
+- All ten existing w-6 pod records retain their pod UIDs, container IDs and
+  restart counts; all running containers remain Ready. openHAB is 2/2 Ready,
+  with zero restarts. The containerd daemon PID changed during the agent
+  restart, but the workload containers continued running.
+- Prometheus reports w-6 UP in both jobs, with successful post-restart scrapes:
+  `kube-proxy` at 10:44:38 UTC and `pushprox-kube-proxy-client` at 10:45:48 UTC.
+  All six targets in `pushprox-kube-proxy-client` are UP, and its `TargetDown`
+  alert is absent from the active alerts.
+- The separate `kube-proxy` job still shows timeouts for w-3, w-4 and w-5,
+  with its existing `TargetDown` alert firing. Those pre-existing failures
+  are outside this w-6 config fix; no monitoring rules were changed.
