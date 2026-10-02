@@ -226,3 +226,22 @@ three monitors in quorum. **w-6 onboarding is complete.**
 - https://docs.k3s.io/cli/agent
 - https://docs.k3s.io/installation/requirements
 - https://rook.io/docs/rook/v1.14/CRDs/Cluster/ceph-cluster-crd/
+
+## kube-proxy metrics, 2026-10-02
+
+The onboarding config omitted the existing workers' `kube-proxy-arg` setting.
+Live checks found `127.0.0.1:10249` only: loopback returned HTTP 200 and the
+node address refused the connection. Add `metrics-bind-address=0.0.0.0` in
+`nodes/k3s-w-6/config.yaml` and merge only this block into the root-owned node
+config. Keep server, token-file, identity and interface settings intact.
+Do not run `scripts/apply-k3s-config.sh` here: it overwrites the whole file.
+
+Apply using a root-only backup and atomic replacement, then restart only
+`k3s-agent` as requested. This is a service restart, not an OS reboot or
+workload drain. The live unit uses `KillMode=process`;
+[K3s documents that containers keep running when the service stops](https://docs.k3s.io/upgrades/killall).
+Compare pod/container identities and restarts afterwards; also check Node Ready,
+Ceph health, LAN HTTP 200, and the actual Prometheus pushprox target after a
+fresh scrape. This change does not alter Prometheus rules or other nodes.
+
+Application and post-change verification: pending.

@@ -5,3 +5,6 @@ node-name: k3s-w-6
 node-ip: 192.168.50.168
 flannel-iface: eno1
 # Onboarding taint removed after Ceph rebalance completed on 2026-09-29.
+# Match the existing workers so pushprox can scrape kube-proxy on the node IP.
+kube-proxy-arg:
+  - "metrics-bind-address=0.0.0.0"
