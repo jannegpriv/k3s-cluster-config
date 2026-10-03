@@ -38,20 +38,9 @@ spec:
       # AI remediator route moved 2026-10-03 to alertmanager-email-config.yaml
       # (global config). Here the operator scoped it to namespace="monitoring",
       # so the agent never saw alerts from other namespaces.
-      # Route for critical alerts
-      - receiver: "critical-alerts"
-        matchers:
-          - name: severity
-            value: critical
-            regex: false
-        continue: true
-      # Route for warning alerts
-      - receiver: "warning-alerts"
-        matchers:
-          - name: severity
-            value: warning
-            regex: false
-        continue: true
+      # critical-alerts/warning-alerts removed 2026-10-03: they duplicated the
+      # global alertmanager-config n8n-webhook route (same /webhook/alertmanager),
+      # so namespace=monitoring alerts were posted twice to Mattermost.
 
   receivers:
     - name: "null"
@@ -61,11 +50,3 @@ spec:
             name: deadmans-switch
             key: url
           sendResolved: false
-    - name: "critical-alerts"
-      webhookConfigs:
-        - url: "http://n8n.n8n/webhook/alertmanager"
-          sendResolved: true
-    - name: "warning-alerts"
-      webhookConfigs:
-        - url: "http://n8n.n8n/webhook/alertmanager"
-          sendResolved: true
