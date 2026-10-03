@@ -55,7 +55,7 @@ spec:
       annotations:
         description: "This alert is silenced for k3s as kube-proxy is managed differently"
         summary: "Silenced - KubeProxy is embedded in k3s"
-      expr: absent(up{job="kube-proxy"} == 1)
+      expr: absent(up{job="pushprox-kube-proxy-client"} == 1)
       for: 1s
       labels:
         severity: none
