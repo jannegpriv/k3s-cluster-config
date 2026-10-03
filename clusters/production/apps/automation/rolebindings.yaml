@@ -10,9 +10,10 @@ kind: RoleBinding
 metadata:
   name: ai-remediator-write
   namespace: openhab
-# Temporary guard for the approved openHAB memory rollout, 2026-10-03.
-# Restore the original subject after application-level startup validation.
-subjects: []
+subjects:
+  - kind: ServiceAccount
+    name: ai-remediator
+    namespace: automation
 roleRef:
   kind: ClusterRole
   name: ai-remediator-write
