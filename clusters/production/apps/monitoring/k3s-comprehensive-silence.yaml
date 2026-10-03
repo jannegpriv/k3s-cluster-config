@@ -56,7 +56,7 @@ spec:
       annotations:
         description: "This alert is expected in k3s as kube-proxy is managed differently and not exposed as a separate target"
         summary: "Expected state - KubeProxy is embedded in k3s"
-      expr: absent(up{job="kube-proxy"} == 1)
+      expr: absent(up{job="pushprox-kube-proxy-client"} == 1)
       for: 0m
       labels:
         severity: none

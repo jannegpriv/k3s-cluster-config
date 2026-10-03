@@ -38,7 +38,7 @@ spec:
     - name: kubernetes-system-kube-proxy
       rules:
         - alert: KubeProxyDown
-          expr: absent(up{job="kube-proxy"} == 1)
+          expr: absent(up{job="pushprox-kube-proxy-client"} == 1)
           for: 15m
           labels:
             severity: none

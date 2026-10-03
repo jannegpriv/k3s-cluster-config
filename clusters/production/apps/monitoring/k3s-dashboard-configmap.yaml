@@ -451,7 +451,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "up{job=\"kube-proxy\", instance=\"192.168.50.75:10249\"}",
+              "expr": "up{job=\"pushprox-kube-proxy-client\", instance=\"k3s-m-1\"}",
               "legendFormat": "__auto",
               "range": true,
               "refId": "A"

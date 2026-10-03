@@ -26,7 +26,7 @@ spec:
         summary: "K3s Scheduler is down"
         description: "K3s Scheduler has been down for more than 5 minutes."
     - alert: K3sKubeProxyDown
-      expr: absent(up{job="kube-proxy"})
+      expr: absent(up{job="pushprox-kube-proxy-client"})
       for: 5m
       labels:
         severity: critical

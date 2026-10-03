@@ -235,6 +235,10 @@ spec:
         insecureSkipVerify: true
 
     kubeProxy:
+      # Disabled 2026-10-03: duplicate of the pushprox ServiceMonitor (job pushprox-kube-proxy-client,
+      # pushprox/kube-proxy-servicemonitor.yaml); this direct job timed out on w-3/w-4/w-5 and kept
+      # TargetDown firing since 2026-07-25. Alerts/dashboards now use the pushprox job.
+      enabled: false
       service:
         port: 10249
         targetPort: 10249

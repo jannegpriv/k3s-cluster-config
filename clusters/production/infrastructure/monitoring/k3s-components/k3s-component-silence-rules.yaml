@@ -29,7 +29,7 @@ spec:
       annotations:
         description: "Silenced for K3s: kube-proxy is embedded in K3s binary. To properly monitor, K3s server needs to be started with --kube-proxy-arg='metrics-bind-address=0.0.0.0'"
         summary: "K3s embedded kube-proxy component alert silenced"
-      expr: absent(up{job="kube-proxy"} == 1)
+      expr: absent(up{job="pushprox-kube-proxy-client"} == 1)
       for: 0m
       labels:
         severity: none
