@@ -24,6 +24,10 @@ spec:
       webhookConfigs:
         - url: "http://n8n.n8n/webhook/alertmanager"
           sendResolved: true
+    - name: ai-remediator
+      webhookConfigs:
+        - url: "http://n8n.n8n/webhook/alert-remediate"
+          sendResolved: false
   route:
     # Group by more fields to combine related alerts
     groupBy: ['alertname', 'severity', 'job']
@@ -50,6 +54,18 @@ spec:
             value: KubeControllerManagerDown|KubeSchedulerDown|KubeProxyDown|K3sServiceDown
             regex: true
         continue: false
+      # AI remediation agent (moved here 2026-10-03 from k3s-silences): this is
+      # the global alertmanagerConfiguration, so it has no operator-injected
+      # namespace="monitoring" matcher and the agent sees warning/critical alerts
+      # from every namespace. Write actions stay limited by the agent's own
+      # namespace allow-list, rate gate and approval rules. continue: true keeps
+      # the normal Mattermost/email feed untouched.
+      - receiver: ai-remediator
+        matchers:
+          - name: severity
+            value: warning|critical
+            regex: true
+        continue: true
       # Route warning/critical alerts to both n8n and email
       - receiver: n8n-webhook
         matchers:
