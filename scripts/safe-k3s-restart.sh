@@ -4,9 +4,23 @@
 # Handles drain, restart, and uncordon to prevent RBD mount issues
 #
 # Usage: ./safe-k3s-restart.sh <node-name> [master|worker]
+# Service-only: add --service-only --expected-machine-id ID [--dry-run]
 #
 
 set -e
+
+# Keep certificate renewal entirely separate from the legacy drain workflow.
+for arg in "$@"; do
+    if [ "$arg" = "--service-only" ]; then
+        exec python3 "$(dirname "$0")/k3s-service-restart.py" "$@"
+    fi
+done
+for arg in "$@"; do
+    if [[ "$arg" == --* ]]; then
+        echo "Flags require --service-only; no changes made" >&2
+        exit 2
+    fi
+done
 
 NODE_NAME="${1:-}"
 NODE_TYPE="${2:-worker}"
