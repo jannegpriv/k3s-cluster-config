@@ -19,13 +19,30 @@ spec:
             description: "Node {{ $labels.instance }} CPU usage is above 80% for more than 5 minutes. Consider investigating running pods or restarting k3s if persistent."
 
         - alert: NodeCPUThrottling
-          expr: sum(increase(container_cpu_cfs_throttled_periods_total[5m])) by (container, pod, namespace) > 10
-          for: 5m
+          # Share of throttled CFS periods, not node CPU usage or CPU time lost.
+          # Match the same cAdvisor source and real containers on both sides.
+          expr: |-
+            (
+              sum by (namespace, pod, container) (
+                increase(container_cpu_cfs_throttled_periods_total{job="kubelet",metrics_path="/metrics/cadvisor",container!="",container!="POD",pod!=""}[5m])
+              )
+              /
+              sum by (namespace, pod, container) (
+                increase(container_cpu_cfs_periods_total{job="kubelet",metrics_path="/metrics/cadvisor",container!="",container!="POD",pod!=""}[5m])
+              )
+            ) > 0.25
+            and on (namespace, pod, container)
+            (
+              sum by (namespace, pod, container) (
+                increase(container_cpu_cfs_periods_total{job="kubelet",metrics_path="/metrics/cadvisor",container!="",container!="POD",pod!=""}[5m])
+              ) > 0
+            )
+          for: 15m
           labels:
             severity: warning
           annotations:
-            summary: "Container CPU throttling detected"
-            description: "Container {{ $labels.container }} in pod {{ $labels.pod }} ({{ $labels.namespace }}) is being throttled significantly. This may indicate resource constraints."
+            summary: "Containerns CPU begränsas återkommande"
+            description: "Container {{ $labels.container }} i podden {{ $labels.pod }} (namespace {{ $labels.namespace }}) har {{ $value | humanizePercentage }} begränsade CPU-perioder under de senaste 5 minuterna. Andelen har varit över 25 % i minst 15 minuter. Detta avser schemaläggningsperioder, inte nodens CPU-användning eller förlorad CPU-tid."
 
         - alert: K3sCPUPressure
           expr: rate(process_cpu_seconds_total{job="kubelet"}[5m]) * 100 > 50
