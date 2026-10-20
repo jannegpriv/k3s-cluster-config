@@ -1,6 +1,15 @@
 # OpenHAB Analytics – avgränsat Landet-prov
 
-Förberett 2026-10-20. Den befintliga Mac-piloten, dess datakatalog och OpenAI-tunnel ska fortsätta oförändrat.
+Aktiverat och verifierat för avgränsat prov 2026-10-20. Den befintliga Mac-piloten, dess datakatalog och OpenAI-tunnel fortsätter oförändrat.
+
+## Verifierat driftläge 2026-10-20
+
+- Flux har aktiverat gatewayen via Git. Båda containrarna är Ready på `k3s-w-1`; egen PVC är Bound, 100 MiB.
+- Tailscale-enheten `openhab-analytics-landet` har egen adress `100.66.87.41` och endast `tag:openhab-analytics`. Backend är Running och enheten Online. Status anger ingen nyckelutgång (`KeyExpiry: null`), i enlighet med registreringsformulärets inställning för taggade enheter.
+- Engångsjobbet `analytics-landet-probe-20261017` är Complete, 1/1. Det hämtade nio historikkällor med totalt 20 godkända GET-anrop. Energiräknaren förblev primär och källavvikelsen mot effektintegralen rapporterades.
+- Gatewayen avvisade POST med 405 och ett otillåtet item med 403. Ingen skrivning skickades till openHAB.
+- Gatewayen lämnas igång för fortsatt arbete. Det slutförda jobbet har ingen tidsschemaläggning. Inget MCP-, tunnel-, NAS- eller dygnsinsamlingsjobb har aktiverats här.
+- Privat verifieringsrapport finns i Analytics-arbetsytan under `private-data/landet-identity-probe-20261020/`. Identitet över poddomstart, privat registry och NAS-återläsning ingår inte i detta genomförda prov.
 
 Detta paket omfattar en egen Tailscale-identitet, en gateway som endast vidarebefordrar godkända GET-anrop till `192.168.1.86:8080`, och ett engångsjobb som läser nio historikkällor för 2026-10-17. Husets primära energikälla är `SigenStor_Total_Load`.
 
