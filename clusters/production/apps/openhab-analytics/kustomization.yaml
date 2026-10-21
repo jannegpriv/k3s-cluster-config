@@ -5,3 +5,4 @@ resources:
   - probe-job.json
   - tailscale-secret.enc.yaml
   - landet-secret.enc.yaml
+  - storage.json
