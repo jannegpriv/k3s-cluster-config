@@ -7,3 +7,4 @@ resources:
   - landet-secret.enc.yaml
   - storage.json
   - storage-write-job.json
+  - storage-read-job.json
