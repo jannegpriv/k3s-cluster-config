@@ -1,0 +1,97 @@
+{
+  "apiVersion": "batch/v1",
+  "kind": "Job",
+  "metadata": {
+    "name": "analytics-storage-write-20261021",
+    "namespace": "openhab-analytics"
+  },
+  "spec": {
+    "backoffLimit": 0,
+    "activeDeadlineSeconds": 240,
+    "template": {
+      "metadata": {
+        "labels": {
+          "app.kubernetes.io/name": "openhab-analytics",
+          "analytics-role": "storage-probe"
+        }
+      },
+      "spec": {
+        "restartPolicy": "Never",
+        "automountServiceAccountToken": false,
+        "enableServiceLinks": false,
+        "nodeSelector": {
+          "kubernetes.io/hostname": "k3s-w-1",
+          "kubernetes.io/arch": "arm64"
+        },
+        "securityContext": {
+          "runAsNonRoot": true,
+          "runAsUser": 10001,
+          "runAsGroup": 10001,
+          "fsGroup": 10001,
+          "fsGroupChangePolicy": "OnRootMismatch",
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
+        },
+        "volumes": [
+          {
+            "name": "data",
+            "persistentVolumeClaim": {
+              "claimName": "analytics-data",
+              "readOnly": false
+            }
+          },
+          {
+            "name": "operations",
+            "persistentVolumeClaim": {
+              "claimName": "analytics-operations",
+              "readOnly": false
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "probe",
+            "image": "docker.io/library/python:3.12-slim-bookworm@sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258",
+            "command": [
+              "python",
+              "-c",
+              "import os,hashlib,json\nfrom pathlib import Path\nmode='write'\nexpected=b\"openhab-analytics-pvc-probe-20261021\\n\"\nfor name in ('data','operations'):\n root=Path('/'+name)\n folder=root/'.volume-probe-20261021'\n file=folder/'persistent.txt'\n if mode=='write':\n  folder.mkdir(mode=0o700,exist_ok=False)\n  with file.open('xb') as stream:\n   stream.write(expected);stream.flush();os.fsync(stream.fileno())\n  file.chmod(0o600)\n  fd=os.open(folder,os.O_RDONLY);os.fsync(fd);os.close(fd)\n else:\n  assert file.read_bytes()==expected\n  try: (root/'reader-must-not-write').write_bytes(b'no')\n  except OSError: pass\n  else: raise RuntimeError('read_only_mount_required')\n assert file.stat().st_uid==10001\n print(json.dumps({'volume':name,'mode':mode,'status':'passed','uid':os.getuid(),'sha256':hashlib.sha256(file.read_bytes()).hexdigest()}))\n"
+            ],
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "readOnlyRootFilesystem": true,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              }
+            },
+            "resources": {
+              "requests": {
+                "cpu": "10m",
+                "memory": "32Mi"
+              },
+              "limits": {
+                "cpu": "200m",
+                "memory": "128Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "data",
+                "mountPath": "/data",
+                "readOnly": false
+              },
+              {
+                "name": "operations",
+                "mountPath": "/operations",
+                "readOnly": false
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

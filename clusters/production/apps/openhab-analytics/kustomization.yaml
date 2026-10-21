@@ -6,3 +6,4 @@ resources:
   - tailscale-secret.enc.yaml
   - landet-secret.enc.yaml
   - storage.json
+  - storage-write-job.json
