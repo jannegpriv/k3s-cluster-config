@@ -12,3 +12,4 @@ resources:
   - registry-proof-job.json
   - import-job.json
   - openhab-secret.enc.yaml
+  - collection-proof-job.json

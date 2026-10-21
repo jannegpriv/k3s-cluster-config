@@ -1,0 +1,189 @@
+{
+  "apiVersion": "batch/v1",
+  "kind": "Job",
+  "metadata": {
+    "name": "analytics-collection-proof-20261022",
+    "namespace": "openhab-analytics"
+  },
+  "spec": {
+    "backoffLimit": 0,
+    "activeDeadlineSeconds": 1200,
+    "template": {
+      "metadata": {
+        "labels": {
+          "app.kubernetes.io/name": "openhab-analytics",
+          "analytics-role": "collector"
+        },
+        "annotations": {
+          "analytics.openhab/credential-revision": "20261022-registry-v1"
+        }
+      },
+      "spec": {
+        "automountServiceAccountToken": false,
+        "serviceAccountName": "analytics",
+        "enableServiceLinks": false,
+        "securityContext": {
+          "runAsNonRoot": true,
+          "runAsUser": 10001,
+          "runAsGroup": 10001,
+          "fsGroup": 10001,
+          "fsGroupChangePolicy": "OnRootMismatch",
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
+        },
+        "nodeSelector": {
+          "kubernetes.io/hostname": "k3s-w-1",
+          "kubernetes.io/arch": "arm64"
+        },
+        "terminationGracePeriodSeconds": 30,
+        "volumes": [
+          {
+            "name": "data",
+            "persistentVolumeClaim": {
+              "claimName": "analytics-data",
+              "readOnly": false
+            }
+          },
+          {
+            "name": "tmp",
+            "emptyDir": {
+              "sizeLimit": "128Mi"
+            }
+          },
+          {
+            "name": "runtime-secrets",
+            "emptyDir": {
+              "medium": "Memory",
+              "sizeLimit": "1Mi"
+            }
+          },
+          {
+            "name": "projected-secrets",
+            "secret": {
+              "secretName": "analytics-openhab",
+              "defaultMode": 288,
+              "items": [
+                {
+                  "key": "huddinge",
+                  "path": "huddinge"
+                },
+                {
+                  "key": "landet",
+                  "path": "landet"
+                }
+              ]
+            }
+          },
+          {
+            "name": "config",
+            "configMap": {
+              "name": "analytics-sources"
+            }
+          }
+        ],
+        "initContainers": [
+          {
+            "name": "stage-secrets",
+            "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:232f2a73c88c26d8e9622d3b5e42e549f482a1e8b6a4f165167d516be93895e6",
+            "args": [
+              "stage-secrets",
+              "--names",
+              "huddinge",
+              "landet"
+            ],
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "readOnlyRootFilesystem": true,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              }
+            },
+            "resources": {
+              "requests": {
+                "cpu": "10m",
+                "memory": "32Mi"
+              },
+              "limits": {
+                "cpu": "200m",
+                "memory": "128Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "projected-secrets",
+                "mountPath": "/projected-secrets",
+                "readOnly": true
+              },
+              {
+                "name": "runtime-secrets",
+                "mountPath": "/runtime",
+                "readOnly": false
+              }
+            ]
+          }
+        ],
+        "containers": [
+          {
+            "name": "collector",
+            "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:232f2a73c88c26d8e9622d3b5e42e549f482a1e8b6a4f165167d516be93895e6",
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "readOnlyRootFilesystem": true,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              }
+            },
+            "resources": {
+              "requests": {
+                "cpu": "100m",
+                "memory": "256Mi"
+              },
+              "limits": {
+                "cpu": "1000m",
+                "memory": "1Gi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "data",
+                "mountPath": "/store",
+                "readOnly": false
+              },
+              {
+                "name": "tmp",
+                "mountPath": "/tmp",
+                "readOnly": false
+              },
+              {
+                "name": "runtime-secrets",
+                "mountPath": "/runtime",
+                "readOnly": true
+              },
+              {
+                "name": "config",
+                "mountPath": "/config",
+                "readOnly": true
+              }
+            ],
+            "command": [
+              "python",
+              "-c",
+              "\"\"\"Run inside the isolated Analytics collection Job; only GETs reach openHAB.\"\"\"\nfrom copy import deepcopy\nimport json\nimport os\nfrom pathlib import Path\nimport threading\nimport time\nfrom backup_store import record_publications\nfrom openhab_analytics.daily import DailyCatalog,run\n\n\ndef main():\n    os.umask(0o077)\n    root=Path('/store/daily');config=Path('/config/sources.json')\n    before=DailyCatalog(root).request_view();original=(root/'active.json').read_bytes()\n    old_answers={d:{'energy':{s:before.energy(s,d) for s in ('huddinge','landet')},'ev':before.ev('huddinge',d)} for d in before.index['days']}\n    bad=json.loads(config.read_text());bad['sites']['huddinge']['base_url']='http://127.0.0.1:9'\n    bad_path=Path('/tmp/unavailable-origin.json');bad_path.write_text(json.dumps(bad));bad_path.chmod(0o600)\n    failure=run(root,bad_path,refresh_date='2026-10-20')\n    assert failure['status']=='failed'\n    assert (root/'active.json').read_bytes()==original\n    assert DailyCatalog(root).request_view().energy('huddinge','2026-10-20')==old_answers['2026-10-20']['energy']['huddinge']\n    print(json.dumps({'failure_probe':'passed','prior_generation_preserved':True,'error':failure['error']}),flush=True)\n    record_publications(root)\n    stopped=threading.Event();reads=[];reader_errors=[]\n    def reader():\n        while not stopped.is_set():\n            try:\n                view=DailyCatalog(root).request_view()\n                energy=view.energy('huddinge','2026-10-20')\n                assert energy['primary_item']=='Currently_One_Currently_Used' and energy['reported_load_energy_kwh'] is not None\n                assert not view.ev('huddinge','2026-10-20')['automatic_house_deduction']\n                reads.append(view.index['generation'])\n            except Exception:reader_errors.append(True)\n            stopped.wait(0.5)\n    thread=threading.Thread(target=reader);thread.start()\n    try: result=run(root,config,refresh_date='2026-10-20')\n    finally:\n        stopped.set();thread.join();record_publications(root)\n    print(json.dumps({'live_collection':result}),flush=True)\n    assert result['status']=='success'\n    assert reads and not reader_errors\n    after=DailyCatalog(root).request_view()\n    assert after.index['generation']!=before.index['generation']\n    assert before.energy('huddinge','2026-10-20')==old_answers['2026-10-20']['energy']['huddinge']\n    for day in before.index['days']:\n        if day=='2026-10-20':continue\n        for site in ('huddinge','landet'):assert after.energy(site,day)==old_answers[day]['energy'][site]\n        assert after.ev('huddinge',day)==old_answers[day]['ev']\n    summaries=[]\n    for site,item in [('huddinge','Currently_One_Currently_Used'),('landet','SigenStor_Total_Load')]:\n        energy=after.energy(site,'2026-10-20');assert energy['primary_item']==item and not energy['automatic_fallback']\n        summaries.append({'site':site,'primary_item':item,'reported_load_energy_kwh':energy['reported_load_energy_kwh'],\n            'prior_kwh':old_answers['2026-10-20']['energy'][site]['reported_load_energy_kwh']})\n    ev=after.ev('huddinge','2026-10-20');assert not ev['automatic_house_deduction']\n    status=json.loads((root/'status.json').read_text());assert status['requests']>0\n    proof={'status':'verified','generation':after.index['generation'],'previous_generation':before.index['generation'],\n        'failure_preserves_catalog':True,'concurrent_reader_checks':len(reads),'unchanged_previous_days':True,\n        'frozen_reader_preserved':True,'requests':status['requests'],'summaries':summaries,\n        'ev_included':True,'automatic_house_deduction':False}\n    print(json.dumps(proof),flush=True)\n\nif __name__=='__main__':\n    try:main()\n    except Exception:\n        print('{\"status\":\"failed\",\"error\":\"collection_probe_failed\"}',flush=True)\n        raise SystemExit(2)\n"
+            ]
+          }
+        ],
+        "imagePullSecrets": [
+          {
+            "name": "analytics-registry"
+          }
+        ],
+        "restartPolicy": "Never"
+      }
+    }
+  }
+}
