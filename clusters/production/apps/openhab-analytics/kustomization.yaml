@@ -10,3 +10,5 @@ resources:
   - storage-read-job.json
   - registry-secret.enc.yaml
   - registry-proof-job.json
+  - import-job.json
+  - openhab-secret.enc.yaml

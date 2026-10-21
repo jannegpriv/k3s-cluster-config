@@ -225,8 +225,7 @@
               "analytics-role": "gateway"
             },
             "annotations": {
-              "analytics.openhab/credential-revision": "initial",
-              "analytics.openhab/source-sha256": "e11972d36e373f46a38253bd1603eeb31bcab634b8acd562f2db6b2353cdb855"
+              "analytics.openhab/credential-revision": "20261022-registry-v1"
             }
           },
           "spec": {
@@ -247,11 +246,15 @@
               "kubernetes.io/hostname": "k3s-w-1",
               "kubernetes.io/arch": "arm64"
             },
-            "imagePullSecrets": [],
+            "imagePullSecrets": [
+              {
+                "name": "analytics-registry"
+              }
+            ],
             "initContainers": [
               {
                 "name": "stage-secrets",
-                "image": "docker.io/library/python:3.12-slim-bookworm@sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258",
+                "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:232f2a73c88c26d8e9622d3b5e42e549f482a1e8b6a4f165167d516be93895e6",
                 "args": [
                   "stage-secrets",
                   "--names",
@@ -286,25 +289,6 @@
                     "name": "runtime",
                     "mountPath": "/runtime",
                     "readOnly": false
-                  },
-                  {
-                    "name": "code",
-                    "mountPath": "/app",
-                    "readOnly": true
-                  }
-                ],
-                "command": [
-                  "python",
-                  "/app/runtime.py"
-                ],
-                "env": [
-                  {
-                    "name": "PYTHONDONTWRITEBYTECODE",
-                    "value": "1"
-                  },
-                  {
-                    "name": "PYTHONUNBUFFERED",
-                    "value": "1"
                   }
                 ]
               }
@@ -312,7 +296,7 @@
             "containers": [
               {
                 "name": "gateway",
-                "image": "docker.io/library/python:3.12-slim-bookworm@sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258",
+                "image": "ghcr.io/jannegpriv/openhab-analytics-gateway@sha256:caf64665ba83b05364327ad9d1c3a12a7fd098276f5ba5f3111053d65ff865cf",
                 "securityContext": {
                   "allowPrivilegeEscalation": false,
                   "readOnlyRootFilesystem": true,
@@ -337,11 +321,6 @@
                     "name": "config",
                     "mountPath": "/config",
                     "readOnly": true
-                  },
-                  {
-                    "name": "code",
-                    "mountPath": "/app",
-                    "readOnly": true
                   }
                 ],
                 "readinessProbe": {
@@ -362,21 +341,7 @@
                   },
                   "periodSeconds": 30,
                   "timeoutSeconds": 3
-                },
-                "command": [
-                  "python",
-                  "/app/gateway.py"
-                ],
-                "env": [
-                  {
-                    "name": "PYTHONDONTWRITEBYTECODE",
-                    "value": "1"
-                  },
-                  {
-                    "name": "PYTHONUNBUFFERED",
-                    "value": "1"
-                  }
-                ]
+                }
               },
               {
                 "name": "tailscale",
@@ -523,66 +488,6 @@
                 "persistentVolumeClaim": {
                   "claimName": "analytics-tailscale-state"
                 }
-              },
-              {
-                "name": "code",
-                "configMap": {
-                  "name": "analytics-probe-code",
-                  "items": [
-                    {
-                      "key": "package-__init__.py",
-                      "path": "openhab_analytics/__init__.py"
-                    },
-                    {
-                      "key": "package-catalog.py",
-                      "path": "openhab_analytics/catalog.py"
-                    },
-                    {
-                      "key": "package-cli.py",
-                      "path": "openhab_analytics/cli.py"
-                    },
-                    {
-                      "key": "package-collector.py",
-                      "path": "openhab_analytics/collector.py"
-                    },
-                    {
-                      "key": "package-core.py",
-                      "path": "openhab_analytics/core.py"
-                    },
-                    {
-                      "key": "package-daily.py",
-                      "path": "openhab_analytics/daily.py"
-                    },
-                    {
-                      "key": "package-ev.py",
-                      "path": "openhab_analytics/ev.py"
-                    },
-                    {
-                      "key": "package-server.py",
-                      "path": "openhab_analytics/server.py"
-                    },
-                    {
-                      "key": "package-snapshots.py",
-                      "path": "openhab_analytics/snapshots.py"
-                    },
-                    {
-                      "key": "package-voice.py",
-                      "path": "openhab_analytics/voice.py"
-                    },
-                    {
-                      "key": "runtime.py",
-                      "path": "runtime.py"
-                    },
-                    {
-                      "key": "gateway.py",
-                      "path": "gateway.py"
-                    },
-                    {
-                      "key": "landet_probe.py",
-                      "path": "landet_probe.py"
-                    }
-                  ]
-                }
               }
             ]
           }
@@ -658,6 +563,293 @@
             ]
           }
         ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "analytics-sources",
+        "namespace": "openhab-analytics",
+        "labels": {
+          "app.kubernetes.io/name": "openhab-analytics"
+        }
+      },
+      "data": {
+        "sources.json": "{\n  \"schema_version\": 1,\n  \"sites\": {\n    \"huddinge\": {\n      \"base_url\": \"http://10.43.132.185:8080\",\n      \"token_file\": \"/runtime/secrets/huddinge\",\n      \"instance\": \"huddinge\",\n      \"timezone\": \"Europe/Stockholm\",\n      \"runtime_version\": \"5.2.1\",\n      \"request_timeout_seconds\": 10,\n      \"energy\": {\n        \"counter_item\": \"Currently_One_Currently_Used\",\n        \"power_item\": \"Currently_One_Currently_Using\",\n        \"label\": \"Currently-rapporterad energi\"\n      },\n      \"items\": {\n        \"Currently_One_Currently_Used\": {\n          \"kind\": \"counter\",\n          \"unit\": \"kWh\",\n          \"expected_interval_seconds\": 60\n        },\n        \"Currently_One_Currently_Using\": {\n          \"kind\": \"power\",\n          \"unit\": \"W\",\n          \"expected_interval_seconds\": 60\n        },\n        \"Compressor_State_Value_as_Switch\": {\n          \"kind\": \"switch\",\n          \"unit\": \"state\",\n          \"expected_interval_seconds\": 60\n        },\n        \"Warm_Water_Temperature_Value_as_Number\": {\n          \"kind\": \"temperature\",\n          \"unit\": \"°C\",\n          \"expected_interval_seconds\": 60\n        },\n        \"Outdoor_Temperature_Value_as_Number\": {\n          \"kind\": \"temperature\",\n          \"unit\": \"°C\",\n          \"expected_interval_seconds\": 60\n        },\n        \"LynkCo_Vehicle_Charging_Power\": {\n          \"kind\": \"power\",\n          \"unit\": \"W\"\n        },\n        \"LynkCo_Vehicle_Battery_Level\": {\n          \"kind\": \"number\",\n          \"unit\": \"%\"\n        },\n        \"LynkCo_Vehicle_Battery_Capacity\": {\n          \"kind\": \"energy\",\n          \"unit\": \"kWh\"\n        }\n      },\n      \"ev\": {\n        \"power_item\": \"LynkCo_Vehicle_Charging_Power\",\n        \"soc_item\": \"LynkCo_Vehicle_Battery_Level\",\n        \"capacity_item\": \"LynkCo_Vehicle_Battery_Capacity\",\n        \"charging_state_item\": \"LynkCo_Vehicle_Charging_State\",\n        \"connection_state_item\": \"LynkCo_Vehicle_Charger_Connection_Status\"\n      }\n    },\n    \"landet\": {\n      \"base_url\": \"http://10.43.255.250:8081\",\n      \"token_file\": \"/runtime/secrets/landet\",\n      \"instance\": \"landet\",\n      \"timezone\": \"Europe/Stockholm\",\n      \"runtime_version\": \"5.1.0\",\n      \"request_timeout_seconds\": 10,\n      \"energy\": {\n        \"counter_item\": \"SigenStor_Total_Load\",\n        \"power_item\": \"SigenStor_Load_Power\",\n        \"label\": \"Sigenergy-rapporterad lastenergi\"\n      },\n      \"items\": {\n        \"SigenStor_Total_Load\": {\n          \"kind\": \"counter\",\n          \"unit\": \"kWh\",\n          \"expected_interval_seconds\": 60\n        },\n        \"SigenStor_Load_Power\": {\n          \"kind\": \"power\",\n          \"unit\": \"kW\",\n          \"expected_interval_seconds\": 60\n        },\n        \"SigenStor_General_Load\": {\n          \"kind\": \"power\",\n          \"unit\": \"kW\",\n          \"expected_interval_seconds\": 60\n        },\n        \"SigenStor_EVAC_Total_Energy\": {\n          \"kind\": \"counter\",\n          \"unit\": \"kWh\",\n          \"expected_interval_seconds\": 60\n        },\n        \"SigenStor_Total_PV\": {\n          \"kind\": \"counter\",\n          \"unit\": \"kWh\",\n          \"expected_interval_seconds\": 60\n        },\n        \"SigenStor_Total_Import\": {\n          \"kind\": \"counter\",\n          \"unit\": \"kWh\",\n          \"expected_interval_seconds\": 60\n        },\n        \"SigenStor_Total_Export\": {\n          \"kind\": \"counter\",\n          \"unit\": \"kWh\",\n          \"expected_interval_seconds\": 60\n        },\n        \"SigenStor_Total_Batt_Charged\": {\n          \"kind\": \"counter\",\n          \"unit\": \"kWh\",\n          \"expected_interval_seconds\": 60\n        },\n        \"SigenStor_Total_Batt_Discharged\": {\n          \"kind\": \"counter\",\n          \"unit\": \"kWh\",\n          \"expected_interval_seconds\": 60\n        }\n      }\n    }\n  }\n}"
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "collector-origins",
+        "namespace": "openhab-analytics",
+        "labels": {
+          "app.kubernetes.io/name": "openhab-analytics"
+        }
+      },
+      "spec": {
+        "podSelector": {
+          "matchLabels": {
+            "analytics-role": "collector"
+          }
+        },
+        "policyTypes": [
+          "Egress"
+        ],
+        "egress": [
+          {
+            "to": [
+              {
+                "ipBlock": {
+                  "cidr": "10.43.132.185/32"
+                }
+              }
+            ],
+            "ports": [
+              {
+                "protocol": "TCP",
+                "port": 8080
+              }
+            ]
+          },
+          {
+            "to": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "app.kubernetes.io/name": "openhab-analytics",
+                    "analytics-role": "gateway"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "protocol": "TCP",
+                "port": 8081
+              }
+            ]
+          },
+          {
+            "to": [
+              {
+                "ipBlock": {
+                  "cidr": "192.168.50.168/32"
+                }
+              }
+            ],
+            "ports": [
+              {
+                "protocol": "TCP",
+                "port": 8080
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "batch/v1",
+      "kind": "CronJob",
+      "metadata": {
+        "name": "analytics-collect",
+        "namespace": "openhab-analytics",
+        "labels": {
+          "app.kubernetes.io/name": "openhab-analytics"
+        }
+      },
+      "spec": {
+        "schedule": "15 * * * *",
+        "timeZone": "Europe/Stockholm",
+        "suspend": true,
+        "concurrencyPolicy": "Forbid",
+        "startingDeadlineSeconds": 3600,
+        "successfulJobsHistoryLimit": 2,
+        "failedJobsHistoryLimit": 3,
+        "jobTemplate": {
+          "spec": {
+            "backoffLimit": 0,
+            "activeDeadlineSeconds": 1200,
+            "ttlSecondsAfterFinished": 172800,
+            "template": {
+              "metadata": {
+                "labels": {
+                  "app.kubernetes.io/name": "openhab-analytics",
+                  "analytics-role": "collector"
+                },
+                "annotations": {
+                  "analytics.openhab/credential-revision": "20261022-registry-v1"
+                }
+              },
+              "spec": {
+                "automountServiceAccountToken": false,
+                "serviceAccountName": "analytics",
+                "enableServiceLinks": false,
+                "securityContext": {
+                  "runAsNonRoot": true,
+                  "runAsUser": 10001,
+                  "runAsGroup": 10001,
+                  "fsGroup": 10001,
+                  "fsGroupChangePolicy": "OnRootMismatch",
+                  "seccompProfile": {
+                    "type": "RuntimeDefault"
+                  }
+                },
+                "nodeSelector": {
+                  "kubernetes.io/hostname": "k3s-w-1",
+                  "kubernetes.io/arch": "arm64"
+                },
+                "terminationGracePeriodSeconds": 30,
+                "volumes": [
+                  {
+                    "name": "data",
+                    "persistentVolumeClaim": {
+                      "claimName": "analytics-data",
+                      "readOnly": false
+                    }
+                  },
+                  {
+                    "name": "tmp",
+                    "emptyDir": {
+                      "sizeLimit": "128Mi"
+                    }
+                  },
+                  {
+                    "name": "runtime-secrets",
+                    "emptyDir": {
+                      "medium": "Memory",
+                      "sizeLimit": "1Mi"
+                    }
+                  },
+                  {
+                    "name": "projected-secrets",
+                    "secret": {
+                      "secretName": "analytics-openhab",
+                      "defaultMode": 288,
+                      "items": [
+                        {
+                          "key": "huddinge",
+                          "path": "huddinge"
+                        },
+                        {
+                          "key": "landet",
+                          "path": "landet"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "config",
+                    "configMap": {
+                      "name": "analytics-sources"
+                    }
+                  }
+                ],
+                "initContainers": [
+                  {
+                    "name": "stage-secrets",
+                    "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:232f2a73c88c26d8e9622d3b5e42e549f482a1e8b6a4f165167d516be93895e6",
+                    "args": [
+                      "stage-secrets",
+                      "--names",
+                      "huddinge",
+                      "landet"
+                    ],
+                    "securityContext": {
+                      "allowPrivilegeEscalation": false,
+                      "readOnlyRootFilesystem": true,
+                      "capabilities": {
+                        "drop": [
+                          "ALL"
+                        ]
+                      }
+                    },
+                    "resources": {
+                      "requests": {
+                        "cpu": "10m",
+                        "memory": "32Mi"
+                      },
+                      "limits": {
+                        "cpu": "200m",
+                        "memory": "128Mi"
+                      }
+                    },
+                    "volumeMounts": [
+                      {
+                        "name": "projected-secrets",
+                        "mountPath": "/projected-secrets",
+                        "readOnly": true
+                      },
+                      {
+                        "name": "runtime-secrets",
+                        "mountPath": "/runtime",
+                        "readOnly": false
+                      }
+                    ]
+                  }
+                ],
+                "containers": [
+                  {
+                    "name": "collector",
+                    "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:232f2a73c88c26d8e9622d3b5e42e549f482a1e8b6a4f165167d516be93895e6",
+                    "securityContext": {
+                      "allowPrivilegeEscalation": false,
+                      "readOnlyRootFilesystem": true,
+                      "capabilities": {
+                        "drop": [
+                          "ALL"
+                        ]
+                      }
+                    },
+                    "resources": {
+                      "requests": {
+                        "cpu": "100m",
+                        "memory": "256Mi"
+                      },
+                      "limits": {
+                        "cpu": "1000m",
+                        "memory": "1Gi"
+                      }
+                    },
+                    "volumeMounts": [
+                      {
+                        "name": "data",
+                        "mountPath": "/store",
+                        "readOnly": false
+                      },
+                      {
+                        "name": "tmp",
+                        "mountPath": "/tmp",
+                        "readOnly": false
+                      },
+                      {
+                        "name": "runtime-secrets",
+                        "mountPath": "/runtime",
+                        "readOnly": true
+                      },
+                      {
+                        "name": "config",
+                        "mountPath": "/config",
+                        "readOnly": true
+                      }
+                    ],
+                    "args": [
+                      "collect"
+                    ]
+                  }
+                ],
+                "imagePullSecrets": [
+                  {
+                    "name": "analytics-registry"
+                  }
+                ],
+                "restartPolicy": "Never"
+              }
+            }
+          }
+        }
       }
     }
   ]
