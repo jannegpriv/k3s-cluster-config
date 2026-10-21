@@ -14,3 +14,4 @@ resources:
   - openhab-secret.enc.yaml
   - collection-proof-job.json
   - monitoring.json
+  - mcp-proof-job.json

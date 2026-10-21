@@ -1,0 +1,91 @@
+{
+  "apiVersion": "batch/v1",
+  "kind": "Job",
+  "metadata": {
+    "name": "analytics-mcp-proof-20261022",
+    "namespace": "openhab-analytics"
+  },
+  "spec": {
+    "backoffLimit": 0,
+    "activeDeadlineSeconds": 900,
+    "template": {
+      "metadata": {
+        "labels": {
+          "app.kubernetes.io/name": "openhab-analytics",
+          "analytics-role": "mcp-proof"
+        }
+      },
+      "spec": {
+        "restartPolicy": "Never",
+        "automountServiceAccountToken": false,
+        "enableServiceLinks": false,
+        "nodeSelector": {
+          "kubernetes.io/hostname": "k3s-w-1",
+          "kubernetes.io/arch": "arm64"
+        },
+        "imagePullSecrets": [
+          {
+            "name": "analytics-registry"
+          }
+        ],
+        "securityContext": {
+          "runAsNonRoot": true,
+          "runAsUser": 10001,
+          "runAsGroup": 10001,
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          },
+          "fsGroup": 10001,
+          "fsGroupChangePolicy": "OnRootMismatch"
+        },
+        "containers": [
+          {
+            "name": "mcp-proof",
+            "image": "ghcr.io/jannegpriv/openhab-analytics-tunnel@sha256:a917c995638de88000a5433c8d042bee04f1781570727cb4f46239fe50678c87",
+            "imagePullPolicy": "Always",
+            "command": [
+              "python",
+              "-c",
+              "\"\"\"Exercise all tools over stdio, optionally asserting saved investigation values.\"\"\"\n\nimport argparse\nimport asyncio\nfrom datetime import datetime, timezone\nimport json\nimport math\nfrom pathlib import Path\nimport sys\n\nfrom jsonschema import validate\nfrom mcp import Client\nfrom mcp.client.stdio import StdioServerParameters\n\n\nasync def check(config: Path, investigation: bool, launcher: Path | None = None):\n    params = (StdioServerParameters(command=str(launcher.resolve()), args=[str(config.resolve())])\n              if launcher else StdioServerParameters(command=sys.executable,\n                  args=[\"-m\", \"openhab_analytics.server\", \"--config\", str(config.resolve())]))\n    summaries, statistics, ev_summaries, history_pages, calls = [], [], [], 0, 0\n    async with Client(params, read_timeout_seconds=15) as client:\n        listing = await client.list_tools()\n        schemas = {t.name: t.output_schema for t in listing.tools}\n        assert set(schemas) == {\"get_history_capabilities\", \"get_item_history\", \"get_item_statistics\", \"get_energy_summary\", \"get_ev_charging_summary\"}\n        assert all(t.annotations.read_only_hint and not t.annotations.open_world_hint for t in listing.tools)\n\n        async def call(name, args):\n            nonlocal calls\n            response = await client.call_tool(name, args)\n            calls += 1\n            assert not response.is_error, response.content\n            validate(response.structured_content, schemas[name])\n            assert response.structured_content[\"mode\"] == \"offline_snapshot\"\n            assert response.structured_content[\"voice_summary\"]\n            assert len(json.dumps(response.structured_content).encode()) < 1024 * 1024\n            assert response.content[0].text == response.structured_content[\"summary\"]\n            return response.structured_content\n\n        cap = (await call(\"get_history_capabilities\", {}))[\"data\"]\n        for site in cap[\"sites\"]:\n            dates = sorted({d for item in site[\"items\"] for d in item[\"dates\"]})\n            for day in dates:\n                r = await call(\"get_energy_summary\", {\"site\": site[\"site\"], \"date\": day})\n                data = r[\"data\"]\n                assert data[\"house_energy_kwh\"] is None and not data[\"automatic_fallback\"]\n                assert data[\"primary_item\"] == site[\"energy_policy\"][\"counter_item\"]\n                summaries.append(r)\n                if site.get(\"ev_summary_available\"):\n                    ev = await call(\"get_ev_charging_summary\", {\"site\":site[\"site\"], \"date\":day})\n                    assert not ev['data']['automatic_house_deduction']\n                    assert ev['data']['house_without_car_kwh'] is None\n                    assert ev['data']['house_energy']['primary_item'] == site['energy_policy']['counter_item']\n                    assert ev['data']['house_energy']['reported_load_energy_kwh'] == data['reported_load_energy_kwh']\n                    ev_summaries.append(ev)\n            for item in site[\"items\"]:\n                for day in item[\"dates\"]:\n                    args = {\"site\": site[\"site\"], \"item\": item[\"item\"], \"date\": day}\n                    stats = (await call(\"get_item_statistics\", args))[\"data\"]\n                    statistics.append(stats)\n                    offset, total = 0, 0\n                    while offset is not None:\n                        page = (await call(\"get_item_history\", {**args, \"offset\": offset, \"limit\": 500}))[\"data\"]\n                        history_pages += 1\n                        assert page[\"snapshot_sha256\"] == stats[\"snapshot_sha256\"]\n                        assert page[\"analysis\"] == stats\n                        assert page[\"returned\"] == len(page[\"points\"]) <= 500\n                        total += page[\"returned\"]\n                        next_offset = page[\"next_offset\"]\n                        assert next_offset is None or next_offset > offset\n                        offset = next_offset\n                    assert total == page[\"total_points\"]\n        if investigation:\n            by_key = {(r[\"data\"][\"site\"], r[\"data\"][\"window\"][\"start\"][:10]): r for r in summaries}\n            for site, day, counter, integral in [\n                (\"landet\", \"2026-10-15\", 8.51, 4.890654444444444),\n                (\"landet\", \"2026-10-16\", 7.98, 4.694464444444445),\n                (\"huddinge\", \"2026-10-16\", 35.48906666667608, 35.51797263888889),\n            ]:\n                result = by_key[(site, day)]\n                data = result[\"data\"]\n                assert math.isclose(data[\"reported_load_energy_kwh\"], counter, abs_tol=1e-8)\n                assert math.isclose(data[\"power_integral_kwh\"], integral, abs_tol=1e-8)\n                assert data[\"primary\"][\"source\"][\"instance\"] == site\n                assert data[\"primary\"][\"source\"][\"origin\"] == \"direct\"\n                if site == \"landet\":\n                    assert \"conflicting_sources\" in data[\"warnings\"] and \"avviker\" in result[\"summary\"]\n            compressor = next(r for r in statistics if r[\"source\"][\"item\"] == \"Compressor_State_Value_as_Switch\")\n            assert math.isclose(compressor[\"value\"], 4.4, abs_tol=1e-8)\n            assert compressor[\"unit\"] == \"h\"\n    return {\"verified_at\": datetime.now(timezone.utc).isoformat(),\n            \"verification_method\": \"official SDK stdio subprocess: discovery, schema validation, all tools, full pagination\",\n            \"status\": \"passed\", \"tools\": sorted(schemas), \"tool_calls\": calls,\n            \"statistics_checked\": len(statistics), \"history_pages\": history_pages, \"energy_summaries\": summaries,\n            \"ev_summaries\": ev_summaries}\n\n\nresult=asyncio.run(check(Path('/store/daily/active.json'),False,Path('/app/mcp.sh')))\nfor field in ('energy_summaries','ev_summaries'): result[field]=len(result[field])\ntry: Path('/store/write-must-fail').write_text('fail')\nexcept OSError: result['read_only_mount']=True\nelse: raise AssertionError('writable_data_mount')\nprint(json.dumps(result))\n"
+            ],
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "readOnlyRootFilesystem": true,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              }
+            },
+            "resources": {
+              "requests": {
+                "cpu": "100m",
+                "memory": "128Mi"
+              },
+              "limits": {
+                "cpu": "1000m",
+                "memory": "512Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "data",
+                "mountPath": "/store",
+                "readOnly": true
+              }
+            ]
+          }
+        ],
+        "volumes": [
+          {
+            "name": "data",
+            "persistentVolumeClaim": {
+              "claimName": "analytics-data",
+              "readOnly": true
+            }
+          }
+        ]
+      }
+    }
+  }
+}
