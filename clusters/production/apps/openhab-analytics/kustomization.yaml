@@ -13,3 +13,4 @@ resources:
   - import-job.json
   - openhab-secret.enc.yaml
   - collection-proof-job.json
+  - monitoring.json

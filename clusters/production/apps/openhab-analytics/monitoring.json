@@ -1,0 +1,267 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "analytics-monitor",
+        "namespace": "openhab-analytics",
+        "labels": {
+          "app.kubernetes.io/name": "openhab-analytics"
+        }
+      },
+      "data": {
+        "credentials.json": "{\"credentials\": [{\"name\": \"registry-pull\", \"expires_at\": \"2027-01-19T23:15:09+00:00\", \"review_at\": \"2027-01-05T00:00:00+00:00\"}, {\"name\": \"openhab-huddinge\", \"review_at\": \"2027-01-20T00:00:00+00:00\"}, {\"name\": \"openhab-landet\", \"review_at\": \"2027-01-20T00:00:00+00:00\"}, {\"name\": \"tailscale-identity\", \"review_at\": \"2027-01-20T00:00:00+00:00\"}]}"
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "analytics-monitor",
+        "namespace": "openhab-analytics",
+        "labels": {
+          "app.kubernetes.io/name": "openhab-analytics"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "strategy": {
+          "type": "Recreate"
+        },
+        "selector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "openhab-analytics",
+            "analytics-role": "monitor"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/name": "openhab-analytics",
+              "analytics-role": "monitor"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "serviceAccountName": "analytics",
+            "enableServiceLinks": false,
+            "securityContext": {
+              "runAsNonRoot": true,
+              "runAsUser": 10001,
+              "runAsGroup": 10001,
+              "fsGroup": 10001,
+              "fsGroupChangePolicy": "OnRootMismatch",
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "nodeSelector": {
+              "kubernetes.io/hostname": "k3s-w-1",
+              "kubernetes.io/arch": "arm64"
+            },
+            "imagePullSecrets": [
+              {
+                "name": "analytics-registry"
+              }
+            ],
+            "volumes": [
+              {
+                "name": "data",
+                "persistentVolumeClaim": {
+                  "claimName": "analytics-data",
+                  "readOnly": true
+                }
+              },
+              {
+                "name": "operations",
+                "persistentVolumeClaim": {
+                  "claimName": "analytics-operations",
+                  "readOnly": true
+                }
+              },
+              {
+                "name": "config",
+                "configMap": {
+                  "name": "analytics-monitor"
+                }
+              }
+            ],
+            "containers": [
+              {
+                "name": "monitor",
+                "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:232f2a73c88c26d8e9622d3b5e42e549f482a1e8b6a4f165167d516be93895e6",
+                "command": [
+                  "python",
+                  "/app/monitor.py"
+                ],
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "readOnlyRootFilesystem": true,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                },
+                "resources": {
+                  "requests": {
+                    "cpu": "20m",
+                    "memory": "64Mi"
+                  },
+                  "limits": {
+                    "cpu": "500m",
+                    "memory": "256Mi"
+                  }
+                },
+                "ports": [
+                  {
+                    "name": "metrics",
+                    "containerPort": 9090
+                  }
+                ],
+                "volumeMounts": [
+                  {
+                    "name": "data",
+                    "mountPath": "/store",
+                    "readOnly": true
+                  },
+                  {
+                    "name": "operations",
+                    "mountPath": "/operations",
+                    "readOnly": true
+                  },
+                  {
+                    "name": "config",
+                    "mountPath": "/config",
+                    "readOnly": true
+                  }
+                ],
+                "readinessProbe": {
+                  "httpGet": {
+                    "path": "/healthz",
+                    "port": "metrics"
+                  },
+                  "periodSeconds": 15
+                },
+                "livenessProbe": {
+                  "httpGet": {
+                    "path": "/healthz",
+                    "port": "metrics"
+                  },
+                  "periodSeconds": 30
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "analytics-monitor",
+        "namespace": "openhab-analytics",
+        "labels": {
+          "app.kubernetes.io/name": "openhab-analytics",
+          "analytics-role": "monitor"
+        }
+      },
+      "spec": {
+        "selector": {
+          "app.kubernetes.io/name": "openhab-analytics",
+          "analytics-role": "monitor"
+        },
+        "ports": [
+          {
+            "name": "metrics",
+            "port": 9090,
+            "targetPort": "metrics"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "monitor-private",
+        "namespace": "openhab-analytics",
+        "labels": {
+          "app.kubernetes.io/name": "openhab-analytics"
+        }
+      },
+      "spec": {
+        "podSelector": {
+          "matchLabels": {
+            "analytics-role": "monitor"
+          }
+        },
+        "policyTypes": [
+          "Ingress",
+          "Egress"
+        ],
+        "egress": [],
+        "ingress": [
+          {
+            "from": [
+              {
+                "namespaceSelector": {
+                  "matchLabels": {
+                    "kubernetes.io/metadata.name": "monitoring"
+                  }
+                },
+                "podSelector": {
+                  "matchLabels": {
+                    "app.kubernetes.io/name": "prometheus"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "protocol": "TCP",
+                "port": 9090
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "monitoring.coreos.com/v1",
+      "kind": "ServiceMonitor",
+      "metadata": {
+        "name": "analytics-monitor",
+        "namespace": "openhab-analytics",
+        "labels": {
+          "app.kubernetes.io/name": "openhab-analytics",
+          "release": "kube-prometheus-stack"
+        }
+      },
+      "spec": {
+        "selector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "openhab-analytics",
+            "analytics-role": "monitor"
+          }
+        },
+        "namespaceSelector": {
+          "matchNames": [
+            "openhab-analytics"
+          ]
+        },
+        "endpoints": [
+          {
+            "port": "metrics",
+            "interval": "60s",
+            "scrapeTimeout": "30s"
+          }
+        ]
+      }
+    }
+  ]
+}
