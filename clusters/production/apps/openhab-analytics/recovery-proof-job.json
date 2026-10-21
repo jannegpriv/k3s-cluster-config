@@ -1,0 +1,101 @@
+{
+  "apiVersion": "batch/v1",
+  "kind": "Job",
+  "metadata": {
+    "name": "analytics-recovery-proof-20261022",
+    "namespace": "openhab-analytics"
+  },
+  "spec": {
+    "backoffLimit": 0,
+    "activeDeadlineSeconds": 900,
+    "template": {
+      "metadata": {
+        "labels": {
+          "app.kubernetes.io/name": "openhab-analytics",
+          "analytics-role": "recovery-proof"
+        }
+      },
+      "spec": {
+        "restartPolicy": "Never",
+        "automountServiceAccountToken": false,
+        "enableServiceLinks": false,
+        "nodeSelector": {
+          "kubernetes.io/hostname": "k3s-w-1",
+          "kubernetes.io/arch": "arm64"
+        },
+        "imagePullSecrets": [
+          {
+            "name": "analytics-registry"
+          }
+        ],
+        "securityContext": {
+          "runAsNonRoot": true,
+          "runAsUser": 10001,
+          "runAsGroup": 10001,
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          },
+          "fsGroup": 10001,
+          "fsGroupChangePolicy": "OnRootMismatch"
+        },
+        "containers": [
+          {
+            "name": "recovery-proof",
+            "image": "ghcr.io/jannegpriv/openhab-analytics-backup@sha256:15041e38fc64c4815fc4bde6cbf8292a8f4eabdef1873b3bf49ecf2542df8bde",
+            "imagePullPolicy": "Always",
+            "command": [
+              "python",
+              "-c",
+              "\"\"\"Container smoke: read-only source volume, archive/restore, no outside network.\"\"\"\nimport json\nfrom pathlib import Path\nimport tempfile\nimport sys\nsys.path.insert(0,'/app')\nimport backup_store\nfrom openhab_analytics.daily import DailyCatalog\n\nsource=Path('/store/daily')\nwith tempfile.TemporaryDirectory(dir='/tmp') as tmp:\n    work=Path(tmp)\n    result=backup_store.backup(source,work/'backup')\n    backup_store.restore(work/'backup'/result['recovery'],work/'restore')\n    a=DailyCatalog(source).request_view();b=DailyCatalog(work/'restore').request_view()\n    for day in a.index['days']:\n        for site in a.index['sites']:\n            name=site['site']\n            assert a.energy(name,day)==b.energy(name,day)\n        assert a.ev('huddinge',day)==b.ev('huddinge',day)\n    print(json.dumps({'status':'passed','checks':['archive','restore','read_only_source','energy_result_equality','ev_result_equality'], 'days':len(a.index['days']),'archived_versions':result['archived_versions'],'nas_verified':False}))\n"
+            ],
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "readOnlyRootFilesystem": true,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              }
+            },
+            "resources": {
+              "requests": {
+                "cpu": "100m",
+                "memory": "128Mi"
+              },
+              "limits": {
+                "cpu": "1000m",
+                "memory": "512Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "data",
+                "mountPath": "/store",
+                "readOnly": true
+              },
+              {
+                "name": "work",
+                "mountPath": "/tmp"
+              }
+            ]
+          }
+        ],
+        "volumes": [
+          {
+            "name": "data",
+            "persistentVolumeClaim": {
+              "claimName": "analytics-data",
+              "readOnly": true
+            }
+          },
+          {
+            "name": "work",
+            "emptyDir": {
+              "sizeLimit": "128Mi"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
