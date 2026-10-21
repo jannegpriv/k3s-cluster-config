@@ -34,6 +34,24 @@ Engångsnyckeln gäller en dag för registrering. Den tidsgränsen avslutar inte
 
 Inga CronJobs, MCP-servrar, OpenAI-tunnlar eller NAS-backupjobb ingår. Inga pilotdata publiceras eller ersätts.
 
+## Utökning 2026-10-21: beständig lagring
+
+Janne har godkänt genomförandet av driftsättningsplanens punkt 1–6, med bevarad
+Mac-pilot som återställningsväg och utan ändringar i openHAB.
+
+`storage.json` lägger till `analytics-data` (2 GiB) och `analytics-operations`
+(100 MiB) på `rook-ceph-block`. Båda är verifierat Bound. Samtliga tre PVC:er
+har `kustomize.toolkit.fluxcd.io/prune: disabled`, så att en återställning av
+applikationsmanifest inte automatiskt tar bort data eller Tailscale-identiteten.
+
+`storage-write-job.json` har skrivit och fsync:at provdata i båda volymerna som
+UID 10001. Efter att skrivjobbet avslutats har `storage-read-job.json` monterat
+volymerna skrivskyddat, verifierat samma checksumma/ägare och fått skrivförsök
+nekade. Båda jobben är Complete 1/1. De har ingen nätåtkomst eller hemligheter.
+
+Datakatalogen är ännu inte importerad. Registry, NAS-åtkomst, driftlarm,
+produktionsnycklar och tunnelövergång återstår att aktivera. Mac-piloten är kvar.
+
 ## Avbryt eller återställ
 
 Stoppa gatewayen genom att sätta dess replicas till 0 i Git. Avlägsna eller suspendera provjobbet via Git vid behov. Bevara PVC:n så att samma identitet kan återanvändas; ta inte bort den eller Tailscale-enheten rutinmässigt. Vid enbart nätfel i provet ska den fungerande Mac-piloten fortsätta.
