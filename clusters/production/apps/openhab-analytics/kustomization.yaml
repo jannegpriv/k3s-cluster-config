@@ -8,3 +8,5 @@ resources:
   - storage.json
   - storage-write-job.json
   - storage-read-job.json
+  - registry-secret.enc.yaml
+  - registry-proof-job.json
