@@ -1,59 +1,100 @@
-# OpenHAB Analytics – avgränsat Landet-prov
+# OpenHAB Analytics – klusterinsamling under övergång
 
-Aktiverat och verifierat för avgränsat prov 2026-10-20. Den befintliga Mac-piloten, dess datakatalog och OpenAI-tunnel fortsätter oförändrat.
+Aktuellt driftläge 2026-10-22. Janne har godkänt genomförandet av punkt 1–6:
+privat registry, insamling, NAS-backup, övervakning, nyckelhantering och
+kontrollerad tunnelövergång. openHAB-konfiguration och styrning ändras inte.
+Mac-piloten med sin egen datakatalog och OpenAI-tunnel är fortfarande aktiv.
 
-## Verifierat driftläge 2026-10-20
+## Aktiverat och verifierat
 
-- Flux har aktiverat gatewayen via Git. Båda containrarna är Ready på `k3s-w-1`; egen PVC är Bound, 100 MiB.
-- Tailscale-enheten `openhab-analytics-landet` har egen adress `100.66.87.41` och endast `tag:openhab-analytics`. Backend är Running och enheten Online. Status anger ingen nyckelutgång (`KeyExpiry: null`), i enlighet med registreringsformulärets inställning för taggade enheter.
-- Engångsjobbet `analytics-landet-probe-20261017` är Complete, 1/1. Det hämtade nio historikkällor med totalt 20 godkända GET-anrop. Energiräknaren förblev primär och källavvikelsen mot effektintegralen rapporterades.
-- Gatewayen avvisade POST med 405 och ett otillåtet item med 403. Ingen skrivning skickades till openHAB.
-- Gatewayen lämnas igång för fortsatt arbete. Det slutförda jobbet har ingen tidsschemaläggning. Inget MCP-, tunnel-, NAS- eller dygnsinsamlingsjobb har aktiverats här.
-- Privat verifieringsrapport finns i Analytics-arbetsytan under `private-data/landet-identity-probe-20261020/`. Identitet över poddomstart, privat registry och NAS-återläsning ingår inte i detta genomförda prov.
+- Fyra privata GHCR-images, låsta till digest. Jobbet
+  `analytics-registry-proof-20261022` hämtade och startade alla fyra med separat
+  läsnyckel, UID 10001, skrivskyddad rot och utan Kubernetes-token/nätåtkomst.
+- `analytics-import-20261022` återställde 17–20 oktober från en verifierad
+  Mac-kopia till `analytics-data`. Arkivets checksumma och alla energisvar och
+  Lynk & Co-svar överensstämmer exakt med originalet.
+- `analytics-collection-proof-20261022` gjorde 38 GET-anrop till Huddinge och
+  Landet för 20 oktober inklusive bilhistoriken. Huddinge 61,7656 kWh och Landet
+  17,21 kWh stämmer med tidigare kopia. Energiräknarna är fortsatt primära;
+  ingen automatisk avräkning av bilen från huset görs.
+- Ett prov mot en stängd lokal port behöll hela den gamla publiceringen.
+  Sju samtidiga läskontroller passerade under riktig insamling. En redan vald
+  äldre generation och övriga dygn förblev läsbara och oförändrade.
+- `analytics-collect` är aktiverad: `15 * * * *`, Europe/Stockholm. Applikationen
+  publicerar föregående dygn först 04.15 och gör inga HTTP-anrop när katalogen
+  redan är aktuell. Timvisa försök hämtar ikapp efter avbrott. `Forbid`,
+  exklusivt kataloglås och atomisk publicering skyddar mot samtidiga skrivare.
+- Gatewayen kör sin privata image. Omstarten bevarade Tailscale-ID,
+  `100.66.87.41`, `tag:openhab-analytics` och befintlig PVC. Båda containrarna är
+  Ready. Identiteten ligger på volym; registreringsnyckelns dygnsgräns påverkar
+  inte den redan registrerade enheten.
+- Alla fem MCP-verktyg har verifierats i separat klusterjobb via officiell SDK:
+  285 anrop, 68 statistikkontroller, 204 historiksidor, åtta energisvar och fyra
+  EV-svar. Scheman, röstsvarsfält, räknarprioritet och skrivskydd passerar.
+- Prometheus rapporterar monitorn som up och läser 19 tidsserier. Katalog,
+  lagring och nyckelmetadata är giltiga; inga dygn saknas. NAS-backup redovisas
+  korrekt som ännu overifierad. Monitorn läser datakatalog,
+  driftvolym och offentliga nyckeldatum skrivskyddat. Den har ingen
+  Kubernetes-token, inga hemligheter och ingen utgående nätåtkomst.
 
-Detta paket omfattar en egen Tailscale-identitet, en gateway som endast vidarebefordrar godkända GET-anrop till `192.168.1.86:8080`, och ett engångsjobb som läser nio historikkällor för 2026-10-17. Husets primära energikälla är `SigenStor_Total_Load`.
+Ett separat klusterprov har även arkiverat fyra dygn och fem publicerade
+versioner från den skrivskyddade volymen och återställt till en tom temporär
+katalog. Alla energi- och EV-svar stämmer. Detta är inte en verifierad NAS-backup.
+Första automatiska 04.15-körningen är ännu inte observerad.
 
-Gatewayen har egen 100 MiB RWO-volym i `rook-ceph-block` för Tailscale-tillstånd. Den kör utan hostNetwork, TUN, Linux capabilities eller Kubernetes API-token. Utgående trafik tillåts till DNS och publik HTTPS för Tailscales kontrollplan och reläer. SOCKS-lyssnaren är endast tillgänglig på loopback i gatewaypodden. Provet kan bara nå gatewayens HTTP-port.
+## Lagring och hemligheter
 
-De offentliga Python- och Tailscale-avbildningarna är låsta till digest. Applikationskoden monteras skrivskyddad från ConfigMap och dess hash finns på poddarna. Detta verifierar nätväg och läsning, inte distributionen via det framtida privata avbildningsregistret.
+Tre RWO-volymer på `rook-ceph-block`, bundna till Ceph-lagring:
+`analytics-data` 2 GiB, `analytics-operations` 100 MiB och
+`analytics-tailscale-state` 100 MiB. Samtliga har Flux prune disabled; PV har
+Retain. Separata skriv-/läspoddar har verifierat beständighet, UID 10001 och
+skrivskydd. Behåll volymerna vid rollback.
 
-## Hemligheter och policy
+SOPS/PGP-krypterade Secrets har separata roller:
 
-`tailscale-secret.enc.yaml` innehåller endast gatewayens registreringsnyckel. `landet-secret.enc.yaml` innehåller endast läsprovets openHAB-token. Båda krypteras med befintlig SOPS/PGP-nyckel och monteras i olika poddar. Inga klartextnycklar ska skrivas i Git, kommandorader eller loggar.
+- `registry-secret.enc.yaml`: endast `read:packages` för privata GHCR-paket.
+  Faktisk utgång 2027-01-19 23:15:09 UTC (20 januari svensk tid).
+- `openhab-secret.enc.yaml`: befintliga tokens för insamling från båda husen.
+- `tailscale-secret.enc.yaml`: ursprunglig engångsregistrering för gatewayen.
+- `landet-secret.enc.yaml`: äldre avgränsat läsprov.
 
-Tailscale-taggen `tag:openhab-analytics` får endast nå `192.168.1.86` på TCP 8080. Policyn sparades efter Jannes uttryckliga godkännande 2026-10-20. Den tidigare generella källregeln ersattes med befintliga medlemsenheter och de befintliga routade näten `192.168.50.0/24` samt `192.168.1.0/24`. SSH-regeln bevarades. Policyn har positiva och negativa åtkomsttester. Kamerabryggans läsning från Landet kontrollerades efter ändringen.
+Publiceringsnyckeln finns aldrig i klustret. Inga nyckelvärden ska finnas i Git,
+kommandorader, rapporter eller loggar. openHAB-koden använder endast GET; det
+bevisar inte att serverns tokenbehörighet är skrivskyddad.
 
-Engångsnyckeln gäller en dag för registrering. Den tidsgränsen avslutar inte en redan registrerad enhets åtkomst. Enhetens tillstånd bevaras på egen PVC; dess nyckelutgång måste kontrolleras efter registreringen.
+Gatewayen vidarebefordrar endast godkända GET-anrop till `192.168.1.86:8080`.
+Tailscale-policyn, uttryckligen godkänd 2026-10-20, begränsar Analytics-taggen till
+just den adressen/porten. Övriga befintliga medlemsenheter och de routade näten
+behåller tidigare åtkomst. Inga host-rutter, TUN, hostNetwork eller
+NET_ADMIN används; userspace SOCKS och HTTPS-reläer används.
 
-## Start och kontroll
+## Återstår före tunnelövergång
 
-1. Granska manifests och krypterade Secrets. Lägg till denna katalog i övergripande apps-kustomization och gör commit/push för Flux.
-2. Kontrollera Bound PVC, gatewayens båda containrar och readiness. Verifiera Tailscale-namn, egen IP och endast Analytics-taggen.
-3. Ändra engångsjobbets `spec.suspend` till `false` genom Git. Jobbet avvisningstestar endast gatewayen; inga skrivningar skickas till openHAB. Därefter körs den befintliga GET-insamlaren.
-4. Spara jobbets verifieringsresultat lokalt. Kontrollera räknarens primärroll, källornas kvalitet och skillnaden mot effektintegralen. Använd 13,8 kWh från tidigare mätning som jämförelse, inte som ett påtvingat svar.
+1. Begränsad separat Synology-åtkomst och verifierad NAS-uppladdning,
+   nedladdning samt återställning med jämförda energi-/bilsvar.
+2. Full Prometheus-larmkedja och säker historikgallring. Reglerna aktiveras efter
+   backupberedskap; den installerade monitorn redovisar ännu saknad backup.
+3. Separat OpenAI-produktionsnyckel, dokumenterade datum och rotationsprov.
+4. Kontrollerad tunnelövergång, text-/röstprov
+   i båda klientlägena med Mac avstängd samt verifierad återgång.
 
-Inga CronJobs, MCP-servrar, OpenAI-tunnlar eller NAS-backupjobb ingår. Inga pilotdata publiceras eller ersätts.
+Ingen OpenAI-tunnel eller NAS-backup körs ännu i klustret. Slutförda engångsjobb
+är verifieringsunderlag och ska inte användas som återkommande jobb.
 
-## Utökning 2026-10-21: beständig lagring
+## Återgång
 
-Janne har godkänt genomförandet av driftsättningsplanens punkt 1–6, med bevarad
-Mac-pilot som återställningsväg och utan ändringar i openHAB.
+Alla resursändringar görs i Git för Flux. Pausa `analytics-collect` med
+`spec.suspend: true` vid felsökning. Behåll data och tidigare publicerade
+kataloggenerationer. Mac-katalogen skrivs inte av klustret.
 
-`storage.json` lägger till `analytics-data` (2 GiB) och `analytics-operations`
-(100 MiB) på `rook-ceph-block`. Båda är verifierat Bound. Samtliga tre PVC:er
-har `kustomize.toolkit.fluxcd.io/prune: disabled`, så att en återställning av
-applikationsmanifest inte automatiskt tar bort data eller Tailscale-identiteten.
+Vid kommande tunnelövergång får Mac och k3s aldrig köra samma tunnel-ID
+samtidigt. Stoppa den ena och verifiera att den avslutats innan den andra
+startas. Behåll senaste verifierade datakopia och Macens startskript.
 
-`storage-write-job.json` har skrivit och fsync:at provdata i båda volymerna som
-UID 10001. Efter att skrivjobbet avslutats har `storage-read-job.json` monterat
-volymerna skrivskyddat, verifierat samma checksumma/ägare och fått skrivförsök
-nekade. Båda jobben är Complete 1/1. De har ingen nätåtkomst eller hemligheter.
+Gatewayen kan stoppas med replicas 0. Ändra inte den gemensamma
+Tailscale-policyn för att felsöka: det kan bredda Analytics åtkomst. Bevara
+identitetsvolymen så att omstart återanvänder samma identitet.
 
-Datakatalogen är ännu inte importerad. Registry, NAS-åtkomst, driftlarm,
-produktionsnycklar och tunnelövergång återstår att aktivera. Mac-piloten är kvar.
-
-## Avbryt eller återställ
-
-Stoppa gatewayen genom att sätta dess replicas till 0 i Git. Avlägsna eller suspendera provjobbet via Git vid behov. Bevara PVC:n så att samma identitet kan återanvändas; ta inte bort den eller Tailscale-enheten rutinmässigt. Vid enbart nätfel i provet ska den fungerande Mac-piloten fortsätta.
-
-En full återgång till den tidigare Tailscale-policyn kräver separat granskning: den skulle ge även en kvarvarande Analytics-enhet obegränsad nätåtkomst. Stoppa och återkalla den nya enheten innan en sådan återgång. Ursprunglig policy och föreslagen policy finns i Analytics-arbetsytans privata kontrollunderlag daterat 2026-10-20.
+Detaljerade privata kvittenser finns i Analytics-arbetsytans
+`private-data/production-rollout-20261022/`. Registrypubliceringen ligger under
+`private-data/production-rollout-20261021/registry-publication.json`.
