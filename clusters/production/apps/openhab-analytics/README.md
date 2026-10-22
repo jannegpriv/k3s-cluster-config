@@ -1,9 +1,11 @@
-# OpenHAB Analytics – klusterinsamling under övergång
+# OpenHAB Analytics – aktiv klusterdrift under slutverifiering
 
 Aktuellt driftläge 2026-10-22. Janne har godkänt genomförandet av punkt 1–6:
 privat registry, insamling, NAS-backup, övervakning, nyckelhantering och
 kontrollerad tunnelövergång. openHAB-konfiguration och styrning ändras inte.
-Mac-piloten med sin egen datakatalog och OpenAI-tunnel är fortfarande aktiv.
+k3s driver nu även den befintliga privata OpenAI-tunneln. Macens insamlare och
+tunnel är stoppade; originaldata, profil och LaunchAgent-plist är sparade.
+Verkligt röstprov i båda klientlägena med Mac avstängd återstår.
 
 ## Aktiverat och verifierat
 
@@ -75,6 +77,23 @@ NAS-kontrollsumma. Jobbet raderar inga NAS-arkiv.
 diskutrymme och credential-datum. Reglerna använder befintlig larmrouting.
 Ett separat prov av levererad larmnotis är ännu inte gjort.
 
+Återkommande backup har verifierats, senast 2026-10-22 18:45:43 UTC. Aktuell
+backup matchar aktiv generation och inga dygn saknas. Schemalagt underhåll har
+ännu inte hunnit köras första gången; separat skarpt underhållsprov är godkänt.
+
+## CPU-varningen 2026-10-22
+
+Gatewayens exec-readiness startade Python var 30:e sekund. Native HTTP-probe
+anropar nu samma `/readyz`, som fortfarande testar Landets SOCKS-väg. Vid
+femminutersmätning sjönk gatewayens CPU från 39,6m till 0,4m och andelen
+throttlade perioder från 65,7 % till 0 %. Request 20m och limit 500m är oförändrade.
+Samma Tailscale-ID/IP bevarades; ett separat jobb verifierade två verkliga GET.
+
+Monitorns integritetskontroll hade separat throttling. Request höjdes till
+100m och limit till 1000m. Andelen throttlade perioder sjönk 63,1 % till 1,83 %.
+Inget NodeCPUThrottling-larm för Analytics var aktivt 18:54 UTC. Periodandelen
+ska inte tolkas som andel förlorad CPU-tid. Ändringar: `3fc36a8`, `e3148e1`.
+
 ## Lagring och hemligheter
 
 Tre RWO-volymer på `rook-ceph-block`, bundna till Ceph-lagring:
@@ -95,6 +114,10 @@ SOPS/PGP-krypterade Secrets har separata roller:
   aldrig till argv eller miljövariabler. Inga kontorättigheter har ändrats.
   Vid lösenordsrotation måste både Basic Memory och Analytics uppdateras
   och båda backupjobben verifieras. Granskningsdatum är 2027-01-20.
+- `tunnel-secret.enc.yaml`: separat produktionsnyckel, verifierad Tunnels
+  Read + Use. Utgång 2027-01-20 07:59:49 UTC, granskning/rotation 2027-01-06
+  07:59:49 UTC. Båda datumen läses av Prometheus. Poddens credential-revision
+  ska ändras vid rotation eftersom nyckeln kopieras till minne vid start.
 
 Publiceringsnyckeln finns aldrig i klustret. Inga nyckelvärden ska finnas i Git,
 kommandorader, rapporter eller loggar. openHAB-koden använder endast GET; det
@@ -106,17 +129,24 @@ just den adressen/porten. Övriga befintliga medlemsenheter och de routade näte
 behåller tidigare åtkomst. Inga host-rutter, TUN, hostNetwork eller
 NET_ADMIN används; userspace SOCKS och HTTPS-reläer används.
 
-## Återstår före tunnelövergång
+## Tunnelövergång och kvarvarande acceptans
 
-1. Separat OpenAI-produktionsnyckel är sparad och SOPS-krypterad lokalt;
-   verifiering av faktiska datum/rättigheter och rotationsprov återstår.
-2. Kontrollerad tunnelövergång, text-/röstprov i båda klientlägena med Mac
-   avstängd samt verifierad återgång.
-3. End-to-end-prov av larmleverans återstår. NAS-uppladdning och återläsning är
-   verifierade; första återkommande backupkörningen följs separat.
+Samtliga fem riktiga MCP-verktyg fungerar via k3s. Landet 17 oktober ger 13,80
+kWh från räknaren; bilsammanfattningen ger tre perioder och 20–100 %, utan
+automatiskt husavdrag. Generationen är `e7c5ac1eed53495a92469b54f1720e0e`.
 
-Ingen OpenAI-tunnel körs ännu i klustret. Mac-piloten är kvar. Slutförda
-engångsjobb är verifieringsunderlag och ska inte användas som återkommande jobb.
+Återgångsprovet är genomfört: k3s stoppades, NAS-arkivet återlästes till ny
+Mac-katalog, Mac startades ensam med gamla nyckeln och riktiga MCP-anrop
+verifierades. Mac stoppades igen innan k3s återaktiverades med nya nyckeln.
+Slutcommit `f45fefd`; ingen samtidig tunnelkörning. Alla energisvar och EV-svar
+i NAS-återställningen matchar klustrets katalog exakt.
+
+Kvar: verkligt röstprov i båda lägen med Mac avstängd, särskilt Analytics-prov
+av levererad larmnotis samt återkallelse av gamla pilotnyckeln efter acceptans.
+Den gamla nyckeln är fortfarande giltig till 17 november och har endast
+behållits för återgång. Jannes mottagna CPU-varning visar att gemensam
+larmrouting fungerar, men ersätter inte det särskilda Analytics-provet.
+Slutförda engångsjobb är verifieringsunderlag, inte återkommande jobb.
 
 ## Återgång
 
@@ -124,7 +154,7 @@ Alla resursändringar görs i Git för Flux. Pausa `analytics-collect` med
 `spec.suspend: true` vid felsökning. Behåll data och tidigare publicerade
 kataloggenerationer. Mac-katalogen skrivs inte av klustret.
 
-Vid kommande tunnelövergång får Mac och k3s aldrig köra samma tunnel-ID
+Vid tunnelövergång får Mac och k3s aldrig köra samma tunnel-ID
 samtidigt. Stoppa den ena och verifiera att den avslutats innan den andra
 startas. Behåll senaste verifierade datakopia och Macens startskript.
 
