@@ -156,7 +156,7 @@
                 "containers": [
                   {
                     "name": "backup",
-                    "image": "ghcr.io/jannegpriv/openhab-analytics-backup@sha256:fcae2cbaf085f2161c097e7ec7120e673647e15afe8f7cfc67cbdc1b22733150",
+                    "image": "ghcr.io/jannegpriv/openhab-analytics-backup@sha256:3585a6450201fc84b5d1b522ffd77c28afa43ff40ce892a9633fdf34f3941998",
                     "args": [
                       "upload",
                       "--state",

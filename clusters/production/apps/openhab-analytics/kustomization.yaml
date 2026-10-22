@@ -19,3 +19,4 @@ resources:
   - nas-backup.json
   - nas-secret.enc.yaml
   - nas-proof-job.json
+  - nas-proof-v2-job.json
