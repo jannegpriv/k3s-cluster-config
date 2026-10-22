@@ -22,3 +22,5 @@ resources:
   - nas-proof-v2-job.json
   - operations-monitoring.json
   - maintenance-proof-job.json
+  - tunnel.json
+  - tunnel-secret.enc.yaml
