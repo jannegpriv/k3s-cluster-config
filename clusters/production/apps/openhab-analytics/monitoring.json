@@ -13,7 +13,7 @@
         }
       },
       "data": {
-        "credentials.json": "{\"credentials\": [{\"name\": \"registry-pull\", \"expires_at\": \"2027-01-19T23:15:09+00:00\", \"review_at\": \"2027-01-05T00:00:00+00:00\"}, {\"name\": \"openhab-huddinge\", \"review_at\": \"2027-01-20T00:00:00+00:00\"}, {\"name\": \"openhab-landet\", \"review_at\": \"2027-01-20T00:00:00+00:00\"}, {\"name\": \"tailscale-identity\", \"review_at\": \"2027-01-20T00:00:00+00:00\"}]}"
+        "credentials.json": "{\"credentials\": [{\"name\": \"registry-pull\", \"expires_at\": \"2027-01-19T23:15:09+00:00\", \"review_at\": \"2027-01-05T00:00:00+00:00\"}, {\"name\": \"openhab-huddinge\", \"review_at\": \"2027-01-20T00:00:00+00:00\"}, {\"name\": \"openhab-landet\", \"review_at\": \"2027-01-20T00:00:00+00:00\"}, {\"name\": \"tailscale-identity\", \"review_at\": \"2027-01-20T00:00:00+00:00\"}, {\"name\": \"nas-shared-basic-memory\", \"review_at\": \"2027-01-20T00:00:00+00:00\"}]}"
       }
     },
     {

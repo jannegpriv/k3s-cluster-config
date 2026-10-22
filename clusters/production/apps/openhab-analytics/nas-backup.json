@@ -68,7 +68,7 @@
       "spec": {
         "schedule": "45 * * * *",
         "timeZone": "Europe/Stockholm",
-        "suspend": true,
+        "suspend": false,
         "concurrencyPolicy": "Forbid",
         "startingDeadlineSeconds": 3600,
         "successfulJobsHistoryLimit": 2,
