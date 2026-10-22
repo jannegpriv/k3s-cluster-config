@@ -39,6 +39,31 @@ spec:
     repeatInterval: 6h
     receiver: email
     routes:
+      # Temporary user-approved Analytics delivery test; bypass AI remediation.
+      - receiver: n8n-webhook
+        matchers:
+          - name: alertname
+            value: AnalyticsNotificationTest
+          - name: namespace
+            value: openhab-analytics
+          - name: analytics_test
+            value: delivery-20261022
+        groupWait: 10s
+        groupInterval: 30s
+        repeatInterval: 1h
+        continue: true
+      - receiver: email
+        matchers:
+          - name: alertname
+            value: AnalyticsNotificationTest
+          - name: namespace
+            value: openhab-analytics
+          - name: analytics_test
+            value: delivery-20261022
+        groupWait: 10s
+        groupInterval: 30s
+        repeatInterval: 1h
+        continue: false
       # Silence TargetDown for kube-proxy (false positive in k3s)
       - receiver: "null"
         matchers:
