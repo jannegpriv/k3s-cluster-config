@@ -75,15 +75,19 @@ NAS-kontrollsumma. Jobbet raderar inga NAS-arkiv.
 
 14 Prometheus-regler omfattar bland annat saknad/felande backup, katalogfel,
 diskutrymme och credential-datum. Reglerna använder befintlig larmrouting.
-Ett separat prov av levererad larmnotis är ännu inte gjort.
+Separat leveransprov är godkänt 2026-10-22: FIRING 21:54:22 UTC och RESOLVED
+21:56:22 UTC har verifierats i både Mattermost `k3s-alerts` och mottagarens
+Gmail. Provet aktiverades först efter Jannes uttryckliga tillstånd.
 
 2026-10-22 19:00 UTC verifierades samtliga 14 larmregler med klustrets
 `promtool 2.48.1`: 19 isolerade scenarier och 75 kontroller av väntetid,
 utlösning och återgång passerar. Alternativa felgrenar, för gammal
 backup/gallringskvittens och helt saknad exporter ingår. Testad spec är exakt
 identisk med aktuell kluster-spec. Inga levande mätserier eller larm ändrades.
-Ett särskilt TEST-larm med avgränsad tillfällig routning förbi AI-remediator
-är förberett och servervaliderat, men inväntar tillstånd att skicka notiser.
+TEST-larmets tillfälliga routning förbi AI-remediator verifierades i körande
+Alertmanager innan provregeln aktiverades. Båda leveranserna är kvitterade.
+Provregeln och de två tillfälliga rutterna togs bort via commit `c2453dd`;
+den ordinarie AlertmanagerConfig-specen återställdes exakt.
 
 Återkommande backup har verifierats, senast 2026-10-22 18:45:43 UTC. Aktuell
 backup matchar aktiv generation och inga dygn saknas. Schemalagt underhåll har
@@ -149,11 +153,10 @@ verifierades. Mac stoppades igen innan k3s återaktiverades med nya nyckeln.
 Slutcommit `f45fefd`; ingen samtidig tunnelkörning. Alla energisvar och EV-svar
 i NAS-återställningen matchar klustrets katalog exakt.
 
-Kvar: verkligt röstprov i båda lägen med Mac avstängd, särskilt Analytics-prov
-av levererad larmnotis samt återkallelse av gamla pilotnyckeln efter acceptans.
+Kvar: verkligt röstprov i båda lägen med Mac avstängd samt återkallelse av
+gamla pilotnyckeln efter acceptans.
 Den gamla nyckeln är fortfarande giltig till 17 november och har endast
-behållits för återgång. Jannes mottagna CPU-varning visar att gemensam
-larmrouting fungerar, men ersätter inte det särskilda Analytics-provet.
+behållits för återgång. Det särskilda Analytics-leveransprovet är nu godkänt.
 Slutförda engångsjobb är verifieringsunderlag, inte återkommande jobb.
 
 ## Återgång
