@@ -24,3 +24,4 @@ resources:
   - maintenance-proof-job.json
   - tunnel.json
   - tunnel-secret.enc.yaml
+  - rollback-export-job.json
