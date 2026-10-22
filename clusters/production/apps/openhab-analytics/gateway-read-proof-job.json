@@ -1,0 +1,178 @@
+{
+  "apiVersion": "batch/v1",
+  "kind": "Job",
+  "metadata": {
+    "name": "analytics-gateway-read-proof-20261022",
+    "namespace": "openhab-analytics"
+  },
+  "spec": {
+    "backoffLimit": 0,
+    "activeDeadlineSeconds": 180,
+    "template": {
+      "metadata": {
+        "labels": {
+          "app.kubernetes.io/name": "openhab-analytics",
+          "analytics-role": "collector"
+        },
+        "annotations": {
+          "analytics.openhab/credential-revision": "20261022-registry-v1"
+        }
+      },
+      "spec": {
+        "automountServiceAccountToken": false,
+        "serviceAccountName": "analytics",
+        "enableServiceLinks": false,
+        "securityContext": {
+          "runAsNonRoot": true,
+          "runAsUser": 10001,
+          "runAsGroup": 10001,
+          "fsGroup": 10001,
+          "fsGroupChangePolicy": "OnRootMismatch",
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
+        },
+        "nodeSelector": {
+          "kubernetes.io/hostname": "k3s-w-1",
+          "kubernetes.io/arch": "arm64"
+        },
+        "terminationGracePeriodSeconds": 30,
+        "volumes": [
+          {
+            "name": "tmp",
+            "emptyDir": {
+              "sizeLimit": "128Mi"
+            }
+          },
+          {
+            "name": "runtime-secrets",
+            "emptyDir": {
+              "medium": "Memory",
+              "sizeLimit": "1Mi"
+            }
+          },
+          {
+            "name": "projected-secrets",
+            "secret": {
+              "secretName": "analytics-openhab",
+              "defaultMode": 288,
+              "items": [
+                {
+                  "key": "huddinge",
+                  "path": "huddinge"
+                },
+                {
+                  "key": "landet",
+                  "path": "landet"
+                }
+              ]
+            }
+          },
+          {
+            "name": "config",
+            "configMap": {
+              "name": "analytics-sources"
+            }
+          }
+        ],
+        "initContainers": [
+          {
+            "name": "stage-secrets",
+            "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:232f2a73c88c26d8e9622d3b5e42e549f482a1e8b6a4f165167d516be93895e6",
+            "args": [
+              "stage-secrets",
+              "--names",
+              "huddinge",
+              "landet"
+            ],
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "readOnlyRootFilesystem": true,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              }
+            },
+            "resources": {
+              "requests": {
+                "cpu": "10m",
+                "memory": "32Mi"
+              },
+              "limits": {
+                "cpu": "200m",
+                "memory": "128Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "projected-secrets",
+                "mountPath": "/projected-secrets",
+                "readOnly": true
+              },
+              {
+                "name": "runtime-secrets",
+                "mountPath": "/runtime",
+                "readOnly": false
+              }
+            ]
+          }
+        ],
+        "containers": [
+          {
+            "name": "collector",
+            "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:232f2a73c88c26d8e9622d3b5e42e549f482a1e8b6a4f165167d516be93895e6",
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "readOnlyRootFilesystem": true,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              }
+            },
+            "resources": {
+              "requests": {
+                "cpu": "100m",
+                "memory": "256Mi"
+              },
+              "limits": {
+                "cpu": "1000m",
+                "memory": "1Gi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "tmp",
+                "mountPath": "/tmp",
+                "readOnly": false
+              },
+              {
+                "name": "runtime-secrets",
+                "mountPath": "/runtime",
+                "readOnly": true
+              },
+              {
+                "name": "config",
+                "mountPath": "/config",
+                "readOnly": true
+              }
+            ],
+            "args": [],
+            "command": [
+              "python",
+              "-c",
+              "import json,time\nfrom pathlib import Path\nfrom openhab_analytics.collector import load_config,OpenHABReader\ncfg=load_config(Path('/config/sources.json'))['sites']['landet']\nr=OpenHABReader(cfg,Path(cfg['token_file']),time.monotonic()+60)\ninfo=r.runtime();item=r.item('SigenStor_Total_Load')\nassert item['name']=='SigenStor_Total_Load'\nprint(json.dumps({'status':'passed','requests':r.requests,'method':'GET','runtime_version':info.get('version'),'counter_item':item['name'],'data_volume_mounted':False}))\n"
+            ]
+          }
+        ],
+        "imagePullSecrets": [
+          {
+            "name": "analytics-registry"
+          }
+        ],
+        "restartPolicy": "Never"
+      }
+    }
+  }
+}
