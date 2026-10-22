@@ -17,7 +17,7 @@
         "rules": [
           {
             "alert": "AnalyticsNotificationTest",
-            "expr": "vector(time()) < 1792706874",
+            "expr": "vector(0) == 1",
             "for": "30s",
             "labels": {
               "severity": "warning",
