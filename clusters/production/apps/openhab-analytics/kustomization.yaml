@@ -16,3 +16,6 @@ resources:
   - monitoring.json
   - mcp-proof-job.json
   - recovery-proof-job.json
+  - nas-backup.json
+  - nas-secret.enc.yaml
+  - nas-proof-job.json
