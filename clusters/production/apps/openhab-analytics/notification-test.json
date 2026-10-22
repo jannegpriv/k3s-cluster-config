@@ -1,0 +1,37 @@
+{
+  "apiVersion": "monitoring.coreos.com/v1",
+  "kind": "PrometheusRule",
+  "metadata": {
+    "name": "analytics-notification-test",
+    "namespace": "openhab-analytics",
+    "labels": {
+      "release": "kube-prometheus-stack",
+      "app.kubernetes.io/name": "openhab-analytics"
+    }
+  },
+  "spec": {
+    "groups": [
+      {
+        "name": "analytics-notification-test",
+        "interval": "30s",
+        "rules": [
+          {
+            "alert": "AnalyticsNotificationTest",
+            "expr": "vector(time()) < 1792706874",
+            "for": "30s",
+            "labels": {
+              "severity": "warning",
+              "namespace": "openhab-analytics",
+              "application": "openhab-analytics",
+              "analytics_test": "delivery-20261022"
+            },
+            "annotations": {
+              "summary": "TEST – OpenHAB Analytics larmleverans",
+              "description": "Planerat leveransprov, inget driftfel. Bekräfta att denna TEST-notis och efterföljande RESOLVED når mottagaren. Inga driftåtgärder ska utföras."
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
