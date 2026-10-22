@@ -32,15 +32,48 @@ Mac-piloten med sin egen datakatalog och OpenAI-tunnel är fortfarande aktiv.
   285 anrop, 68 statistikkontroller, 204 historiksidor, åtta energisvar och fyra
   EV-svar. Scheman, röstsvarsfält, räknarprioritet och skrivskydd passerar.
 - Prometheus rapporterar monitorn som up och läser 19 tidsserier. Katalog,
-  lagring och nyckelmetadata är giltiga; inga dygn saknas. NAS-backup redovisas
-  korrekt som ännu overifierad. Monitorn läser datakatalog,
+  lagring och nyckelmetadata är giltiga; inga dygn saknas. Monitorn läser datakatalog,
   driftvolym och offentliga nyckeldatum skrivskyddat. Den har ingen
   Kubernetes-token, inga hemligheter och ingen utgående nätåtkomst.
 
-Ett separat klusterprov har även arkiverat fyra dygn och fem publicerade
-versioner från den skrivskyddade volymen och återställt till en tom temporär
-katalog. Alla energi- och EV-svar stämmer. Detta är inte en verifierad NAS-backup.
-Första automatiska 04.15-körningen är ännu inte observerad.
+Den automatiska insamlingen den 22 oktober kl. 04.15 svensk tid lyckades:
+38 GET-anrop hämtade den 21 oktober, inklusive Lynk & Co. Aktiva katalogen
+innehåller nu fem dygn (17–21 oktober).
+
+## Synology-backup
+
+Janne har 2026-10-22 uttryckligen godkänt samma konto och metod som Basic Memory:
+`jannenasadm`, SSH-lösenord och låst servernyckel mot `192.168.50.25:4711`.
+Analytics använder `/volume1/k3s_backups/openhab-analytics`. Basic Memorys
+konto, backupkatalog, schema och konfiguration är oförändrade.
+
+`analytics-nas-proof-v2-20261022` har laddat upp sex publicerade dygnsversioner
+samt ett återställningsarkiv, verifierat fjärrchecksumma, laddat ned arkivet igen
+och återställt till en tom katalog. Samtliga energisvar för båda husen och fem
+EV-sammanfattningar överensstämmer exakt; källans active.json är oförändrad.
+Arkivet är 621058 byte och har SHA256
+`239254a8e7d8b0d75214c051a08a9719de2fc5096376d1d9792a23b7a72d8cb1`.
+
+Backupcontainern `0.6.0-ops4` är privat och digestlåst. Den har verifierats med
+170 lokala tester, 16 backup-/gatewaytester i Linux ARM64, SSH-startprov och
+verklig hämtning med registry-läsnyckeln. Första NAS-provet avbröts eftersom
+SSH saknade passwd-post för UID 10001. Den posten finns i den korrigerade
+avbildningen; omprovet är godkänt. Det misslyckade jobbet sparas som underlag.
+
+`analytics-backup` kör vid minut 45 varje timme, Europe/Stockholm, med Forbid.
+Datavolymen är skrivskyddad och ett delat lås skyddar publicerade filer.
+Kontrollsummor måste stämma innan en backup publiceras eller äldre
+återställningsarkiv gallras. Dygnsarkiven sparas utan automatisk NAS-gallring;
+återställningsarkiv behåller senaste per sju datum och fyra ISO-veckor.
+
+`analytics-maintenance` kör kl. 02.45. Aktiva generationer skyddas alltid;
+övrig lokal historik behålls minst 90 dagar och nyligen skapade generationer
+minst sju dagar. Borttagning kräver backupkvittens och en ny matchande
+NAS-kontrollsumma. Jobbet raderar inga NAS-arkiv.
+
+14 Prometheus-regler omfattar bland annat saknad/felande backup, katalogfel,
+diskutrymme och credential-datum. Reglerna använder befintlig larmrouting.
+Ett separat prov av levererad larmnotis är ännu inte gjort.
 
 ## Lagring och hemligheter
 
@@ -57,6 +90,11 @@ SOPS/PGP-krypterade Secrets har separata roller:
 - `openhab-secret.enc.yaml`: befintliga tokens för insamling från båda husen.
 - `tailscale-secret.enc.yaml`: ursprunglig engångsregistrering för gatewayen.
 - `landet-secret.enc.yaml`: äldre avgränsat läsprov.
+- `nas-secret.enc.yaml`: samma befintliga NAS-lösenord som Basic Memory,
+  separat SOPS-krypterad Secret. Lösenordet kopieras till minnesvolym med 0600,
+  aldrig till argv eller miljövariabler. Inga kontorättigheter har ändrats.
+  Vid lösenordsrotation måste både Basic Memory och Analytics uppdateras
+  och båda backupjobben verifieras. Granskningsdatum är 2027-01-20.
 
 Publiceringsnyckeln finns aldrig i klustret. Inga nyckelvärden ska finnas i Git,
 kommandorader, rapporter eller loggar. openHAB-koden använder endast GET; det
@@ -70,16 +108,15 @@ NET_ADMIN används; userspace SOCKS och HTTPS-reläer används.
 
 ## Återstår före tunnelövergång
 
-1. Begränsad separat Synology-åtkomst och verifierad NAS-uppladdning,
-   nedladdning samt återställning med jämförda energi-/bilsvar.
-2. Full Prometheus-larmkedja och säker historikgallring. Reglerna aktiveras efter
-   backupberedskap; den installerade monitorn redovisar ännu saknad backup.
-3. Separat OpenAI-produktionsnyckel, dokumenterade datum och rotationsprov.
-4. Kontrollerad tunnelövergång, text-/röstprov
-   i båda klientlägena med Mac avstängd samt verifierad återgång.
+1. Separat OpenAI-produktionsnyckel är sparad och SOPS-krypterad lokalt;
+   verifiering av faktiska datum/rättigheter och rotationsprov återstår.
+2. Kontrollerad tunnelövergång, text-/röstprov i båda klientlägena med Mac
+   avstängd samt verifierad återgång.
+3. End-to-end-prov av larmleverans återstår. NAS-uppladdning och återläsning är
+   verifierade; första återkommande backupkörningen följs separat.
 
-Ingen OpenAI-tunnel eller NAS-backup körs ännu i klustret. Slutförda engångsjobb
-är verifieringsunderlag och ska inte användas som återkommande jobb.
+Ingen OpenAI-tunnel körs ännu i klustret. Mac-piloten är kvar. Slutförda
+engångsjobb är verifieringsunderlag och ska inte användas som återkommande jobb.
 
 ## Återgång
 
