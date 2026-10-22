@@ -77,6 +77,14 @@ NAS-kontrollsumma. Jobbet raderar inga NAS-arkiv.
 diskutrymme och credential-datum. Reglerna använder befintlig larmrouting.
 Ett separat prov av levererad larmnotis är ännu inte gjort.
 
+2026-10-22 19:00 UTC verifierades samtliga 14 larmregler med klustrets
+`promtool 2.48.1`: 19 isolerade scenarier och 75 kontroller av väntetid,
+utlösning och återgång passerar. Alternativa felgrenar, för gammal
+backup/gallringskvittens och helt saknad exporter ingår. Testad spec är exakt
+identisk med aktuell kluster-spec. Inga levande mätserier eller larm ändrades.
+Ett särskilt TEST-larm med avgränsad tillfällig routning förbi AI-remediator
+är förberett och servervaliderat, men inväntar tillstånd att skicka notiser.
+
 Återkommande backup har verifierats, senast 2026-10-22 18:45:43 UTC. Aktuell
 backup matchar aktiv generation och inga dygn saknas. Schemalagt underhåll har
 ännu inte hunnit köras första gången; separat skarpt underhållsprov är godkänt.
