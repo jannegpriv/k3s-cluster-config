@@ -324,12 +324,9 @@
                   }
                 ],
                 "readinessProbe": {
-                  "exec": {
-                    "command": [
-                      "python",
-                      "-c",
-                      "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/readyz',timeout=9)"
-                    ]
+                  "httpGet": {
+                    "path": "/readyz",
+                    "port": 8081
                   },
                   "periodSeconds": 30,
                   "timeoutSeconds": 10
