@@ -18,7 +18,6 @@ resources:
   - recovery-proof-job.json
   - nas-backup.json
   - nas-secret.enc.yaml
-  - nas-proof-job.json
   - nas-proof-v2-job.json
   - operations-monitoring.json
   - maintenance-proof-job.json

@@ -1,12 +1,14 @@
-# OpenHAB Analytics – aktiv klusterdrift under slutverifiering
+# OpenHAB Analytics – verifierad klusterdrift
 
-Aktuellt driftläge 2026-10-22. Janne har godkänt genomförandet av punkt 1–6:
+Aktuellt driftläge 2026-10-23. Janne har godkänt genomförandet av punkt 1–6:
 privat registry, insamling, NAS-backup, övervakning, nyckelhantering och
 kontrollerad tunnelövergång. openHAB-konfiguration och styrning ändras inte.
 k3s driver nu även den befintliga privata OpenAI-tunneln. Macens insamlare och
 tunnel är stoppade; originaldata, profil och LaunchAgent-plist är sparade.
 Janne bekräftade 2026-10-23 att ChatGPT-röst på mobilen fungerade med Macen
-helt avstängd. Codex/Work-röstprovet efter övergång är ännu inte rapporterat.
+helt avstängd. Codex/Work-röstprovet efter övergång är också användarbekräftat.
+Den gamla pilotnyckeln återkallades 23 oktober; produktionsnyckeln fungerar.
+Mac-reserven har verifierats med fryst produktionskod och produktionsnyckeln.
 
 ## Aktiverat och verifierat
 
@@ -61,7 +63,8 @@ Backupcontainern `0.6.0-ops4` är privat och digestlåst. Den har verifierats me
 170 lokala tester, 16 backup-/gatewaytester i Linux ARM64, SSH-startprov och
 verklig hämtning med registry-läsnyckeln. Första NAS-provet avbröts eftersom
 SSH saknade passwd-post för UID 10001. Den posten finns i den korrigerade
-avbildningen; omprovet är godkänt. Det misslyckade jobbet sparas som underlag.
+avbildningen; omprovet är godkänt. Det misslyckade jobbets metadata och logg är arkiverade lokalt. Dess
+GitOps-referens tas bort efter godkänt omprov för att avsluta det gamla larmet.
 
 `analytics-backup` kör vid minut 45 varje timme, Europe/Stockholm, med Forbid.
 Datavolymen är skrivskyddad och ett delat lås skyddar publicerade filer.
@@ -69,7 +72,7 @@ Kontrollsummor måste stämma innan en backup publiceras eller äldre
 återställningsarkiv gallras. Dygnsarkiven sparas utan automatisk NAS-gallring;
 återställningsarkiv behåller senaste per sju datum och fyra ISO-veckor.
 
-`analytics-maintenance` kör kl. 02.45. Aktiva generationer skyddas alltid;
+`analytics-maintenance` kör kl. 03.05 Europe/Stockholm, med sex återförsök. Aktiva generationer skyddas alltid;
 övrig lokal historik behålls minst 90 dagar och nyligen skapade generationer
 minst sju dagar. Borttagning kräver backupkvittens och en ny matchande
 NAS-kontrollsumma. Jobbet raderar inga NAS-arkiv.
@@ -90,9 +93,12 @@ Alertmanager innan provregeln aktiverades. Båda leveranserna är kvitterade.
 Provregeln och de två tillfälliga rutterna togs bort via commit `c2453dd`;
 den ordinarie AlertmanagerConfig-specen återställdes exakt.
 
-Återkommande backup har verifierats, senast 2026-10-22 18:45:43 UTC. Aktuell
-backup matchar aktiv generation och inga dygn saknas. Schemalagt underhåll har
-ännu inte hunnit köras första gången; separat skarpt underhållsprov är godkänt.
+Schemalagd insamling publicerade 22 oktober den 23 oktober kl. 04.15.
+Backup är återkommande och matchar aktiv generation. Underhållskörningen
+02.45 kolliderade med backupens lås. Godkänd korrigering i `9b911dd` flyttar
+schemat till 03.05 och tillåter sex återförsök. Skarpt omprov 23 oktober
+19.05 UTC lyckades: noll berättigade generationer, noll borttagningar.
+Nästa schemalagda 03.05-körning har ännu inte inträffat.
 
 ## CPU-varningen 2026-10-22
 
@@ -154,12 +160,22 @@ verifierades. Mac stoppades igen innan k3s återaktiverades med nya nyckeln.
 Slutcommit `f45fefd`; ingen samtidig tunnelkörning. Alla energisvar och EV-svar
 i NAS-återställningen matchar klustrets katalog exakt.
 
-Kvar: Codex/Work-röstprov efter övergång samt återkallelse av gamla pilotnyckeln
-efter acceptans. Mobilprovet i ChatGPT med Mac avstängd är användarbekräftat
-2026-10-23; exakt svarsinnehåll har inte återlästs som separat tekniskt kvitto.
-Den gamla nyckeln är fortfarande giltig till 17 november och har endast
-behållits för återgång. Det särskilda Analytics-leveransprovet är nu godkänt.
-Slutförda engångsjobb är verifieringsunderlag, inte återkommande jobb.
+Båda röstproven är användarbekräftade 2026-10-23. Macens kalla reserv
+provades därefter med produktionsnyckeln: k3s skalades till noll via `4f8b1e7`,
+Mac startades ensam mot NAS-återläst katalog och riktiga energi-/EV-anrop
+passerade. Mac stoppades innan k3s återaktiverades genom `10d4c32`.
+Reservkoden är fryst från den aktiva imagen med SHA256- och beroendekontroll.
+Aktiv k3s-generation är `ba424a25ee634b20a429131da075f023` (17–22 oktober).
+
+Pilotnyckeln `key_0crWeIvWla8L4bod` återkallades efter uttryckligt godkännande.
+API-provet 19.10 UTC nekas med gamla nyckeln och lyckas med produktionsnyckeln.
+Ett riktigt energianrop efter återkallelsen ger 13,80 kWh med kvalitetsvarningar.
+
+Två avslutade feljobb arkiveras som metadata/logg i privata slutkvitton.
+Gamla NAS-provets GitOps-referens tas bort; dess manifest behålls för revision.
+Det avslutade CronJob-barnet tas bort med det UID-avgränsade skriptet
+`scripts/cleanup-analytics-failed-maintenance-20261023.sh` efter godkänt omprov.
+Detta rensar inaktuella jobblarm; larmregler och historik ändras inte.
 
 ## Återgång
 
