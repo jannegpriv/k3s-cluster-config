@@ -5,7 +5,8 @@ privat registry, insamling, NAS-backup, övervakning, nyckelhantering och
 kontrollerad tunnelövergång. openHAB-konfiguration och styrning ändras inte.
 k3s driver nu även den befintliga privata OpenAI-tunneln. Macens insamlare och
 tunnel är stoppade; originaldata, profil och LaunchAgent-plist är sparade.
-Verkligt röstprov i båda klientlägena med Mac avstängd återstår.
+Janne bekräftade 2026-10-23 att ChatGPT-röst på mobilen fungerade med Macen
+helt avstängd. Codex/Work-röstprovet efter övergång är ännu inte rapporterat.
 
 ## Aktiverat och verifierat
 
@@ -153,8 +154,9 @@ verifierades. Mac stoppades igen innan k3s återaktiverades med nya nyckeln.
 Slutcommit `f45fefd`; ingen samtidig tunnelkörning. Alla energisvar och EV-svar
 i NAS-återställningen matchar klustrets katalog exakt.
 
-Kvar: verkligt röstprov i båda lägen med Mac avstängd samt återkallelse av
-gamla pilotnyckeln efter acceptans.
+Kvar: Codex/Work-röstprov efter övergång samt återkallelse av gamla pilotnyckeln
+efter acceptans. Mobilprovet i ChatGPT med Mac avstängd är användarbekräftat
+2026-10-23; exakt svarsinnehåll har inte återlästs som separat tekniskt kvitto.
 Den gamla nyckeln är fortfarande giltig till 17 november och har endast
 behållits för återgång. Det särskilda Analytics-leveransprovet är nu godkänt.
 Slutförda engångsjobb är verifieringsunderlag, inte återkommande jobb.
