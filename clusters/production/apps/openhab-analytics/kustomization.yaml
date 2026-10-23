@@ -26,3 +26,4 @@ resources:
   - tunnel-secret.enc.yaml
   - rollback-export-job.json
   - gateway-read-proof-job.json
+  - maintenance-proof-20261023-job.json

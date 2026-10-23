@@ -216,7 +216,7 @@
         }
       },
       "spec": {
-        "schedule": "45 2 * * *",
+        "schedule": "5 3 * * *",
         "timeZone": "Europe/Stockholm",
         "suspend": false,
         "concurrencyPolicy": "Forbid",
@@ -225,7 +225,7 @@
         "failedJobsHistoryLimit": 3,
         "jobTemplate": {
           "spec": {
-            "backoffLimit": 0,
+            "backoffLimit": 6,
             "activeDeadlineSeconds": 1800,
             "ttlSecondsAfterFinished": 172800,
             "template": {
