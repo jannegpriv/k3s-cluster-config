@@ -1,6 +1,6 @@
 # OpenHAB Analytics – verifierad klusterdrift
 
-Aktuellt driftläge 2026-10-23. Janne har godkänt genomförandet av punkt 1–6:
+Basdriftens slutacceptans 2026-10-23. Janne har godkänt genomförandet av punkt 1–6:
 privat registry, insamling, NAS-backup, övervakning, nyckelhantering och
 kontrollerad tunnelövergång. openHAB-konfiguration och styrning ändras inte.
 k3s driver nu även den befintliga privata OpenAI-tunneln. Macens insamlare och
@@ -10,7 +10,74 @@ helt avstängd. Codex/Work-röstprovet efter övergång är också användarbekr
 Den gamla pilotnyckeln återkallades 23 oktober; produktionsnyckeln fungerar.
 Mac-reserven har verifierats med fryst produktionskod och produktionsnyckeln.
 
-## Aktiverat och verifierat
+## Release 0.7.0, aktiverad 2026-10-24
+
+`3eb1bf8` aktiverar deldygn och Huddinges värmepumpsanalys efter fem godkända
+klusterprov. Tre nya privata ARM64-images är låsta till digest i
+`features.json`, `monitoring.json` och `tunnel.json`. Både publicering och
+separat nedladdning med läsnyckeln är verifierade. Gatewayen och ursprunglig
+insamling/backup är oförändrade. Inga openHAB-inställningar ändras.
+
+- `analytics-features` (4 GiB) och `analytics-feature-operations` (100 MiB)
+  är separata Bound-PVC, skyddade mot Flux-prune och med PV-policy Retain.
+- Deldygn: `7,22,37,52 * * * *`, Europe/Stockholm. Hela dagens sparade fönster
+  hämtas från båda husen. Minst 15 minuter krävs mellan två insamlingar för
+  samma datum; ett tätt omförsök returnerar `up_to_date` utan openHAB-anrop.
+- Utökad historik börjar 2026-10-22. Vid varje körning hämtas dagens deldygn
+  först och högst två saknade avslutade dygn efter 04.15. Alla datum kommer
+  från faktisk insamling. MCP hämtar aldrig live på användarens begäran.
+- Backup minut 02 använder samma NAS-konto i den separata underkatalogen
+  `/volume1/k3s_backups/openhab-analytics/intraday`. Första ordinarie körningen
+  2026-10-24 09.02 är verifierad. Avslutade dygnsarkiv gallras inte på NAS.
+- Underhåll 03.20 behåller ersatta deldygn minst 48 timmar och avslutade dygn
+  lokalt minst 90 dagar. Borttagning kräver rätt checksummeverifierad NAS-kopia.
+  Aktiva generationer raderas aldrig. Originalets underhåll förblir 03.05.
+- MCP använder originalarkivet först för energi, bil och befintliga items
+  för sparade hela dygn. Värmepump och nya items läses ur feature-katalogen.
+  Ingen automatisk bilavräkning, uppskattad värmepumpsenergi eller COP införs.
+- Samma privata ChatGPT-plugin har sex läsverktyg efter uppdatering av dess
+  verktygslista. Nya anrop läser nya kataloggenerationer utan serveromstart.
+- Sju nya Prometheus-regler i `feature-alerts.json` är inlästa och friska.
+  Kontrollen efter första ordinarie backup visar inga aktiva/väntande
+  Analytics-larm. Befintliga larm och deras routing är oförändrade.
+
+Klusterproven kördes sekventiellt: 162 GET till båda husen för tre datum;
+nio MCP-anrop och 14 jämförelser mot originalarkivet; NAS-upload;
+NAS-återläsning med checksumma och sex plats/dygn-jämförelser;
+gallringsprov utan borttagning. Jobbens loggar/metadata är arkiverade i
+Analytics-arbetsytans `private-data/feature-rollout-20261024/` innan deras
+referenser togs bort från Kustomization. Provmanifesten behålls för revision.
+Originalindexet är oförändrat genom samtliga fem prov.
+
+Aktiveringens startprov, ordinarie timbackup kl. 09.02 och ordinarie
+insamling kl. 09.22 är verifierade. Den senare gjorde 54 GET och publicerade
+`9e0a27cbda1a446ea23e55727111e011`. Riktiga anrop via befintlig ChatGPT-anslutning
+läser den nya generationen, tidsfönstret 00.00–09.22 och 3,75 kWh för Landet.
+MCP-processens PID/starttid och tunnelpoddens UID/omstartsräknare är oförändrade.
+Originalindexet är oförändrat. Slutkontrollen visar inga aktiva eller väntande
+Analytics-larm. Kvartsversionen 09.22 inkluderas i nästa timbackup; backupen
+09.02 innehåller den föregående generationen.
+
+Nya röstprov inväntar Jannes bekräftelse. Tidigare röstacceptans den 23 oktober
+gäller basfunktionerna. Privata slutkvitton: `rollout-verification.json`,
+`scheduled-verification.json`, `connector-hot-reload.json` och `final-health.json`
+i den ovan nämnda arbetsytans driftsättningskatalog.
+
+### Återgång av 0.7.0
+
+Återlägg `tunnel.json` och `monitoring.json` från baslinjecommit `400053e`.
+Sätt samtliga tre CronJobs i `features.json` till `suspend: true` och ta bort
+endast `feature-alerts.json` från Kustomization-resurserna. Behåll själva
+larmfilen för revision, liksom feature-PVC, ConfigMaps och data. Granska diff,
+committa och låt Flux synka. Det förberedda motsvarande återgångsmanifestet
+har passerat Kubernetes server-dry-run den 24 oktober; någon faktisk återgång
+av 0.7.0 har inte behövts.
+
+Kontrollera Ready på föregående tunnel/monitor, gamla energisvaret 13,80 kWh
+för Landet 17 oktober och oförändrad bilsammanfattning. Den frysta Mac-reserven
+behåller föregående provade version och får aldrig köras samtidigt som k3s.
+
+## Basdrift verifierad 2026-10-22–23
 
 - Fyra privata GHCR-images, låsta till digest. Jobbet
   `analytics-registry-proof-20261022` hämtade och startade alla fyra med separat
