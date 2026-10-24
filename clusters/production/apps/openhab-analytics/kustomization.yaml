@@ -30,3 +30,4 @@ resources:
   - 01-analytics-collect-features-proof-070.json
   - 02-analytics-feature-mcp-proof-070.json
   - 03-analytics-feature-backup-proof-070.json
+  - 04-analytics-feature-recovery-proof-070.json
