@@ -1,0 +1,213 @@
+{
+  "apiVersion": "batch/v1",
+  "kind": "Job",
+  "metadata": {
+    "name": "analytics-feature-backup-proof-070",
+    "namespace": "openhab-analytics"
+  },
+  "spec": {
+    "backoffLimit": 3,
+    "activeDeadlineSeconds": 1800,
+    "ttlSecondsAfterFinished": 172800,
+    "template": {
+      "metadata": {
+        "labels": {
+          "app.kubernetes.io/name": "openhab-analytics",
+          "analytics-role": "backup"
+        },
+        "annotations": {
+          "analytics.openhab/credential-revision": "nas-bm-password-20261022"
+        }
+      },
+      "spec": {
+        "automountServiceAccountToken": false,
+        "serviceAccountName": "analytics",
+        "enableServiceLinks": false,
+        "securityContext": {
+          "runAsNonRoot": true,
+          "runAsUser": 10001,
+          "runAsGroup": 10001,
+          "fsGroup": 10001,
+          "fsGroupChangePolicy": "OnRootMismatch",
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
+        },
+        "nodeSelector": {
+          "kubernetes.io/hostname": "k3s-w-1",
+          "kubernetes.io/arch": "arm64"
+        },
+        "imagePullSecrets": [
+          {
+            "name": "analytics-registry"
+          }
+        ],
+        "initContainers": [
+          {
+            "name": "stage-secrets",
+            "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:042b7446a1433c40f96f9104fc438dbd5a026c5b890d92d4d67ce81a497ec80d",
+            "args": [
+              "stage-secrets",
+              "--names",
+              "password"
+            ],
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "readOnlyRootFilesystem": true,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              }
+            },
+            "resources": {
+              "requests": {
+                "cpu": "10m",
+                "memory": "32Mi"
+              },
+              "limits": {
+                "cpu": "200m",
+                "memory": "128Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "credentials",
+                "mountPath": "/projected-secrets",
+                "readOnly": true
+              },
+              {
+                "name": "runtime",
+                "mountPath": "/runtime",
+                "readOnly": false
+              }
+            ]
+          }
+        ],
+        "containers": [
+          {
+            "name": "backup",
+            "image": "ghcr.io/jannegpriv/openhab-analytics-backup@sha256:7773692f064343adca82b15b1132830ba71c8f00144b833bd5c1fa460e3814e6",
+            "args": [
+              "upload",
+              "--root",
+              "/features/catalog",
+              "--state",
+              "/operations/features"
+            ],
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "readOnlyRootFilesystem": true,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              }
+            },
+            "resources": {
+              "requests": {
+                "cpu": "100m",
+                "memory": "128Mi",
+                "ephemeral-storage": "512Mi"
+              },
+              "limits": {
+                "cpu": "1000m",
+                "memory": "512Mi",
+                "ephemeral-storage": "4Gi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "data",
+                "mountPath": "/features",
+                "readOnly": true
+              },
+              {
+                "name": "runtime",
+                "mountPath": "/runtime",
+                "readOnly": true
+              },
+              {
+                "name": "work",
+                "mountPath": "/work",
+                "readOnly": false
+              },
+              {
+                "name": "tmp",
+                "mountPath": "/tmp",
+                "readOnly": false
+              },
+              {
+                "name": "config",
+                "mountPath": "/config",
+                "readOnly": true
+              },
+              {
+                "name": "operations",
+                "mountPath": "/operations"
+              }
+            ],
+            "command": [
+              "python",
+              "/app/feature_backup.py"
+            ]
+          }
+        ],
+        "volumes": [
+          {
+            "name": "credentials",
+            "secret": {
+              "secretName": "analytics-nas",
+              "defaultMode": 288,
+              "items": [
+                {
+                  "key": "password",
+                  "path": "password"
+                }
+              ]
+            }
+          },
+          {
+            "name": "runtime",
+            "emptyDir": {
+              "medium": "Memory",
+              "sizeLimit": "1Mi"
+            }
+          },
+          {
+            "name": "tmp",
+            "emptyDir": {
+              "sizeLimit": "128Mi"
+            }
+          },
+          {
+            "name": "data",
+            "persistentVolumeClaim": {
+              "claimName": "analytics-features",
+              "readOnly": true
+            }
+          },
+          {
+            "name": "work",
+            "emptyDir": {
+              "sizeLimit": "4Gi"
+            }
+          },
+          {
+            "name": "config",
+            "configMap": {
+              "name": "analytics-feature-nas"
+            }
+          },
+          {
+            "name": "operations",
+            "persistentVolumeClaim": {
+              "claimName": "analytics-feature-operations"
+            }
+          }
+        ],
+        "restartPolicy": "Never"
+      }
+    }
+  }
+}
