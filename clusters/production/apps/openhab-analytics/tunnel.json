@@ -164,12 +164,19 @@
                 "configMap": {
                   "name": "analytics-sources"
                 }
+              },
+              {
+                "name": "features",
+                "persistentVolumeClaim": {
+                  "claimName": "analytics-features",
+                  "readOnly": true
+                }
               }
             ],
             "initContainers": [
               {
                 "name": "stage-secrets",
-                "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:232f2a73c88c26d8e9622d3b5e42e549f482a1e8b6a4f165167d516be93895e6",
+                "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:042b7446a1433c40f96f9104fc438dbd5a026c5b890d92d4d67ce81a497ec80d",
                 "args": [
                   "stage-secrets",
                   "--names",
@@ -209,7 +216,7 @@
               },
               {
                 "name": "validate-data",
-                "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:232f2a73c88c26d8e9622d3b5e42e549f482a1e8b6a4f165167d516be93895e6",
+                "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:042b7446a1433c40f96f9104fc438dbd5a026c5b890d92d4d67ce81a497ec80d",
                 "args": [
                   "check-data"
                 ],
@@ -244,7 +251,7 @@
             "containers": [
               {
                 "name": "tunnel",
-                "image": "ghcr.io/jannegpriv/openhab-analytics-tunnel@sha256:a917c995638de88000a5433c8d042bee04f1781570727cb4f46239fe50678c87",
+                "image": "ghcr.io/jannegpriv/openhab-analytics-tunnel@sha256:129a26293ae91e15a6f63e0c341fdd3a1d9561f88912afc2cad7276569911f2b",
                 "securityContext": {
                   "allowPrivilegeEscalation": false,
                   "readOnlyRootFilesystem": true,
@@ -279,12 +286,21 @@
                     "name": "runtime-secrets",
                     "mountPath": "/runtime",
                     "readOnly": true
+                  },
+                  {
+                    "name": "features",
+                    "mountPath": "/features",
+                    "readOnly": true
                   }
                 ],
                 "env": [
                   {
                     "name": "ANALYTICS_TUNNEL_ID",
                     "value": "tunnel_6ad525a3010c81919343e4f9c96d3c33"
+                  },
+                  {
+                    "name": "ANALYTICS_FEATURES_ENABLED",
+                    "value": "true"
                   }
                 ],
                 "readinessProbe": {

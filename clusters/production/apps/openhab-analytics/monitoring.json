@@ -87,12 +87,26 @@
                 "configMap": {
                   "name": "analytics-monitor"
                 }
+              },
+              {
+                "name": "features",
+                "persistentVolumeClaim": {
+                  "claimName": "analytics-features",
+                  "readOnly": true
+                }
+              },
+              {
+                "name": "feature-operations",
+                "persistentVolumeClaim": {
+                  "claimName": "analytics-feature-operations",
+                  "readOnly": true
+                }
               }
             ],
             "containers": [
               {
                 "name": "monitor",
-                "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:232f2a73c88c26d8e9622d3b5e42e549f482a1e8b6a4f165167d516be93895e6",
+                "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:042b7446a1433c40f96f9104fc438dbd5a026c5b890d92d4d67ce81a497ec80d",
                 "command": [
                   "python",
                   "/app/monitor.py"
@@ -137,6 +151,16 @@
                     "name": "config",
                     "mountPath": "/config",
                     "readOnly": true
+                  },
+                  {
+                    "name": "features",
+                    "mountPath": "/features",
+                    "readOnly": true
+                  },
+                  {
+                    "name": "feature-operations",
+                    "mountPath": "/feature-operations",
+                    "readOnly": true
                   }
                 ],
                 "readinessProbe": {
@@ -152,7 +176,13 @@
                     "port": "metrics"
                   },
                   "periodSeconds": 30
-                }
+                },
+                "args": [
+                  "--feature-root",
+                  "/features/catalog",
+                  "--feature-state",
+                  "/feature-operations/features"
+                ]
               }
             ]
           }

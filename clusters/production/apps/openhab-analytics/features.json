@@ -94,7 +94,7 @@
       "spec": {
         "schedule": "7,22,37,52 * * * *",
         "timeZone": "Europe/Stockholm",
-        "suspend": true,
+        "suspend": false,
         "concurrencyPolicy": "Forbid",
         "startingDeadlineSeconds": 600,
         "successfulJobsHistoryLimit": 2,
@@ -299,7 +299,7 @@
       "spec": {
         "schedule": "2 * * * *",
         "timeZone": "Europe/Stockholm",
-        "suspend": true,
+        "suspend": false,
         "concurrencyPolicy": "Forbid",
         "startingDeadlineSeconds": 3600,
         "successfulJobsHistoryLimit": 2,
@@ -526,7 +526,7 @@
       "spec": {
         "schedule": "20 3 * * *",
         "timeZone": "Europe/Stockholm",
-        "suspend": true,
+        "suspend": false,
         "concurrencyPolicy": "Forbid",
         "startingDeadlineSeconds": 3600,
         "successfulJobsHistoryLimit": 2,

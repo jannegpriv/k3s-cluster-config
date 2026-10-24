@@ -1,0 +1,112 @@
+{
+  "apiVersion": "monitoring.coreos.com/v1",
+  "kind": "PrometheusRule",
+  "metadata": {
+    "name": "analytics-feature-alerts",
+    "namespace": "openhab-analytics",
+    "labels": {
+      "app.kubernetes.io/name": "openhab-analytics",
+      "release": "kube-prometheus-stack"
+    }
+  },
+  "spec": {
+    "groups": [
+      {
+        "name": "openhab-analytics-features",
+        "rules": [
+          {
+            "alert": "AnalyticsFeatureInvalid",
+            "expr": "absent(openhab_analytics_feature_catalog_valid{namespace=\"openhab-analytics\"}) or openhab_analytics_feature_catalog_valid{namespace=\"openhab-analytics\"} == 0",
+            "for": "5m",
+            "labels": {
+              "severity": "warning",
+              "application": "openhab-analytics"
+            },
+            "annotations": {
+              "summary": "Deldygnskatalogen kan inte verifieras",
+              "description": "Kontrollera den separata deldygnskatalogen. Husets dygnsarkiv ers\u00e4tts inte."
+            }
+          },
+          {
+            "alert": "AnalyticsFeatureStale",
+            "expr": "openhab_analytics_feature_current_stale{namespace=\"openhab-analytics\"} == 1",
+            "for": "30m",
+            "labels": {
+              "severity": "warning",
+              "application": "openhab-analytics"
+            },
+            "annotations": {
+              "summary": "Dagens deldygn saknas eller \u00e4r \u00e4ldre \u00e4n 45 minuter",
+              "description": "Kontrollera den separata deldygnskatalogen. Husets dygnsarkiv ers\u00e4tts inte."
+            }
+          },
+          {
+            "alert": "AnalyticsFeatureCollectionFailed",
+            "expr": "openhab_analytics_feature_collection_failed{namespace=\"openhab-analytics\"} == 1 or openhab_analytics_feature_pending_days{namespace=\"openhab-analytics\"} > 0",
+            "for": "45m",
+            "labels": {
+              "severity": "warning",
+              "application": "openhab-analytics"
+            },
+            "annotations": {
+              "summary": "Deldygnsinsamlingen eller dess dygnsavslut beh\u00f6ver tillsyn",
+              "description": "Kontrollera den separata deldygnskatalogen. Husets dygnsarkiv ers\u00e4tts inte."
+            }
+          },
+          {
+            "alert": "AnalyticsFeatureBackupMissing",
+            "expr": "openhab_analytics_feature_backup_valid{namespace=\"openhab-analytics\"} == 0 or time() - openhab_analytics_feature_backup_timestamp_seconds{namespace=\"openhab-analytics\"} > 7200",
+            "for": "30m",
+            "labels": {
+              "severity": "warning",
+              "application": "openhab-analytics"
+            },
+            "annotations": {
+              "summary": "Deldygn saknar verifierad NAS-backup",
+              "description": "Kontrollera den separata deldygnskatalogen. Husets dygnsarkiv ers\u00e4tts inte."
+            }
+          },
+          {
+            "alert": "AnalyticsFeatureBackupFailed",
+            "expr": "openhab_analytics_feature_backup_failed{namespace=\"openhab-analytics\"} == 1",
+            "for": "15m",
+            "labels": {
+              "severity": "warning",
+              "application": "openhab-analytics"
+            },
+            "annotations": {
+              "summary": "Senaste deldygnsbackup misslyckades",
+              "description": "Kontrollera den separata deldygnskatalogen. Husets dygnsarkiv ers\u00e4tts inte."
+            }
+          },
+          {
+            "alert": "AnalyticsFeatureMaintenanceFailed",
+            "expr": "openhab_analytics_feature_maintenance_failed{namespace=\"openhab-analytics\"} == 1",
+            "for": "30m",
+            "labels": {
+              "severity": "warning",
+              "application": "openhab-analytics"
+            },
+            "annotations": {
+              "summary": "Deldygnens gallring beh\u00f6ver tillsyn",
+              "description": "Kontrollera den separata deldygnskatalogen. Husets dygnsarkiv ers\u00e4tts inte."
+            }
+          },
+          {
+            "alert": "AnalyticsFeatureDiskLow",
+            "expr": "openhab_analytics_feature_storage_valid{namespace=\"openhab-analytics\"} == 0 or openhab_analytics_feature_storage_available_bytes{namespace=\"openhab-analytics\"} / openhab_analytics_feature_storage_capacity_bytes{namespace=\"openhab-analytics\"} < 0.2",
+            "for": "15m",
+            "labels": {
+              "severity": "warning",
+              "application": "openhab-analytics"
+            },
+            "annotations": {
+              "summary": "Deldygnslagringen har mindre \u00e4n 20 procent ledigt",
+              "description": "Kontrollera den separata deldygnskatalogen. Husets dygnsarkiv ers\u00e4tts inte."
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
