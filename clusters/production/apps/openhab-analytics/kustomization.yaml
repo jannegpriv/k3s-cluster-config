@@ -28,3 +28,4 @@ resources:
   - maintenance-proof-20261023-job.json
   - features.json
   - 01-analytics-collect-features-proof-070.json
+  - 02-analytics-feature-mcp-proof-070.json

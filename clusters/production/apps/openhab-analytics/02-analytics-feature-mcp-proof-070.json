@@ -1,0 +1,119 @@
+{
+  "apiVersion": "batch/v1",
+  "kind": "Job",
+  "metadata": {
+    "name": "analytics-feature-mcp-proof-070",
+    "namespace": "openhab-analytics"
+  },
+  "spec": {
+    "backoffLimit": 0,
+    "activeDeadlineSeconds": 600,
+    "ttlSecondsAfterFinished": 172800,
+    "template": {
+      "metadata": {
+        "labels": {
+          "app.kubernetes.io/name": "openhab-analytics",
+          "analytics-role": "feature-proof"
+        },
+        "annotations": {
+          "analytics.openhab/credential-revision": "production-20261022"
+        }
+      },
+      "spec": {
+        "automountServiceAccountToken": false,
+        "serviceAccountName": "analytics",
+        "enableServiceLinks": false,
+        "securityContext": {
+          "runAsNonRoot": true,
+          "runAsUser": 10001,
+          "runAsGroup": 10001,
+          "fsGroup": 10001,
+          "fsGroupChangePolicy": "OnRootMismatch",
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
+        },
+        "nodeSelector": {
+          "kubernetes.io/hostname": "k3s-w-1",
+          "kubernetes.io/arch": "arm64"
+        },
+        "terminationGracePeriodSeconds": 30,
+        "volumes": [
+          {
+            "name": "data",
+            "persistentVolumeClaim": {
+              "claimName": "analytics-data",
+              "readOnly": true
+            }
+          },
+          {
+            "name": "tmp",
+            "emptyDir": {
+              "sizeLimit": "128Mi"
+            }
+          },
+          {
+            "name": "features",
+            "persistentVolumeClaim": {
+              "claimName": "analytics-features",
+              "readOnly": true
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "tunnel",
+            "image": "ghcr.io/jannegpriv/openhab-analytics-tunnel@sha256:129a26293ae91e15a6f63e0c341fdd3a1d9561f88912afc2cad7276569911f2b",
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "readOnlyRootFilesystem": true,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              }
+            },
+            "resources": {
+              "requests": {
+                "cpu": "100m",
+                "memory": "256Mi"
+              },
+              "limits": {
+                "cpu": "1000m",
+                "memory": "1Gi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "data",
+                "mountPath": "/store",
+                "readOnly": true
+              },
+              {
+                "name": "tmp",
+                "mountPath": "/tmp",
+                "readOnly": false
+              },
+              {
+                "name": "features",
+                "mountPath": "/features",
+                "readOnly": true
+              }
+            ],
+            "command": [
+              "python",
+              "/app/feature_probe.py"
+            ],
+            "args": []
+          }
+        ],
+        "imagePullSecrets": [
+          {
+            "name": "analytics-registry"
+          }
+        ],
+        "restartPolicy": "Never"
+      }
+    }
+  }
+}
