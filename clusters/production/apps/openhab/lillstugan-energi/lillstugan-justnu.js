@@ -1,7 +1,9 @@
 // "Lillstugan just nu" text and badges. Deployed to /openhab/conf/automation/js/lillstugan-justnu.js (JS Scripting).
 //
 // Builds the plain-Swedish summary ("Huset drar 1,7 kW. Batteriet levererar ...") and the
-// card badges for the Lillstugan page from the SigenStor items mirrored from Landet.
+// card badges for the Lillstugan page from the SigenStor items. Runs unchanged in both
+// openHABs: Huddinge (items mirrored from Landet) and Landet (openhab3, native items);
+// items that do not exist in an instance (the Lynk & Co on Landet) are skipped.
 // Sign conventions (checked against 48 h of history, load = grid + pv - battery):
 //   SigenStor_Battery_Power > 0 charging, < 0 discharging
 //   SigenStor_Grid_Power    > 0 import,   < 0 export
@@ -17,13 +19,18 @@ const SOURCES = [
   'LynkCo_Vehicle_Charger_Connection_Status', 'LynkCo_Vehicle_Charging_State', 'LynkCo_Vehicle_Charging_Power',
 ];
 
+function exists(name) {
+  return items.getItem(name, true) !== null;
+}
+
 function num(name) {
+  if (!exists(name)) return null;
   const v = items.getItem(name).numericState;
   return (v === null || Number.isNaN(v)) ? null : v;
 }
 
 function str(name) {
-  return items.getItem(name).state;
+  return exists(name) ? items.getItem(name).state : null;
 }
 
 // Swedish decimal comma, kW with one or two decimals.
@@ -102,6 +109,7 @@ function update() {
   else if (evState.startsWith('E') || evState.startsWith('F')) set('Lillstugan_Badge_Laddare', 'Fel|bad');
   else set('Lillstugan_Badge_Laddare', 'Okänd|idle');
 
+  if (!exists('LynkCo_Vehicle_Charging_State')) return;
   const carConn = String(str('LynkCo_Vehicle_Charger_Connection_Status') || '');
   const carState = String(str('LynkCo_Vehicle_Charging_State') || '');
   if (carState.includes('CHARGING') && !carState.includes('IDLE')) set('Lillstugan_Badge_Bil', 'Laddar|ok');
@@ -114,7 +122,7 @@ rules.JSRule({
   description: 'Bygger sammanfattningen och badgarna för sidan Lillstugan just nu',
   triggers: [
     triggers.SystemStartlevelTrigger(100),
-    ...SOURCES.map((name) => triggers.ItemStateChangeTrigger(name)),
+    ...SOURCES.filter(exists).map((name) => triggers.ItemStateChangeTrigger(name)),
   ],
   execute: () => {
     try {

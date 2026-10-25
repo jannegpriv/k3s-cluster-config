@@ -1,12 +1,15 @@
 # Lillstugan just nu
 
-Homey-style energy page in openHAB (Huddinge) for Lillstugan at Landet (Glava): a photo of
-the cottage with live labels (sol, hus, SigenStor, nät, laddare), a plain-Swedish "Just nu"
-summary, cards for SigenStor, solceller, elnät and the Sigen EVAC charger, and a Lynk & Co 08
-card. All values come from the SigenStor items mirrored from Landet via Remote openHAB.
+Homey-style energy page for Lillstugan at Landet (Glava): a photo of the cottage with live
+labels (sol, hus, SigenStor, nät, laddare), a plain-Swedish "Just nu" summary, and cards for
+SigenStor, solceller, elnät and the Sigen EVAC charger. The same files run in both openHABs:
+
+- **Landet** (Pi `openhab3`, http://192.168.1.86:8080): native SigenStor items, no Lynk & Co card.
+- **Huddinge** (K3s, http://192.168.50.75:30080): SigenStor items mirrored from Landet via
+  Remote openHAB, plus a Lynk & Co 08 card.
 
 Not applied by Flux. Files are copied into the pod / pushed via REST with
-`scripts/lillstugan-energi-deploy.sh [photo.jpg]`.
+`scripts/lillstugan-energi-deploy.sh [huddinge|landet] [photo.jpg]`.
 
 | File | What | Lives in |
 |---|---|---|
