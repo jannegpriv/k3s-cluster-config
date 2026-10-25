@@ -2,11 +2,12 @@
 
 One-screen overview for the house in Huddinge, in the same dark style as
 [Lillstugan just nu](../lillstugan-energi/README.md): a plain-Swedish "Just nu" summary with
-four tiles (ute, framledning, effekt nu, el idag), the IVT Premiumline HQ C8 heat pump,
+a photo of the house (chips for the car and the house) and four tiles (ute, framledning,
+effekt nu, el idag), the IVT Premiumline HQ C8 heat pump,
 electricity per phase (Currently One) and the Lynk & Co 08.
 Page: http://192.168.50.75:30080/page/huddinge_just_nu
 
-Not applied by Flux. Deploy with `scripts/huddinge-energi-deploy.sh`. The page reuses
+Not applied by Flux. Deploy with `scripts/huddinge-energi-deploy.sh [photo.jpg]`. The page reuses
 `lillstugan_kort` and `lillstugan_bil`, which `scripts/lillstugan-energi-deploy.sh huddinge` deploys.
 
 | File | What | Lives in |
@@ -25,8 +26,10 @@ Notes
   to `Huddinge_Huvudsakring`; orange from 80 %, red at 100 %.
 - Tomorrow's forecast comes from VäderKollen's public `smhi-forecast` edge function (SMHI data,
   no key), queried hourly for central Huddinge (city-level coordinates, not the address).
-- No photo yet; the hero can get one like Lillstugan's when there is a picture of the house.
+- The photo (`conf/html/huddinge.jpg`, 1380x908) is not in Git because the repo is public. The
+  address sign and number plate are blurred and the mailbox is cropped out; keep it that way
+  when replacing it. Chip positions are percentages in `widget-huddinge-hero.yaml`.
 - Read-only: nothing is sent to the heat pump, the meter or the car.
 
 Rollback: delete the page and the two widgets in Main UI, and remove `huddinge.items` and
-`huddinge-justnu.js` from `conf/items/` and `conf/automation/js/`.
+`huddinge-justnu.js` from `conf/items/` and `conf/automation/js/`, and `conf/html/huddinge.jpg`.

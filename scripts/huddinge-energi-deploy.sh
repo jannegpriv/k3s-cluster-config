@@ -2,13 +2,16 @@
 # Deploy the "Huddinge just nu" page to the Huddinge openHAB (K3s pod openhab-production-0):
 #   - huddinge.items          -> conf/items/
 #   - huddinge-justnu.js      -> conf/automation/js/   (text, badges, daily figures, forecast)
+#   - photo (optional)        -> conf/html/huddinge.jpg (served as /static/huddinge.jpg)
 #   - widgets + page          -> Main UI via REST (PUT, POST if new)
 # The page also uses lillstugan_kort and lillstugan_bil; deploy those with
 # scripts/lillstugan-energi-deploy.sh huddinge.
 # Token: ~/.secrets/camera-bridge/oh-token (or OPENHAB_TOKEN).
-# Usage: scripts/huddinge-energi-deploy.sh
+# The photo is NOT kept in Git (public repo); pass its path when it changes.
+# Usage: scripts/huddinge-energi-deploy.sh [photo.jpg]
 set -euo pipefail
 cd "$(dirname "$0")/.."
+PHOTO="${1:-}"
 DIR="clusters/production/apps/openhab/huddinge-energi"
 BASE="http://192.168.50.75:30080"
 HOST="janne@192.168.50.75"
@@ -18,12 +21,20 @@ TOKFILE="$HOME/.secrets/camera-bridge/oh-token"
 OPENHAB_TOKEN="${OPENHAB_TOKEN:-$( [ -s "$TOKFILE" ] && cat "$TOKFILE" )}"
 : "${OPENHAB_TOKEN:?no token: put it in $TOKFILE (Main UI > profile > Create new API token)}"
 
-scp -F /dev/null -q "$DIR/huddinge.items" "$DIR/huddinge-justnu.js" "${HOST}:/tmp/"
+files=("$DIR/huddinge.items" "$DIR/huddinge-justnu.js")
+[ -n "$PHOTO" ] && files+=("$PHOTO")
+scp -F /dev/null -q "${files[@]}" "${HOST}:/tmp/"
+photo_cmd=""
+if [ -n "$PHOTO" ]; then
+  pb="$(basename "$PHOTO")"
+  photo_cmd="kubectl -n openhab cp '/tmp/$pb' $POD:/openhab/conf/html/huddinge.jpg -c $C && rm -f '/tmp/$pb' &&"
+fi
 ssh -F /dev/null "$HOST" "export KUBECONFIG=\$HOME/.kube/config; set -e
+  $photo_cmd
   kubectl -n openhab cp /tmp/huddinge.items $POD:/openhab/conf/items/huddinge.items -c $C
   kubectl -n openhab cp /tmp/huddinge-justnu.js $POD:/openhab/conf/automation/js/huddinge-justnu.js -c $C
   rm -f /tmp/huddinge.items /tmp/huddinge-justnu.js
-  kubectl -n openhab exec $POD -c $C -- sh -c 'cd /openhab/conf; chown openhab:openhab items/huddinge.items automation/js/huddinge-justnu.js; ls -l items/huddinge.items automation/js/huddinge-justnu.js'"
+  kubectl -n openhab exec $POD -c $C -- sh -c 'cd /openhab/conf; chown openhab:openhab items/huddinge.items automation/js/huddinge-justnu.js html/huddinge.jpg 2>/dev/null; ls -l items/huddinge.items automation/js/huddinge-justnu.js html/huddinge.jpg 2>&1'"
 
 # YAML -> JSON with Ruby (stdlib on macOS; PyYAML is not installed there).
 put() { # kind file

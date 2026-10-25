@@ -1,29 +1,40 @@
 # Main UI custom widget "huddinge_hero": "Just nu" summary for the house in Huddinge next to
 # four big tiles (ute, framledning, effekt nu, el idag) and tomorrow's forecast from VäderKollen.
-# No photo yet; same dark style as lillstugan_hero. Deploy with scripts/huddinge-energi-deploy.sh.
+# Between them a photo of the house with two chips (car, house): conf/html/huddinge.jpg, served
+# as /static/ (not in Git; address sign and number plate blurred, mailbox cropped out).
+# Same dark style as lillstugan_hero. Deploy with scripts/huddinge-energi-deploy.sh [photo.jpg].
 uid: huddinge_hero
 tags:
   - huddinge
 props:
-  parameters: []
+  parameters:
+    - name: photo
+      label: Fotots URL
+      type: TEXT
+      default: /static/huddinge.jpg
   parameterGroups: []
 component: div
 config:
   stylesheet: |
     .hd-hero { display: flex; flex-wrap: wrap; align-items: stretch; gap: 16px 24px; background: #0f1615; color: #e8eeec;
-      border: 1px solid #22302e; border-radius: 16px; padding: 18px; margin: 6px 0;
+      border: 1px solid #22302e; border-radius: 16px; padding: 14px 16px; margin: 6px 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     .hd-text { flex: 1 1 300px; }
     .hd-brand { font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #8fa09d; }
-    .hd-kicker { font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-top: 12px; }
-    .hd-say { font-size: clamp(19px, 2vw, 25px); line-height: 1.32; font-weight: 600; margin: 8px 0; }
+    .hd-kicker { font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-top: 8px; }
+    .hd-say { font-size: clamp(17px, 1.6vw, 22px); line-height: 1.3; font-weight: 600; margin: 6px 0; }
     .hd-detail { font-size: 14px; line-height: 1.45; color: #9fb0ad; }
-    .hd-tiles { flex: 1.4 1 420px; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
-    .hd-tile { background: #141c1b; border: 1px solid #22302e; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; }
+    .hd-photo { flex: 1.1 1 300px; position: relative; height: 190px; align-self: center; border-radius: 12px; overflow: hidden; background: #1a2422; }
+    .hd-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 62%; filter: brightness(.7) saturate(.85) contrast(1.05); }
+    .hd-chip { position: absolute; padding: 4px 8px; border-radius: 8px; background: rgba(12,18,17,.8); backdrop-filter: blur(3px); white-space: nowrap; }
+    .hd-chip-v { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: clamp(12px, 1.2vw, 16px); }
+    .hd-chip-k { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #aebcb9; }
+    .hd-tiles { flex: 1 1 300px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .hd-tile { background: #141c1b; border: 1px solid #22302e; border-radius: 12px; padding: 8px 12px; display: flex; flex-direction: column; justify-content: space-between; }
     .hd-tile-k { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #aebcb9; }
-    .hd-tile-v { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: clamp(24px, 2.6vw, 34px); line-height: 1.1; margin-top: 8px; white-space: nowrap; }
+    .hd-tile-v { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: clamp(20px, 2vw, 28px); line-height: 1.1; margin-top: 2px; white-space: nowrap; }
     .hd-tile-u { font-size: 14px; color: #8fa09d; margin-left: 4px; }
-    .hd-tile-s { font-size: 12px; color: #9fb0ad; margin-top: 4px; }
+    .hd-tile-s { font-size: 11px; line-height: 1.3; color: #9fb0ad; margin-top: 4px; }
 slots:
   default:
     - component: div
@@ -59,6 +70,50 @@ slots:
                     class:
                       - hd-detail
                     content: "=['NULL', 'UNDEF'].includes(items.Huddinge_JustNu_Detalj.state) ? '' : items.Huddinge_JustNu_Detalj.state"
+          - component: div
+            config:
+              class:
+                - hd-photo
+            slots:
+              default:
+                - component: img
+                  config:
+                    class:
+                      - hd-img
+                    src: =props.photo || '/static/huddinge.jpg'
+                    alt: Huset i Huddinge
+                - component: oh-repeater
+                  config:
+                    for: c
+                    sourceType: array
+                    fragment: true
+                    in: >-
+                      =[
+                      {x: 3, y: 34, t: 'translate(0, -50%)', k: 'Lynk & Co 08', v: Math.round(Number.parseFloat(items.LynkCo_Vehicle_Battery_Level.numericState) || 0) + ' % · ' + ('' + items.Lillstugan_Badge_Bil.state).split('|')[0]},
+                      {x: 76, y: 70, t: 'translate(-50%, -50%)', k: 'Huset', v: ((Number.parseFloat(items.Currently_One_Currently_Using.numericState) || 0) / 1000).toFixed(1).replace('.', ',') + ' kW'}
+                      ]
+                  slots:
+                    default:
+                      - component: div
+                        config:
+                          class:
+                            - hd-chip
+                          style:
+                            left: =loop.c.x + '%'
+                            top: =loop.c.y + '%'
+                            transform: =loop.c.t
+                        slots:
+                          default:
+                            - component: div
+                              config:
+                                class:
+                                  - hd-chip-v
+                                content: =loop.c.v
+                            - component: div
+                              config:
+                                class:
+                                  - hd-chip-k
+                                content: =loop.c.k
           - component: div
             config:
               class:
