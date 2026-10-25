@@ -1,0 +1,125 @@
+# Main UI custom widget "lillstugan_bil": Lynk & Co 08 card in the same dark style as
+# lillstugan_kort (big battery/range/fuel values + rows). Address and position are left
+# out on purpose. Deploy with scripts/lillstugan-energi-deploy.sh.
+uid: lillstugan_bil
+tags:
+  - lillstugan
+props:
+  parameters: []
+  parameterGroups: []
+component: div
+config:
+  stylesheet: |
+    .ls-card { background: #141c1b; color: #e8eeec; border: 1px solid #22302e; border-radius: 14px;
+      padding: 18px 18px 10px; margin: 6px 0; height: calc(100% - 12px); box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .ls-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .ls-name { font-size: 22px; font-weight: 700; }
+    .ls-badge { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+    .ls-ok { background: rgba(76,175,80,.16); color: #7fd884; }
+    .ls-info { background: rgba(100,160,255,.16); color: #9cc2ff; }
+    .ls-idle { background: rgba(255,255,255,.08); color: #d5dedc; }
+    .ls-bad, .ls-warn { background: rgba(244,67,54,.16); color: #ff7b6e; }
+    .ls-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 14px; margin: 18px 0 12px; }
+    .ls-stat-v { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 32px; line-height: 1.1; }
+    .ls-stat-u { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 14px; color: #8fa09d; margin-left: 4px; }
+    .ls-stat-k { font-size: 13px; color: #9fb0ad; margin-top: 2px; }
+    .ls-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #22302e; font-size: 14px; }
+    .ls-row-l { color: #9fb0ad; }
+    .ls-row-v { font-family: "SF Mono", ui-monospace, Menlo, monospace; text-align: right; white-space: nowrap; }
+slots:
+  default:
+    - component: div
+      config:
+        class:
+          - ls-card
+      slots:
+        default:
+          - component: div
+            config:
+              class:
+                - ls-head
+            slots:
+              default:
+                - component: div
+                  config:
+                    class:
+                      - ls-name
+                    content: Lynk & Co 08
+                - component: span
+                  config:
+                    class: "=['ls-badge', 'ls-' + (('' + items.Lillstugan_Badge_Bil.state).split('|')[1] || 'idle')]"
+                    content: "=('' + items.Lillstugan_Badge_Bil.state).split('|')[0]"
+          - component: div
+            config:
+              class:
+                - ls-stats
+            slots:
+              default:
+                - component: oh-repeater
+                  config:
+                    for: s
+                    sourceType: array
+                    fragment: true
+                    in: >-
+                      =[
+                      {v: Math.round(Number.parseFloat(items.LynkCo_Vehicle_Battery_Level.numericState) || 0), u: '%', k: 'Batterinivå'},
+                      {v: Math.round((Number.parseFloat(items.LynkCo_Vehicle_Electric_Range.numericState) || 0) / 1000), u: 'km', k: 'Elräckvidd'},
+                      {v: (Number.parseFloat(items.LynkCo_Vehicle_Fuel_Level.numericState) || 0).toFixed(1).replace('.', ','), u: 'l', k: 'Bensin av ' + Math.round(Number.parseFloat(items.LynkCo_Vehicle_Tank_Capacity.numericState) || 60) + ' l'},
+                      {v: Math.round((Number.parseFloat(items.LynkCo_Vehicle_Fuel_Range.numericState) || 0) / 1000), u: 'km', k: 'Bensinräckvidd'}
+                      ]
+                  slots:
+                    default:
+                      - component: div
+                        slots:
+                          default:
+                            - component: div
+                              slots:
+                                default:
+                                  - component: span
+                                    config:
+                                      class:
+                                        - ls-stat-v
+                                      content: =loop.s.v
+                                  - component: span
+                                    config:
+                                      class:
+                                        - ls-stat-u
+                                      content: =loop.s.u
+                            - component: div
+                              config:
+                                class:
+                                  - ls-stat-k
+                                content: =loop.s.k
+          - component: oh-repeater
+            config:
+              for: r
+              sourceType: array
+              fragment: true
+              in: >-
+                =[
+                {l: 'Laddeffekt', v: ((Number.parseFloat(items.LynkCo_Vehicle_Charging_Power.numericState) || 0) / 1000).toFixed(1).replace('.', ',') + ' kW'},
+                {l: 'Tid till fullt', v: (Number.parseFloat(items.LynkCo_Vehicle_Time_to_Full_Charge.numericState) || 0) > 0 ? Math.round(Number.parseFloat(items.LynkCo_Vehicle_Time_to_Full_Charge.numericState) / 60) + ' min' : '–'},
+                {l: 'Batteri', v: (Number.parseFloat(items.LynkCo_Vehicle_Battery_Energy.numericState) || 0).toFixed(1).replace('.', ',') + ' av ' + (Number.parseFloat(items.LynkCo_Vehicle_Battery_Capacity.numericState) || 0).toFixed(1).replace('.', ',') + ' kWh'},
+                {l: 'Mätarställning', v: Math.round((Number.parseFloat(items.LynkCo_Vehicle_Odometer.numericState) || 0) / 1000) + ' km'},
+                {l: 'Innertemperatur', v: ('' + (items.LynkCo_Vehicle_Interior_Temperature.displayState || items.LynkCo_Vehicle_Interior_Temperature.state)).replace('.', ',')},
+                {l: 'Låst', v: items.LynkCo_Vehicle_Lock.state == 'ON' ? 'Ja' : 'Nej'}
+                ]
+            slots:
+              default:
+                - component: div
+                  config:
+                    class:
+                      - ls-row
+                  slots:
+                    default:
+                      - component: span
+                        config:
+                          class:
+                            - ls-row-l
+                          content: =loop.r.l
+                      - component: span
+                        config:
+                          class:
+                            - ls-row-v
+                          content: =loop.r.v

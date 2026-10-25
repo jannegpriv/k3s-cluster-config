@@ -1,0 +1,159 @@
+# Main UI layout page "Lillstugan just nu" (uid: lillstugan_just_nu). Homey-style energy
+# overview for Lillstugan (Landet, Glava) built from the SigenStor items mirrored into
+# Huddinge, plus the Lynk & Co 08. One widget per oh-grid-col (a col renders only its
+# first child). Read-only: no controls. Deploy with scripts/lillstugan-energi-deploy.sh.
+# Separate from the "Solel", "Solel Historik" and "SigenStor AI Utvärdering" pages.
+uid: lillstugan_just_nu
+tags:
+  - lillstugan
+props:
+  parameters: []
+  parameterGroups: []
+component: oh-layout-page
+config:
+  label: Lillstugan just nu
+  sidebar: true
+  order: "60"
+slots:
+  default:
+    - component: oh-block
+      config: {}
+      slots:
+        default:
+          - component: oh-grid-row
+            config: {}
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                  slots:
+                    default:
+                      - component: widget:lillstugan_hero
+                        config: {}
+    - component: oh-block
+      config: {}
+      slots:
+        default:
+          - component: oh-grid-row
+            config: {}
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    medium: "50"
+                    xlarge: "33"
+                  slots:
+                    default:
+                      - component: widget:lillstugan_kort
+                        config:
+                          title: SigenStor 18 kWh
+                          mainItem: SigenStor_Battery_SOC
+                          badgeItem: Lillstugan_Badge_Batteri
+                          barItem: SigenStor_Battery_SOC
+                          r1Label: Energi kvar
+                          r1Item: SigenStor_Avail_Discharge_Cap
+                          r2Label: Celltemperatur
+                          r2Item: SigenStor_Cell_Temp
+                          r3Label: Växelriktare
+                          r3Item: SigenStor_Inv_Temp
+                          r4Label: Laddat idag
+                          r4Item: SigenStor_Inv_Charged_Today
+                          r5Label: Urladdat idag
+                          r5Item: SigenStor_Inv_Discharged_Today
+                          r6Label: Totalt laddat
+                          r6Item: SigenStor_Total_Batt_Charged
+                          r7Label: Totalt urladdat
+                          r7Item: SigenStor_Total_Batt_Discharged
+                          r8Label: EMS-läge
+                          r8Item: SigenStor_EMS_Mode
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    medium: "50"
+                    xlarge: "33"
+                  slots:
+                    default:
+                      - component: widget:lillstugan_kort
+                        config:
+                          title: Solceller · 8 paneler
+                          mainItem: SigenStor_PV_Power
+                          badgeItem: Lillstugan_Badge_Sol
+                          r1Label: Producerat idag
+                          r1Item: SigenStor_PV_Today
+                          r2Label: Producerat igår
+                          r2Item: SigenStor_PV_Yesterday
+                          r3Label: Totalt sedan start
+                          r3Item: SigenStor_Total_PV
+                          r4Label: Strängspänning
+                          r4Item: SigenStor_PV1_Voltage
+                          r5Label: Strängeffekt
+                          r5Item: SigenStor_PV1_Power
+                          r6Label: Växelriktarstatus
+                          r6Item: SigenStor_Inv_State
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    medium: "100"
+                    xlarge: "33"
+                  slots:
+                    default:
+                      - component: widget:lillstugan_kort
+                        config:
+                          title: Elnät
+                          mainItem: SigenStor_Grid_Power
+                          badgeItem: Lillstugan_Badge_Nat
+                          r1Label: Köpt idag
+                          r1Item: SigenStor_Import_Today
+                          r2Label: Sålt idag
+                          r2Item: SigenStor_Export_Today
+                          r3Label: Förbrukning idag
+                          r3Item: SigenStor_Load_Today
+                          r4Label: Fas A
+                          r4Item: SigenStor_Phase_A_Power
+                          r5Label: Fas B
+                          r5Item: SigenStor_Phase_B_Power
+                          r6Label: Fas C
+                          r6Item: SigenStor_Phase_C_Power
+                          r7Label: Totalt köpt
+                          r7Item: SigenStor_Total_Import
+                          r8Label: Totalt sålt
+                          r8Item: SigenStor_Total_Export
+    - component: oh-block
+      config: {}
+      slots:
+        default:
+          - component: oh-grid-row
+            config: {}
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "60"
+                  slots:
+                    default:
+                      - component: widget:lillstugan_bil
+                        config: {}
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    large: "40"
+                  slots:
+                    default:
+                      - component: widget:lillstugan_kort
+                        config:
+                          title: Laddare · Sigen EVAC
+                          mainItem: SigenStor_EVAC_Power
+                          badgeItem: Lillstugan_Badge_Laddare
+                          r1Label: Status
+                          r1Item: SigenStor_EVAC_State
+                          r2Label: Laddat totalt
+                          r2Item: SigenStor_EVAC_Total_Energy
+                          r3Label: Märkeffekt
+                          r3Item: SigenStor_EVAC_Rated_Power
+                          r4Label: Ingångssäkring
+                          r4Item: SigenStor_EVAC_Breaker
+                          r5Label: Larm
+                          r5Item: SigenStor_EVAC_Alarm_Summary

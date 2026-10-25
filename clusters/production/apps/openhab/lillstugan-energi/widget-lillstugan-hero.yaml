@@ -1,0 +1,169 @@
+# Main UI custom widget "lillstugan_hero": "Just nu" summary next to a photo of Lillstugan
+# with live power labels pinned to the roof (sol), facade (hus), SigenStor cabinet,
+# grid pole (nät) and the charger. Photo: conf/html/lillstugan.jpg (served as /static/).
+# Marker coordinates are percent of the photo (x, y = anchor, ly = label end of the line);
+# when the photo is replaced, adjust them here. Deploy with scripts/lillstugan-energi-deploy.sh.
+uid: lillstugan_hero
+tags:
+  - lillstugan
+props:
+  parameters:
+    - name: photo
+      label: Fotots URL
+      type: TEXT
+      default: /static/lillstugan.jpg
+  parameterGroups: []
+component: div
+config:
+  stylesheet: |
+    .ls-hero { display: grid; grid-template-columns: 1fr; gap: 18px; background: #0f1615; color: #e8eeec;
+      border: 1px solid #22302e; border-radius: 16px; padding: 18px; margin: 6px 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .ls-brand { font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #8fa09d; }
+    .ls-kicker { font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-top: 18px; }
+    .ls-say { font-size: clamp(20px, 2.3vw, 28px); line-height: 1.32; font-weight: 600; margin: 10px 0; }
+    .ls-detail { font-size: 14px; line-height: 1.45; color: #9fb0ad; }
+    .ls-photo { position: relative; width: 100%; aspect-ratio: 1600 / 920; border-radius: 12px; overflow: hidden; background: #1a2422; }
+    .ls-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(.62) saturate(.85) contrast(1.05); }
+    .ls-shade { position: absolute; inset: 0; background: radial-gradient(ellipse at 55% 50%, rgba(0,0,0,0) 40%, rgba(10,16,15,.55) 100%); }
+    .ls-mk { position: absolute; inset: 0; pointer-events: none; }
+    .ls-dot { position: absolute; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.25); }
+    .ls-line { position: absolute; width: 1px; background: rgba(255,255,255,.75); }
+    .ls-lab { position: absolute; padding: 5px 9px; border-radius: 8px; background: rgba(12,18,17,.78); backdrop-filter: blur(3px); white-space: nowrap; text-align: left; }
+    .ls-lab-v { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: clamp(13px, 1.6vw, 20px); font-weight: 500; }
+    .ls-lab-k { font-size: clamp(9px, .9vw, 11px); letter-spacing: .1em; text-transform: uppercase; color: #aebcb9; }
+    .ls-lab-c { display: inline-block; margin-top: 4px; font-size: clamp(9px, .9vw, 11px); font-weight: 600; padding: 2px 7px; border-radius: 999px; background: rgba(255,255,255,.12); }
+    .ls-temp { position: absolute; left: 2.5%; top: 4%; }
+slots:
+  default:
+    - component: div
+      config:
+        class:
+          - ls-hero
+        # Two columns (text | photo) on wide screens, switched on the screen width.
+        # Stylesheet rules are scoped as descendants of the root, hence this inner div.
+        style:
+          grid-template-columns: "=screen.width >= 1100 ? 'minmax(280px, 34%) 1fr' : '1fr'"
+          align-items: center
+      slots:
+        default:
+          - component: div
+            slots:
+              default:
+                - component: div
+                  config:
+                    class:
+                      - ls-brand
+                    content: Lillstugan · Sigenergy
+                - component: div
+                  config:
+                    class:
+                      - ls-kicker
+                    content: Just nu
+                - component: div
+                  config:
+                    class:
+                      - ls-say
+                    content: "=['NULL', 'UNDEF'].includes(items.Lillstugan_JustNu.state) ? 'Väntar på värden från Lillstugan…' : items.Lillstugan_JustNu.state"
+                - component: div
+                  config:
+                    class:
+                      - ls-detail
+                    content: "=['NULL', 'UNDEF'].includes(items.Lillstugan_JustNu_Detalj.state) ? '' : items.Lillstugan_JustNu_Detalj.state"
+          - component: div
+            config:
+              class:
+                - ls-photo
+            slots:
+              default:
+                - component: img
+                  config:
+                    class:
+                      - ls-img
+                    src: =props.photo || '/static/lillstugan.jpg'
+                    alt: Lillstugan
+                - component: div
+                  config:
+                    class:
+                      - ls-shade
+                - component: div
+                  config:
+                    class:
+                      - ls-lab
+                      - ls-temp
+                  slots:
+                    default:
+                      - component: div
+                        config:
+                          class:
+                            - ls-lab-v
+                          content: "=(@'Remote_openHAB_Server_Landet_Item_Gateway_Device_Outdoor_Temperature' + '').replace('.', ',')"
+                      - component: div
+                        config:
+                          class:
+                            - ls-lab-k
+                          content: Utomhus
+                - component: oh-repeater
+                  config:
+                    for: m
+                    sourceType: array
+                    fragment: true
+                    in: >-
+                      =[
+                      {x: 63, y: 40, ly: 22, k: 'Sol', v: Math.abs(Number.parseFloat(items.SigenStor_PV_Power.numericState) || 0).toFixed(1).replace('.', ',') + ' kW', c: ''},
+                      {x: 27.6, y: 36, ly: 24, k: 'Nät', v: Math.abs(Number.parseFloat(items.SigenStor_Grid_Power.numericState) || 0).toFixed(1).replace('.', ',') + ' kW', c: ('' + items.Lillstugan_Badge_Nat.state).split('|')[0].split(' · ')[0]},
+                      {x: 35, y: 62, ly: 80, k: 'SigenStor', v: Math.abs(Number.parseFloat(items.SigenStor_Battery_Power.numericState) || 0).toFixed(1).replace('.', ',') + ' kW', c: ('' + items.Lillstugan_Badge_Batteri.state).split('|')[0].split(' · ')[0] + ' · ' + Math.round(Number.parseFloat(items.SigenStor_Battery_SOC.numericState) || 0) + ' %'},
+                      {x: 70, y: 60, ly: 82, k: 'Hus', v: Math.abs(Number.parseFloat(items.SigenStor_Load_Power.numericState) || 0).toFixed(1).replace('.', ',') + ' kW', c: ''},
+                      {x: 11, y: 0, ly: 76, k: 'Laddare', v: Math.abs(Number.parseFloat(items.SigenStor_EVAC_Power.numericState) || 0).toFixed(1).replace('.', ',') + ' kW', c: ('' + items.Lillstugan_Badge_Laddare.state).split('|')[0].split(' · ')[0], nodot: true}
+                      ]
+                  slots:
+                    default:
+                      - component: div
+                        config:
+                          class:
+                            - ls-mk
+                        slots:
+                          default:
+                            - component: div
+                              config:
+                                visible: =!loop.m.nodot
+                                class:
+                                  - ls-dot
+                                style:
+                                  left: =loop.m.x + '%'
+                                  top: =loop.m.y + '%'
+                            - component: div
+                              config:
+                                visible: =!loop.m.nodot
+                                class:
+                                  - ls-line
+                                style:
+                                  left: =loop.m.x + '%'
+                                  top: =Math.min(loop.m.y, loop.m.ly) + '%'
+                                  height: =Math.abs(loop.m.y - loop.m.ly) + '%'
+                            - component: div
+                              config:
+                                class:
+                                  - ls-lab
+                                style:
+                                  left: =loop.m.x + '%'
+                                  top: =loop.m.ly + '%'
+                                  transform: "=loop.m.nodot ? 'translate(-50%, 0)' : (loop.m.ly < loop.m.y ? 'translate(-50%, -100%)' : 'translate(-50%, 0)')"
+                              slots:
+                                default:
+                                  - component: div
+                                    config:
+                                      class:
+                                        - ls-lab-v
+                                      content: =loop.m.v
+                                  - component: div
+                                    config:
+                                      class:
+                                        - ls-lab-k
+                                      content: =loop.m.k
+                                  - component: div
+                                    config:
+                                      visible: =!!loop.m.c
+                                      class:
+                                        - ls-lab-c
+                                      content: =loop.m.c

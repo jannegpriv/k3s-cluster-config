@@ -1,0 +1,9 @@
+// Text items for the "Lillstugan just nu" page, written by lillstugan-justnu.js.
+// Badges are "text|tone" where tone is one of ok, warn, bad, idle, info.
+String Lillstugan_JustNu         "Lillstugan just nu"
+String Lillstugan_JustNu_Detalj  "Lillstugan just nu, detalj"
+String Lillstugan_Badge_Batteri  "Lillstugan badge batteri"
+String Lillstugan_Badge_Sol      "Lillstugan badge sol"
+String Lillstugan_Badge_Nat      "Lillstugan badge nät"
+String Lillstugan_Badge_Laddare  "Lillstugan badge laddare"
+String Lillstugan_Badge_Bil      "Lillstugan badge bil"

@@ -1,0 +1,134 @@
+# Main UI custom widget "lillstugan_kort": dark energy card with a big value, a badge,
+# an optional percentage bar and up to eight label/value rows. Used by the
+# "Lillstugan just nu" page. Deploy with scripts/lillstugan-energi-deploy.sh.
+# Badge items hold "text|tone" (tone: ok, warn, bad, idle, info), see lillstugan-justnu.js.
+uid: lillstugan_kort
+tags:
+  - lillstugan
+props:
+  parameters:
+    - name: title
+      label: Rubrik
+      type: TEXT
+    - name: mainItem
+      label: Huvudvärde
+      type: TEXT
+      context: item
+    - name: badgeItem
+      label: Badge (String-item "text|ton")
+      type: TEXT
+      context: item
+    - name: barItem
+      label: Stapel (0-100 %)
+      type: TEXT
+      context: item
+    - { name: r1Label, label: Rad 1 etikett, type: TEXT }
+    - { name: r1Item, label: Rad 1 item, type: TEXT, context: item }
+    - { name: r2Label, label: Rad 2 etikett, type: TEXT }
+    - { name: r2Item, label: Rad 2 item, type: TEXT, context: item }
+    - { name: r3Label, label: Rad 3 etikett, type: TEXT }
+    - { name: r3Item, label: Rad 3 item, type: TEXT, context: item }
+    - { name: r4Label, label: Rad 4 etikett, type: TEXT }
+    - { name: r4Item, label: Rad 4 item, type: TEXT, context: item }
+    - { name: r5Label, label: Rad 5 etikett, type: TEXT }
+    - { name: r5Item, label: Rad 5 item, type: TEXT, context: item }
+    - { name: r6Label, label: Rad 6 etikett, type: TEXT }
+    - { name: r6Item, label: Rad 6 item, type: TEXT, context: item }
+    - { name: r7Label, label: Rad 7 etikett, type: TEXT }
+    - { name: r7Item, label: Rad 7 item, type: TEXT, context: item }
+    - { name: r8Label, label: Rad 8 etikett, type: TEXT }
+    - { name: r8Item, label: Rad 8 item, type: TEXT, context: item }
+  parameterGroups: []
+component: div
+config:
+  stylesheet: |
+    .ls-card { background: #141c1b; color: #e8eeec; border: 1px solid #22302e; border-radius: 14px;
+      padding: 18px 18px 10px; margin: 6px 0; height: calc(100% - 12px); box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .ls-title { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #cfd8d6; }
+    .ls-main { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 10px; margin: 12px 0 10px; }
+    .ls-num { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 40px; line-height: 1; font-weight: 500; }
+    .ls-unit { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 15px; color: #8fa09d; }
+    .ls-badge { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; align-self: center; }
+    .ls-ok { background: rgba(76,175,80,.16); color: #7fd884; }
+    .ls-warn { background: rgba(244,67,54,.16); color: #ff7b6e; }
+    .ls-bad { background: rgba(244,67,54,.28); color: #ffb0a8; }
+    .ls-info { background: rgba(100,160,255,.16); color: #9cc2ff; }
+    .ls-idle { background: rgba(255,255,255,.08); color: #d5dedc; }
+    .ls-bar { height: 10px; border-radius: 999px; background: #24302e; overflow: hidden; margin: 4px 0 8px; }
+    .ls-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f0a030, #4caf50); min-width: 6px; }
+    .ls-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #22302e; font-size: 14px; }
+    .ls-row-l { color: #9fb0ad; }
+    .ls-row-v { font-family: "SF Mono", ui-monospace, Menlo, monospace; text-align: right; white-space: nowrap; }
+slots:
+  default:
+    - component: div
+      config:
+        class:
+          - ls-card
+      slots:
+        default:
+          - component: div
+            config:
+              class:
+                - ls-title
+              content: =props.title
+          - component: div
+            config:
+              class:
+                - ls-main
+            slots:
+              default:
+                - component: span
+                  config:
+                    class:
+                      - ls-num
+                    content: "=props.mainItem ? ('' + (items[props.mainItem].displayState || items[props.mainItem].state)).split(' ')[0].replace('.', ',') : ''"
+                - component: span
+                  config:
+                    class:
+                      - ls-unit
+                    content: "=props.mainItem ? ('' + (items[props.mainItem].displayState || items[props.mainItem].state)).split(' ').slice(1).join(' ') : ''"
+                - component: span
+                  config:
+                    visible: =!!props.badgeItem
+                    class: "=['ls-badge', 'ls-' + (props.badgeItem ? (('' + items[props.badgeItem].state).split('|')[1] || 'idle') : 'idle')]"
+                    content: "=props.badgeItem ? ('' + items[props.badgeItem].state).split('|')[0] : ''"
+          - component: div
+            config:
+              visible: =!!props.barItem
+              class:
+                - ls-bar
+            slots:
+              default:
+                - component: div
+                  config:
+                    class:
+                      - ls-bar-fill
+                    style:
+                      width: "=(props.barItem ? Math.max(0, Math.min(100, Number.parseFloat(items[props.barItem].numericState) || 0)) : 0) + '%'"
+          - component: oh-repeater
+            config:
+              for: row
+              sourceType: array
+              fragment: true
+              in: "=[{l: props.r1Label, i: props.r1Item}, {l: props.r2Label, i: props.r2Item}, {l: props.r3Label, i: props.r3Item}, {l: props.r4Label, i: props.r4Item}, {l: props.r5Label, i: props.r5Item}, {l: props.r6Label, i: props.r6Item}, {l: props.r7Label, i: props.r7Item}, {l: props.r8Label, i: props.r8Item}]"
+              filter: loop.row.i && loop.row.l
+            slots:
+              default:
+                - component: div
+                  config:
+                    class:
+                      - ls-row
+                  slots:
+                    default:
+                      - component: span
+                        config:
+                          class:
+                            - ls-row-l
+                          content: =loop.row.l
+                      - component: span
+                        config:
+                          class:
+                            - ls-row-v
+                          content: "=['NULL', 'UNDEF'].includes(items[loop.row.i].state) ? '–' : ('' + (items[loop.row.i].displayState || items[loop.row.i].state)).replace('.', ',')"
