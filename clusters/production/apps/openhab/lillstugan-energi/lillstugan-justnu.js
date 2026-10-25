@@ -7,8 +7,10 @@
 // Sign conventions (checked against 48 h of history, load = grid + pv - battery):
 //   SigenStor_Battery_Power > 0 charging, < 0 discharging
 //   SigenStor_Grid_Power    > 0 import,   < 0 export
-// Read-only towards SigenStor: only the Lillstugan_* String items are updated.
-const { rules, triggers, items, log } = require('openhab');
+// A second rule computes "förbrukning igår" and "senaste dygnet" every 5 min from rrd4j deltas
+// of the cumulative SigenStor_Total_Load meter.
+// Read-only towards SigenStor: only the Lillstugan_* items are updated.
+const { rules, triggers, items, log, time } = require('openhab');
 const logger = log('lillstugan');
 
 const IDLE_KW = 0.05;
@@ -117,6 +119,33 @@ function update() {
   else set('Lillstugan_Badge_Bil', 'Ej inkopplad|idle');
 }
 
+// PersistedState (openhab-js 5) to a number.
+function pnum(s) {
+  if (s === null || s === undefined) return null;
+  const v = s.numericState !== undefined ? s.numericState : Number.parseFloat(s.state);
+  return (v === null || Number.isNaN(v)) ? null : v;
+}
+
+function setKwh(name, value) {
+  const item = items.getItem(name);
+  const cur = item.numericState;
+  if (cur === null || Number.isNaN(cur) || Math.abs(cur - value) >= 0.01) item.postUpdate(`${value.toFixed(2)} kWh`);
+}
+
+function consumption() {
+  if (!exists('SigenStor_Total_Load')) return;
+  const meter = items.getItem('SigenStor_Total_Load');
+  const at = (zdt) => pnum(meter.persistence.persistedState(zdt, 'rrd4j'));
+  const now = time.toZDT();
+  const midnight = now.truncatedTo(time.ChronoUnit.DAYS);
+  const today0 = at(midnight);
+  const yesterday0 = at(midnight.minusDays(1));
+  if (today0 !== null && yesterday0 !== null) setKwh('Lillstugan_Forbrukning_Igar', Math.max(0, today0 - yesterday0));
+  const cur = num('SigenStor_Total_Load');
+  const dayAgo = at(now.minusHours(24));
+  if (cur !== null && dayAgo !== null) setKwh('Lillstugan_Forbrukning_24h', Math.max(0, cur - dayAgo));
+}
+
 rules.JSRule({
   name: 'Lillstugan just nu: text och badges',
   description: 'Bygger sammanfattningen och badgarna för sidan Lillstugan just nu',
@@ -133,4 +162,19 @@ rules.JSRule({
   },
   tags: ['lillstugan'],
   id: 'lillstugan-justnu',
+});
+
+rules.JSRule({
+  name: 'Lillstugan just nu: förbrukning igår och senaste dygnet',
+  description: 'Deltan på SigenStor_Total_Load i rrd4j för sidan Lillstugan just nu',
+  triggers: [triggers.SystemStartlevelTrigger(100), triggers.GenericCronTrigger('0 */5 * * * ?')],
+  execute: () => {
+    try {
+      consumption();
+    } catch (e) {
+      logger.warn(`consumption failed: ${e}`);
+    }
+  },
+  tags: ['lillstugan'],
+  id: 'lillstugan-forbrukning',
 });

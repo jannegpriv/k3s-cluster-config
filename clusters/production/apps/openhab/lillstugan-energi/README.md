@@ -13,8 +13,8 @@ Not applied by Flux. Files are copied into the pod / pushed via REST with
 
 | File | What | Lives in |
 |---|---|---|
-| `lillstugan.items` | String items for the summary and card badges | `conf/items/` |
-| `lillstugan-justnu.js` | JS Scripting rule that writes those items on every SigenStor change | `conf/automation/js/` |
+| `lillstugan.items` | summary, card badges, förbrukning igår / senaste dygnet | `conf/items/` |
+| `lillstugan-justnu.js` | JS Scripting rules: text/badges on every SigenStor change, consumption every 5 min | `conf/automation/js/` |
 | `widget-lillstugan-hero.yaml` | photo + markers + "Just nu" text | Main UI widget (jsondb) |
 | `widget-lillstugan-kort.yaml` | reusable dark card (big value, badge, bar, 8 rows) | Main UI widget (jsondb) |
 | `widget-lillstugan-bil.yaml` | Lynk & Co 08 card | Main UI widget (jsondb) |
@@ -23,6 +23,8 @@ Not applied by Flux. Files are copied into the pod / pushed via REST with
 Notes
 - The photo (`conf/html/lillstugan.jpg`, 1600x920) is not in Git because the repo is public.
   Marker positions are percentages of the photo, set in `widget-lillstugan-hero.yaml`.
+- "Förbrukning igår" and "senaste dygnet" (Elnät card) are rrd4j deltas of the cumulative
+  `SigenStor_Total_Load`, computed every 5 min by the rule `lillstugan-forbrukning`.
 - Sign conventions: battery power > 0 charging, grid power > 0 import (verified against history).
 - No spot price source exists in either openHAB (checked 2026-10-25), so there is no spot price card.
 - Independent of the "Solel", "Solel Historik" and "SigenStor AI Utvärdering" pages.

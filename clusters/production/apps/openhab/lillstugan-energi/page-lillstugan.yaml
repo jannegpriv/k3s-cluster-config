@@ -110,16 +110,16 @@ slots:
                           r2Item: SigenStor_Export_Today
                           r3Label: Förbrukning idag
                           r3Item: SigenStor_Load_Today
-                          r4Label: Fas A
-                          r4Item: SigenStor_Phase_A_Power
-                          r5Label: Fas B
-                          r5Item: SigenStor_Phase_B_Power
-                          r6Label: Fas C
-                          r6Item: SigenStor_Phase_C_Power
-                          r7Label: Totalt köpt
-                          r7Item: SigenStor_Total_Import
-                          r8Label: Totalt sålt
-                          r8Item: SigenStor_Total_Export
+                          r4Label: Förbrukning igår
+                          r4Item: Lillstugan_Forbrukning_Igar
+                          r5Label: Förbrukning senaste dygnet
+                          r5Item: Lillstugan_Forbrukning_24h
+                          r6Label: Fas A
+                          r6Item: SigenStor_Phase_A_Power
+                          r7Label: Fas B
+                          r7Item: SigenStor_Phase_B_Power
+                          r8Label: Fas C
+                          r8Item: SigenStor_Phase_C_Power
     - component: oh-block
       config: {}
       slots:
