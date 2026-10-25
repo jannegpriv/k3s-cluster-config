@@ -1,0 +1,83 @@
+# Main UI layout page "Huddinge just nu" (uid: huddinge_just_nu). One-screen overview for the
+# house in Huddinge: summary + tiles, IVT heat pump, electricity per phase and the Lynk & Co 08.
+# Reuses lillstugan_kort and lillstugan_bil from ../lillstugan-energi (deploy those first).
+# One widget per oh-grid-col (a col renders only its first child). Read-only: no controls.
+# Deploy with scripts/huddinge-energi-deploy.sh.
+uid: huddinge_just_nu
+tags:
+  - huddinge
+props:
+  parameters: []
+  parameterGroups: []
+component: oh-layout-page
+config:
+  label: Huddinge just nu
+  sidebar: true
+  order: "59"
+slots:
+  default:
+    - component: oh-block
+      config: {}
+      slots:
+        default:
+          - component: oh-grid-row
+            config: {}
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                  slots:
+                    default:
+                      - component: widget:huddinge_hero
+                        config: {}
+    - component: oh-block
+      config: {}
+      slots:
+        default:
+          - component: oh-grid-row
+            config: {}
+            slots:
+              default:
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    medium: "50"
+                    large: "33"
+                  slots:
+                    default:
+                      - component: widget:lillstugan_kort
+                        config:
+                          title: Värmepump · IVT Premiumline HQ C8
+                          mainItem: Heat_carrier_Forward_Value_as_Number
+                          badgeItem: Huddinge_Badge_BVP
+                          r1Label: Retur
+                          r1Item: Heat_carrier_Return_Value_as_Number
+                          r2Label: Börvärde framledning
+                          r2Item: Heating_Setpoint_Value_as_Number
+                          r3Label: Kompressor senaste dygnet
+                          r3Item: Huddinge_Kompressor_24h
+                          r4Label: Tillskott senaste dygnet
+                          r4Item: Huddinge_Tillskott_24h
+                          r5Label: Varmvatten
+                          r5Item: Warm_Water_Temperature_Value_as_Number
+                          r6Label: Köldbärare in
+                          r6Item: Brine_In_Evaporator_Value_as_Number
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    medium: "50"
+                    large: "33"
+                  slots:
+                    default:
+                      - component: widget:huddinge_el
+                        config: {}
+                - component: oh-grid-col
+                  config:
+                    width: "100"
+                    medium: "100"
+                    large: "33"
+                  slots:
+                    default:
+                      - component: widget:lillstugan_bil
+                        config: {}

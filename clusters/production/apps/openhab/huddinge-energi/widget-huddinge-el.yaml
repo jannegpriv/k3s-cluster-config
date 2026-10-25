@@ -1,0 +1,139 @@
+# Main UI custom widget "huddinge_el": house electricity card for Huddinge (Currently One meter):
+# power now, kWh since 00:00 and over the last 24 h, one bar per phase (current against the
+# main fuse in Huddinge_Huvudsakring, orange from 80 %, red at 100 %), highest phase today and
+# voltages. Same dark style as lillstugan_kort. Deploy with scripts/huddinge-energi-deploy.sh.
+uid: huddinge_el
+tags:
+  - huddinge
+props:
+  parameters: []
+  parameterGroups: []
+component: div
+config:
+  stylesheet: |
+    .hd-card { background: #141c1b; color: #e8eeec; border: 1px solid #22302e; border-radius: 14px;
+      padding: 18px 18px 10px; margin: 6px 0; height: calc(100% - 12px); box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .hd-title { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #cfd8d6; }
+    .hd-main { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 10px; margin: 12px 0 10px; }
+    .hd-num { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 40px; line-height: 1; font-weight: 500; }
+    .hd-unit { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 15px; color: #8fa09d; }
+    .hd-badge { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; align-self: center; }
+    .hd-ok { background: rgba(76,175,80,.16); color: #7fd884; }
+    .hd-warn { background: rgba(240,160,48,.18); color: #ffc46b; }
+    .hd-bad { background: rgba(244,67,54,.28); color: #ffb0a8; }
+    .hd-idle { background: rgba(255,255,255,.08); color: #d5dedc; }
+    .hd-phase { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 10px; padding: 7px 0; font-size: 14px; }
+    .hd-phase-l { color: #9fb0ad; font-weight: 600; }
+    .hd-bar { height: 12px; border-radius: 999px; background: #24302e; overflow: hidden; }
+    .hd-fill { height: 100%; border-radius: 999px; min-width: 6px; }
+    .hd-fill-ok { background: linear-gradient(90deg, #2e7d32, #4caf50); }
+    .hd-fill-warn { background: linear-gradient(90deg, #c77700, #f0a030); }
+    .hd-fill-bad { background: linear-gradient(90deg, #c62828, #f44336); }
+    .hd-phase-v { font-family: "SF Mono", ui-monospace, Menlo, monospace; white-space: nowrap; min-width: 128px; text-align: right; }
+    .hd-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #22302e; font-size: 14px; }
+    .hd-row-l { color: #9fb0ad; }
+    .hd-row-v { font-family: "SF Mono", ui-monospace, Menlo, monospace; text-align: right; white-space: nowrap; }
+slots:
+  default:
+    - component: div
+      config:
+        class:
+          - hd-card
+      slots:
+        default:
+          - component: div
+            config:
+              class:
+                - hd-title
+              content: El · huset
+          - component: div
+            config:
+              class:
+                - hd-main
+            slots:
+              default:
+                - component: span
+                  config:
+                    class:
+                      - hd-num
+                    content: =((Number.parseFloat(items.Currently_One_Currently_Using.numericState) || 0) / 1000).toFixed(2).replace('.', ',')
+                - component: span
+                  config:
+                    class:
+                      - hd-unit
+                    content: kW
+                - component: span
+                  config:
+                    class: "=['hd-badge', 'hd-' + (('' + items.Huddinge_Badge_El.state).split('|')[1] || 'idle')]"
+                    content: "=('' + items.Huddinge_Badge_El.state).split('|')[0]"
+          - component: oh-repeater
+            config:
+              for: ph
+              sourceType: array
+              fragment: true
+              in: >-
+                =[
+                {l: 'L1', a: Number.parseFloat(items.Currently_One_Currently_I1.numericState) || 0, p: Number.parseFloat(items.Currently_One_Currently_L1.numericState) || 0},
+                {l: 'L2', a: Number.parseFloat(items.Currently_One_Currently_I2.numericState) || 0, p: Number.parseFloat(items.Currently_One_Currently_L2.numericState) || 0},
+                {l: 'L3', a: Number.parseFloat(items.Currently_One_Currently_I3.numericState) || 0, p: Number.parseFloat(items.Currently_One_Currently_L3.numericState) || 0}
+                ]
+            slots:
+              default:
+                - component: div
+                  config:
+                    class:
+                      - hd-phase
+                  slots:
+                    default:
+                      - component: span
+                        config:
+                          class:
+                            - hd-phase-l
+                          content: =loop.ph.l
+                      - component: div
+                        config:
+                          class:
+                            - hd-bar
+                        slots:
+                          default:
+                            - component: div
+                              config:
+                                class: "=['hd-fill', loop.ph.a >= (Number.parseFloat(items.Huddinge_Huvudsakring.numericState) || 20) ? 'hd-fill-bad' : (loop.ph.a >= 0.8 * (Number.parseFloat(items.Huddinge_Huvudsakring.numericState) || 20) ? 'hd-fill-warn' : 'hd-fill-ok')]"
+                                style:
+                                  width: "=Math.min(100, 100 * loop.ph.a / (Number.parseFloat(items.Huddinge_Huvudsakring.numericState) || 20)) + '%'"
+                      - component: span
+                        config:
+                          class:
+                            - hd-phase-v
+                          content: "=loop.ph.a.toFixed(1).replace('.', ',') + ' A · ' + (loop.ph.p / 1000).toFixed(1).replace('.', ',') + ' kW'"
+          - component: oh-repeater
+            config:
+              for: r
+              sourceType: array
+              fragment: true
+              in: >-
+                =[
+                {l: 'El sedan 00:00', v: (Number.parseFloat(items.Huddinge_El_Idag.numericState) || 0).toFixed(1).replace('.', ',') + ' kWh'},
+                {l: 'Senaste dygnet', v: (Number.parseFloat(items.Huddinge_El_24h.numericState) || 0).toFixed(1).replace('.', ',') + ' kWh'},
+                {l: 'Högsta fas idag', v: ['NULL', 'UNDEF'].includes(items.Huddinge_Toppfas.state) ? '–' : items.Huddinge_Toppfas.state},
+                {l: 'Spänning', v: Math.round(Number.parseFloat(items.Currently_One_Currently_U1.numericState) || 0) + ' / ' + Math.round(Number.parseFloat(items.Currently_One_Currently_U2.numericState) || 0) + ' / ' + Math.round(Number.parseFloat(items.Currently_One_Currently_U3.numericState) || 0) + ' V'}
+                ]
+            slots:
+              default:
+                - component: div
+                  config:
+                    class:
+                      - hd-row
+                  slots:
+                    default:
+                      - component: span
+                        config:
+                          class:
+                            - hd-row-l
+                          content: =loop.r.l
+                      - component: span
+                        config:
+                          class:
+                            - hd-row-v
+                          content: =loop.r.v

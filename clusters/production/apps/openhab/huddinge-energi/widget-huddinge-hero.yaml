@@ -1,0 +1,112 @@
+# Main UI custom widget "huddinge_hero": "Just nu" summary for the house in Huddinge next to
+# four big tiles (ute, framledning, effekt nu, el idag) and tomorrow's forecast from VäderKollen.
+# No photo yet; same dark style as lillstugan_hero. Deploy with scripts/huddinge-energi-deploy.sh.
+uid: huddinge_hero
+tags:
+  - huddinge
+props:
+  parameters: []
+  parameterGroups: []
+component: div
+config:
+  stylesheet: |
+    .hd-hero { display: flex; flex-wrap: wrap; align-items: stretch; gap: 16px 24px; background: #0f1615; color: #e8eeec;
+      border: 1px solid #22302e; border-radius: 16px; padding: 18px; margin: 6px 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .hd-text { flex: 1 1 300px; }
+    .hd-brand { font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #8fa09d; }
+    .hd-kicker { font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-top: 12px; }
+    .hd-say { font-size: clamp(19px, 2vw, 25px); line-height: 1.32; font-weight: 600; margin: 8px 0; }
+    .hd-detail { font-size: 14px; line-height: 1.45; color: #9fb0ad; }
+    .hd-tiles { flex: 1.4 1 420px; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+    .hd-tile { background: #141c1b; border: 1px solid #22302e; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; }
+    .hd-tile-k { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #aebcb9; }
+    .hd-tile-v { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: clamp(24px, 2.6vw, 34px); line-height: 1.1; margin-top: 8px; white-space: nowrap; }
+    .hd-tile-u { font-size: 14px; color: #8fa09d; margin-left: 4px; }
+    .hd-tile-s { font-size: 12px; color: #9fb0ad; margin-top: 4px; }
+slots:
+  default:
+    - component: div
+      config:
+        class:
+          - hd-hero
+        # Stylesheet rules are scoped as descendants of the root, hence this inner div.
+      slots:
+        default:
+          - component: div
+            config:
+              class:
+                - hd-text
+            slots:
+              default:
+                - component: div
+                  config:
+                    class:
+                      - hd-brand
+                    content: Huddinge · IVT & el
+                - component: div
+                  config:
+                    class:
+                      - hd-kicker
+                    content: Just nu
+                - component: div
+                  config:
+                    class:
+                      - hd-say
+                    content: "=['NULL', 'UNDEF'].includes(items.Huddinge_JustNu.state) ? 'Väntar på värden…' : items.Huddinge_JustNu.state"
+                - component: div
+                  config:
+                    class:
+                      - hd-detail
+                    content: "=['NULL', 'UNDEF'].includes(items.Huddinge_JustNu_Detalj.state) ? '' : items.Huddinge_JustNu_Detalj.state"
+          - component: div
+            config:
+              class:
+                - hd-tiles
+            slots:
+              default:
+                - component: oh-repeater
+                  config:
+                    for: t
+                    sourceType: array
+                    fragment: true
+                    in: >-
+                      =[
+                      {k: 'Utomhus', v: (Number.parseFloat(items.HuddingeOutdoorModule_OutdoorTemperature.numericState) || Number.parseFloat(items.Outdoor_Temperature_Value_as_Number.numericState) || 0).toFixed(1).replace('.', ','), u: '°C', s: ['NULL', 'UNDEF'].includes(items.Huddinge_Prognos_Imorgon.state) ? '' : items.Huddinge_Prognos_Imorgon.state},
+                      {k: 'Framledning', v: (Number.parseFloat(items.Heat_carrier_Forward_Value_as_Number.numericState) || 0).toFixed(1).replace('.', ','), u: '°C', s: 'börvärde ' + (Number.parseFloat(items.Heating_Setpoint_Value_as_Number.numericState) || 0).toFixed(1).replace('.', ',') + ' °C'},
+                      {k: 'Effekt nu', v: ((Number.parseFloat(items.Currently_One_Currently_Using.numericState) || 0) / 1000).toFixed(1).replace('.', ','), u: 'kW', s: 'kompressor ' + (items.Compressor_State_Value_as_Switch.state == 'ON' ? 'på' : 'av')},
+                      {k: 'El idag', v: (Number.parseFloat(items.Huddinge_El_Idag.numericState) || 0).toFixed(1).replace('.', ','), u: 'kWh', s: 'senaste dygnet ' + (Number.parseFloat(items.Huddinge_El_24h.numericState) || 0).toFixed(1).replace('.', ',') + ' kWh'}
+                      ]
+                  slots:
+                    default:
+                      - component: div
+                        config:
+                          class:
+                            - hd-tile
+                        slots:
+                          default:
+                            - component: div
+                              config:
+                                class:
+                                  - hd-tile-k
+                                content: =loop.t.k
+                            - component: div
+                              config:
+                                class:
+                                  - hd-tile-v
+                              slots:
+                                default:
+                                  - component: span
+                                    config:
+                                      content: =loop.t.v
+                                  - component: span
+                                    config:
+                                      class:
+                                        - hd-tile-u
+                                      content: =loop.t.u
+                            - component: div
+                              config:
+                                visible: =!!loop.t.s
+                                class:
+                                  - hd-tile-s
+                                content: =loop.t.s

@@ -1,0 +1,13 @@
+// Items for the "Huddinge just nu" page, written by huddinge-justnu.js.
+// Badges are "text|tone" where tone is one of ok, warn, bad, idle, info.
+String        Huddinge_JustNu           "Huddinge just nu"
+String        Huddinge_JustNu_Detalj    "Huddinge just nu, detalj"
+String        Huddinge_Prognos_Imorgon  "Prognos imorgon (VäderKollen)"
+String        Huddinge_Badge_BVP        "Huddinge badge värmepump"
+String        Huddinge_Badge_El         "Huddinge badge el"
+String        Huddinge_Toppfas          "Högsta fasström idag"
+Number:Energy Huddinge_El_Idag          "El sedan 00:00 [%.1f kWh]"
+Number:Energy Huddinge_El_24h           "El senaste dygnet [%.1f kWh]"
+Number:Time   Huddinge_Kompressor_24h   "Kompressor senaste dygnet [%.1f h]"
+Number:Time   Huddinge_Tillskott_24h    "Tillskott senaste dygnet [%.1f h]"
+Number        Huddinge_Huvudsakring     "Huvudsäkring [%d A]"
