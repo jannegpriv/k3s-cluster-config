@@ -6,7 +6,7 @@ import sys
 
 NS = 'basic-memory'
 NAME = os.environ.get('BM_VALIDATION_NAME', 'basic-memory-v1-test')
-assert NAME in ('basic-memory-v1-test', 'basic-memory-v1-restore')
+assert NAME in ('basic-memory-v1-test', 'basic-memory-v1-restore', 'basic-memory-pre-v1-rollback')
 PVC = NAME + '-data'
 IMAGE = 'ghcr.io/basicmachines-co/basic-memory:1.0.0@sha256:cad49f5433bcd8592fea547907a2b967435b3fa60d0f81ebc4d558e2b5cb55a8'
 OLD_IMAGE = 'ghcr.io/basicmachines-co/basic-memory:0.23.2@sha256:939f1173d96626c280763e14622f2381d49fbbb7db17cae2e832f4f639405643'
@@ -24,12 +24,14 @@ def volume(name, claim, readonly=False):
 
 if sys.argv[1] == 'setup':
     pvc = resource('PersistentVolumeClaim', PVC, {'accessModes': ['ReadWriteOnce'], 'storageClassName': 'rook-ceph-block', 'resources': {'requests': {'storage': '5Gi'}}})
+    pvc['metadata']['annotations'] = {'kustomize.toolkit.fluxcd.io/prune': 'disabled'}
     scripts = {'apiVersion': 'v1', 'kind': 'ConfigMap', 'metadata': {'name': NAME + '-scripts', 'namespace': NS, 'labels': LABELS}, 'data': {'snapshot_copy.py': Path(__file__).with_name('snapshot_copy.py').read_text()}}
     pod = {'automountServiceAccountToken': False, 'restartPolicy': 'Never', 'securityContext': SECURITY, 'affinity': AFFINITY, 'containers': [{'name': 'copy', 'image': OLD_IMAGE, 'command': ['python', '/scripts/snapshot_copy.py'], 'securityContext': CONTAINER_SECURITY, 'resources': {'requests': {'cpu': '100m', 'memory': '128Mi'}, 'limits': {'cpu': '1', 'memory': '512Mi'}}, 'volumeMounts': [{'name': 'source', 'mountPath': '/source', 'readOnly': True}, {'name': 'target', 'mountPath': '/data'}, {'name': 'scripts', 'mountPath': '/scripts', 'readOnly': True}]}], 'volumes': [volume('source', 'basic-memory-data', True), volume('target', PVC), {'name': 'scripts', 'configMap': {'name': NAME + '-scripts'}}]}
     job = resource('Job', NAME + '-copy', {'backoffLimit': 0, 'activeDeadlineSeconds': 600, 'template': {'metadata': {'labels': LABELS}, 'spec': pod}}, 'batch/v1')
     policy = resource('NetworkPolicy', NAME, {'podSelector': {'matchLabels': LABELS}, 'policyTypes': ['Ingress', 'Egress'], 'ingress': [], 'egress': [{'to': [{'namespaceSelector': {'matchLabels': {'kubernetes.io/metadata.name': 'kube-system'}}, 'podSelector': {'matchLabels': {'k8s-app': 'kube-dns'}}}], 'ports': [{'protocol': 'UDP', 'port': 53}, {'protocol': 'TCP', 'port': 53}]}, {'to': [{'ipBlock': {'cidr': '0.0.0.0/0', 'except': ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16', '100.64.0.0/10', '127.0.0.0/8', '169.254.0.0/16']}}], 'ports': [{'protocol': 'TCP', 'port': 443}]}]}, 'networking.k8s.io/v1')
     result = {'apiVersion': 'v1', 'kind': 'List', 'items': [pvc, scripts, policy, job]}
 elif sys.argv[1] == 'server':
+    assert NAME != 'basic-memory-pre-v1-rollback', 'Never migrate the rollback copy'
     container = {'name': 'basic-memory', 'image': IMAGE, 'command': ['basic-memory', 'mcp', '--transport', 'streamable-http', '--host', '127.0.0.1', '--port', '8000', '--path', '/mcp', '--project', 'main'], 'env': [{'name': k, 'value': v} for k, v in ENV.items()], 'securityContext': CONTAINER_SECURITY, 'resources': {'requests': {'cpu': '500m', 'memory': '1Gi'}, 'limits': {'cpu': '2', 'memory': '2Gi'}}, 'volumeMounts': [{'name': 'data', 'mountPath': '/data'}], 'startupProbe': {'exec': {'command': ['python', '-c', 'import socket; socket.create_connection(("127.0.0.1",8000),3).close()']}, 'periodSeconds': 5, 'failureThreshold': 180}, 'readinessProbe': {'exec': {'command': ['python', '-c', 'import socket; socket.create_connection(("127.0.0.1",8000),3).close()']}, 'periodSeconds': 10}}
     pod = {'automountServiceAccountToken': False, 'securityContext': SECURITY, 'affinity': AFFINITY, 'containers': [container], 'volumes': [volume('data', PVC)]}
     result = resource('Deployment', NAME, {'replicas': 1, 'strategy': {'type': 'Recreate'}, 'selector': {'matchLabels': LABELS}, 'template': {'metadata': {'labels': LABELS}, 'spec': pod}}, 'apps/v1')

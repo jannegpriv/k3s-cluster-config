@@ -1,6 +1,6 @@
 # Basic Memory pilot
 
-One replica of the pinned Basic Memory 0.23.2 image, Markdown in `/data/memory`, configuration
+One replica of the pinned Basic Memory 1.0.0 image, Markdown in `/data/memory`, configuration
 and rebuildable SQLite index in `/data/config`, on the retained 5 GiB Ceph RBD PVC.
 The Deployment uses Recreate; brief update interruptions are expected. Hybrid search
 uses local FastEmbed inference; no external model API or telemetry is enabled.
@@ -25,10 +25,10 @@ kubectl -n basic-memory exec deployment/basic-memory -- basic-memory reindex --e
 ```
 
 Run kubectl over SSH on the control-plane node as described in the repository
-instructions. Verify explicit `text`, `vector`, `hybrid`, and default MCP searches
+instructions. Verify explicit `text`, `semantic`, `hybrid`, and default MCP searches
 after indexing. New and edited notes are indexed by the existing change watcher.
-To roll back retrieval behavior, set `BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=false`
-and `BASIC_MEMORY_DEFAULT_SEARCH_TYPE=text` in Git and reconcile Flux; keep the
+To use text-only retrieval, set `BASIC_MEMORY_DEFAULT_SEARCH_TYPE=text` in Git
+and reconcile Flux; semantic indexing remains available in 1.0. Keep the
 Markdown files and PVC intact.
 
 ## Connect
@@ -52,6 +52,32 @@ separate CLI 0.146.0 does not support header helpers and needs a compatible vers
 before it can use this authentication configuration.
 Own agents should read their account from a secret store and never log headers.
 Do not put personal notes, passwords, or decrypted Secrets in Git.
+
+Basic Memory 1.0 exposes only the 12 `bm_*` tools. Old `read_note`, `search_notes`,
+`recent_activity`, and write/edit tool names no longer exist. Pass `project="main"`
+explicitly. Use `bm_search(mode="hybrid", compact=true)` and then `bm_read` for
+selected notes; `bm_project(command="recent", since="7d", page_size=5)` replaces
+recent activity. `bm_edit` uses `command` and accepts `expected_checksum` from
+`bm_read` to prevent overwriting a concurrent edit. See `agent-instructions.md`.
+
+The existing URL, Keychain helpers, private ingress and ChatGPT Secure MCP Tunnel
+remain unchanged. Refresh tools in ChatGPT's Basic Memory plugin settings after
+upgrading; reconnect/restart existing Codex and Claude sessions so they discover
+the new tool schemas. New sessions use the updated global instructions.
+
+The opt-in `upgrade-validation` renderer is not part of the production Kustomization.
+It tests an online SQLite snapshot and byte-verified project copy on a separate PVC,
+then a NAS round trip and index rebuild on another empty PVC. Test servers bind to
+loopback and have no Service or Ingress. The backup test uses a separate NAS folder
+and cannot rotate production archives.
+
+Before the 1.0 migration, `basic-memory-pre-v1-rollback-data` retains a complete
+0.23.2 snapshot, including a SQLite online backup, notes and model cache. Never run
+1.0 against this rollback volume. To roll back before new writes, change both the
+Deployment and backup CronJob claim to that PVC and pin the former 0.23.2 image in
+Git. If writes have occurred after cutover, first preserve the current notes in a
+verified NAS archive and reconcile those changes; the old snapshot cannot contain
+them. Never simply downgrade the migrated production database in place.
 
 ## Backup and restore
 
@@ -106,6 +132,6 @@ and worker relocation, and NAS restoration with index rebuild on an isolated vol
 Prometheus alerts cover no ready replica for 5m, no successful scheduled backup for
 30h, and volume usage above 80% for 15m.
 
-References: [Basic Memory release](https://github.com/basicmachines-co/basic-memory/releases/tag/v0.23.2),
+References: [Basic Memory release](https://github.com/basicmachines-co/basic-memory/releases/tag/v1.0.0),
 [configuration](https://docs.basicmemory.com/reference/configuration),
 [Codex MCP configuration](https://learn.chatgpt.com/docs/extend/mcp).
