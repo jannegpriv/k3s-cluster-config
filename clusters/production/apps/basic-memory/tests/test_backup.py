@@ -6,6 +6,7 @@ import sqlite3
 import tempfile
 import tarfile
 import unittest
+import subprocess
 from unittest.mock import patch
 
 spec = importlib.util.spec_from_file_location("backup", Path(__file__).parents[1] / "scripts/backup.py")
@@ -65,6 +66,24 @@ class BackupTest(unittest.TestCase):
             tar.addfile(info, io.BytesIO(b"x"))
         with self.assertRaisesRegex(RuntimeError, "Unsafe archive"):
             backup.verify_archive(self.archive)
+
+    def test_validation_upload_cannot_rotate_production_backups(self):
+        destination = '/volume1/k3s_backups/basic-memory-upgrade-test-20261106'
+        self.archive.write_bytes(b'validation')
+        checksum = backup.file_digest(self.archive)
+        production = '/volume1/k3s_backups/basic-memory/basic-memory-old.tar.gz'
+        commands = []
+        def remote(command, **kwargs):
+            commands.append(command)
+            output = checksum + '  uploading\n' if command.startswith('sha256sum ') else ''
+            if command.startswith('find '):
+                output = '\n'.join([production] + [destination + '/basic-memory-%02d.tar.gz' % n for n in range(16)])
+            return subprocess.CompletedProcess([], 0, stdout=output)
+        with patch.dict(backup.os.environ, {'BASIC_MEMORY_BACKUP_DESTINATION': destination}), patch.object(backup, 'remote', side_effect=remote):
+            backup.upload(self.archive)
+        removals = [cmd for cmd in commands if cmd.startswith('rm ')]
+        self.assertEqual(len(removals), 2)
+        self.assertTrue(all(destination in cmd and production not in cmd for cmd in removals))
 
 
 if __name__ == "__main__":
