@@ -13,8 +13,9 @@ FastEmbed runs `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`
 (384 dimensions) locally for Swedish and other supported languages. The model is
 downloaded on first use and cached on the retained PVC at `/data/cache/fastembed`.
 Only model artifacts are downloaded; note text is not sent to an embedding API.
-The container requests 1 GiB RAM, allows 2 GiB, and uses two inference threads
-within a two-core CPU limit. The startup probe allows up to 15 minutes for a cold
+The container requests 1 GiB RAM, allows 3 GiB, and uses two inference threads
+within a two-core CPU limit. The 3 GiB limit leaves room for a full embedding
+rebuild alongside the running server; the restore drill exceeded the former 2 GiB limit. The startup probe allows up to 15 minutes for a cold
 start. Reranking remains disabled.
 
 After first enabling semantic search, restoring notes, or changing the embedding
