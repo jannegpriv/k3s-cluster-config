@@ -1,5 +1,59 @@
 # Basic Memory verification
 
+## 1.0 validation attempt — 2026-11-06 — BLOCKED, not deployed
+
+[PR #7](https://github.com/jannegpriv/k3s-cluster-config/pull/7) is a draft upgrade.
+Production remains pinned to 0.23.2 with hybrid search. Global agent instructions,
+client authentication and ChatGPT tool metadata have not been switched to 1.0.
+
+- An online SQLite backup and byte-verified copy of all 59 project files were
+  migrated on an isolated PVC. The 1.0 server exposed 12 `bm_*` tools. Text,
+  semantic, explicit/default hybrid search, create/read/edit/delete, stale-revision
+  rejection, recent activity and folder listing passed. Original file hashes and
+  counts (59 entities, 3,297 observations, 232 relations) matched after cleanup.
+- A 1.0 file backup was uploaded to a separate NAS test directory, downloaded,
+  SHA256-verified and restored to an empty second PVC. All 59 note files and the
+  configuration matched; the database was rebuilt, not copied from the archive.
+- A full embedding rebuild alongside the server exceeded the former 2 GiB limit
+  and the test pod was OOMKilled. The proposed limit is 3 GiB. After restart and
+  incremental recovery, all 59 notes were represented by 5,914 ready vectors with
+  no pending chunks or embedding errors. The subsequent MCP functional checks
+  passed, but this is not sufficient to approve the release.
+- **Restore blocker:** the initial rebuilt graph contained 215 relations rather
+  than 232. Sixteen missing authored relations in three files are recognized by
+  the 1.0 Markdown parser; one additional old row came from an inline code example
+  and is correctly excluded by 1.0. A full search rebuild reported 46 indexed and
+  13 failed files with `sqlite3.OperationalError: database is locked`, on
+  `DELETE FROM search_index WHERE entity_id = ? AND project_id = ?`.
+- The same full rebuild failed with 13 files after stopping the test server and
+  running a separate maintenance Job with `BASIC_MEMORY_INDEX_CHANGES=false`.
+  Consequently the complete restore acceptance gate remains failed. No production
+  migration or agent-instruction replacement was performed.
+- `bm doctor --json` reported no project errors and passed its sandbox self-test;
+  that diagnostic did not detect the missing authored relations. Restore acceptance
+  therefore also compares the rebuilt graph with parsed Markdown, not just doctor.
+- The convention-note migration was tested on the isolated migration copy and
+  read back through an independent loopback MCP session. Original metadata was
+  preserved. YAML formatting and final newlines are canonicalized by 1.0.
+- Six backup tests, Kustomize rendering, the public-network boundary check and
+  repository review workflows passed. They do not override the failed restore gate.
+- Mac Keychain reads for both existing client credentials returned exit 51, so
+  fresh authenticated Codex/Claude checks remain blocked on local credential
+  access. No credential, permission or endpoint changes were made.
+
+A fresh pre-upgrade production NAS backup completed:
+`basic-memory-20261106T212457885734Z.tar.gz`, SHA256
+`866a96fd0133072a1963f8bc416a67cb64570a568d0ea7a3c6e404cc441382fe`.
+The untouched 0.23.2 snapshot is retained on
+`basic-memory-pre-v1-rollback-data`; never run 1.0 against it. The two test PVCs
+are retained for diagnosis with their Deployments scaled to zero. The failed
+`basic-memory-v1-restore-index` Job retains its diagnostic log. No test Service
+or Ingress was created. The NAS test archive is isolated from production retention.
+
+Before resuming: resolve and reproduce the restore-index failure, then pass file,
+graph, search, CRUD and recovery checks. Only then merge/deploy and apply the
+prepared agent instructions and ChatGPT tool refresh.
+
 ## Hybrid activation — 2026-11-06
 
 Implemented in [PR #6](https://github.com/jannegpriv/k3s-cluster-config/pull/6),
