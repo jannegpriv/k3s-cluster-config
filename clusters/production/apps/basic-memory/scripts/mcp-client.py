@@ -91,3 +91,13 @@ if __name__ == "__main__":
     result = client.request("tools/list")
     print(json.dumps({"server": client.initialize.get("serverInfo"),
                       "tools": [tool["name"] for tool in result["tools"]]}, ensure_ascii=False))
+    if "--verify-v1" in sys.argv:
+        names = {tool['name'] for tool in result['tools']}
+        assert len(names) == 12 and all(name.startswith('bm_') for name in names)
+        client.call('bm_project', command='recent', project='main', since='7d', page_size=5, output_format='text')
+        client.call('bm_read', identifier='memory://profile/konventioner-for-ai-minnet', project='main', include_content=False)
+        result = client.call('bm_search', project='main', query='konventioner', mode='hybrid', compact=True, page_size=3, output_format='json')
+        data = result.get('structuredContent', {})
+        data = data.get('result', data)
+        assert data.get('results'), 'Expected convention search result'
+        print(json.dumps({'account': client.account, 'v1_read_search_recent': 'passed', 'search_seconds': round(client.last_seconds, 3)}))
