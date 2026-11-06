@@ -50,7 +50,7 @@ if __name__ == '__main__':
     other = module.Client('agent')
     readback = unpack(other.call('bm_read', project='main', identifier=identifier, output_format='json'))
     # Basic Memory canonicalizes YAML; compare the body and parsed metadata separately.
-    assert readback['content'].split('---', 2)[2] == updated.split('---', 2)[2]
+    assert readback['content'].split('---', 2)[2].rstrip('\n') == updated.split('---', 2)[2].rstrip('\n')
     actual_metadata = dict(readback['frontmatter'])
     assert actual_metadata.pop('tooling_validation')['version'] == '1.0.0'
     assert actual_metadata == note['frontmatter'], 'Existing frontmatter changed'
