@@ -37,9 +37,13 @@ client authentication and ChatGPT tool metadata have not been switched to 1.0.
   preserved. YAML formatting and final newlines are canonicalized by 1.0.
 - Six backup tests, Kustomize rendering, the public-network boundary check and
   repository review workflows passed. They do not override the failed restore gate.
-- Mac Keychain reads for both existing client credentials returned exit 51, so
-  fresh authenticated Codex/Claude checks remain blocked on local credential
-  access. No credential, permission or endpoint changes were made.
+- Mac Keychain reads initially returned exit 51 even while the system reported
+  the login keychain unlocked. On 2026-11-06, the user locked and unlocked that
+  keychain again; fresh reads then succeeded. Both existing `codex` and `agent`
+  accounts authenticated, discovered 21 production tools, and passed title search,
+  hybrid search and note readback. `claude mcp get basic_memory` reported Connected.
+  This verifies the current 0.23.2 clients; the 1.0 restore gate remains blocked.
+  No credential, permission or endpoint changes were made.
 
 A fresh pre-upgrade production NAS backup completed:
 `basic-memory-20261106T212457885734Z.tar.gz`, SHA256
