@@ -19,15 +19,20 @@ rebuild alongside the running server; the restore drill exceeded the former 2 Gi
 start. Reranking remains disabled.
 
 After first enabling semantic search, restoring notes, or changing the embedding
-model, rebuild derived vectors in the running container:
+model, rebuild derived vectors during maintenance with exclusive access to SQLite.
+For full recovery, stop the server first and run an isolated Job mounting the
+same restored PVC, with the same configuration and `BASIC_MEMORY_INDEX_CHANGES=false`:
 
 ```bash
-kubectl -n basic-memory exec deployment/basic-memory -- basic-memory reindex --embeddings -p main
+basic-memory reindex --full --search -p main
+basic-memory reindex --embeddings -p main
 ```
 
 Run kubectl over SSH on the control-plane node as described in the repository
-instructions. Verify explicit `text`, `semantic`, `hybrid`, and default MCP searches
-after indexing. New and edited notes are indexed by the existing change watcher.
+instructions. The opt-in `upgrade-validation/render.py index` shows the maintenance
+Job; do not run it concurrently with its server. Restart the server and verify
+explicit `text`, `semantic`, `hybrid`, and default MCP searches after indexing.
+New and edited notes are indexed by the existing change watcher.
 To use text-only retrieval, set `BASIC_MEMORY_DEFAULT_SEARCH_TYPE=text` in Git
 and reconcile Flux; semantic indexing remains available in 1.0. Keep the
 Markdown files and PVC intact.

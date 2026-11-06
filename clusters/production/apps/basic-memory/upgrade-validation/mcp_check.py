@@ -99,7 +99,7 @@ def validate(client=None):
     print(json.dumps({'crud': 'passed', 'revision_guard': 'passed', 'default_hybrid': True, 'recent_and_list': 'passed', 'tool_count': len(names)}), flush=True)
 
 
-def verify_copy():
+def verify_copy(restored=False):
     root = Path('/data/memory')
     expected = json.loads(Path('/data/upgrade-evidence/source-manifest.json').read_text())
     for attempt in range(20):
@@ -111,7 +111,20 @@ def verify_copy():
     with sqlite3.connect('file:/data/config/memory.db?mode=ro', uri=True) as db:
         assert db.execute('PRAGMA integrity_check').fetchone()[0] == 'ok'
         counts = {table: db.execute('SELECT count(*) FROM ' + table).fetchone()[0] for table in expected['counts']}
-        assert counts == expected['counts'], 'Migrated graph counts differ'
+        if restored:
+            import frontmatter
+            from basic_memory.markdown.entity_parser import parse
+            expected_relations = set()
+            for path in root.rglob('*.md'):
+                for relation in parse(frontmatter.loads(path.read_text()).content).relations:
+                    expected_relations.add((str(path.relative_to(root)), relation.type, relation.target, relation.context))
+            actual_relations = set(db.execute('SELECT e.file_path,r.relation_type,r.to_name,r.context FROM relation r JOIN entity e ON e.id=r.from_id').fetchall())
+            assert actual_relations == expected_relations, 'Rebuilt graph does not match authored Markdown'
+            assert counts['entity'] == expected['counts']['entity']
+            assert counts['observation'] == expected['counts']['observation']
+            print(json.dumps({'restored_relations_match_parser': len(expected_relations)}), flush=True)
+        else:
+            assert counts == expected['counts'], 'Migrated graph counts differ'
         pending = db.execute("SELECT count(*) FROM note_content WHERE file_write_status != 'synced' OR file_version IS NULL OR file_version != db_version").fetchone()[0]
         assert pending == 0
     print(json.dumps({'original_files_unchanged': len(actual), 'graph_counts': counts, 'sqlite_integrity': 'ok', 'pending_writes': 0}), flush=True)
@@ -119,4 +132,4 @@ def verify_copy():
 
 if __name__ == '__main__':
     validate()
-    verify_copy()
+    verify_copy(restored='--restored' in sys.argv)
