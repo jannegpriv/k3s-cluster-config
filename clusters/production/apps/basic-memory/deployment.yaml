@@ -61,7 +61,21 @@ spec:
         - name: BASIC_MEMORY_DATABASE_BACKEND
           value: sqlite
         - name: BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED
-          value: 'false'
+          value: 'true'
+        - name: BASIC_MEMORY_DEFAULT_SEARCH_TYPE
+          value: hybrid
+        - name: BASIC_MEMORY_SEMANTIC_EMBEDDING_PROVIDER
+          value: fastembed
+        - name: BASIC_MEMORY_SEMANTIC_EMBEDDING_MODEL
+          value: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+        - name: BASIC_MEMORY_SEMANTIC_EMBEDDING_DIMENSIONS
+          value: '384'
+        - name: BASIC_MEMORY_SEMANTIC_EMBEDDING_CACHE_DIR
+          value: /data/cache/fastembed
+        - name: BASIC_MEMORY_SEMANTIC_EMBEDDING_THREADS
+          value: '2'
+        - name: BASIC_MEMORY_SEMANTIC_EMBEDDING_PARALLEL
+          value: '1'
         - name: BASIC_MEMORY_INDEX_CHANGES
           value: 'true'
         - name: BASIC_MEMORY_LOGFIRE_ENABLED
@@ -77,11 +91,11 @@ spec:
           containerPort: 8000
         resources:
           requests:
-            cpu: 250m
-            memory: 512Mi
-          limits:
-            cpu: '1'
+            cpu: 500m
             memory: 1Gi
+          limits:
+            cpu: '2'
+            memory: 2Gi
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -95,7 +109,7 @@ spec:
             port: mcp
           periodSeconds: 5
           timeoutSeconds: 3
-          failureThreshold: 36
+          failureThreshold: 180
         readinessProbe:
           tcpSocket:
             port: mcp
