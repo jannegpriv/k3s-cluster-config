@@ -2,8 +2,34 @@
 
 One ARM64 replica of Basic Memory 0.23.2, Markdown in `/data/memory`, configuration
 and rebuildable SQLite index in `/data/config`, on the retained 5 GiB Ceph RBD PVC.
-The Deployment uses Recreate; brief update interruptions are expected. No embedding
-models, external model API, or telemetry are enabled. App pods have no Kubernetes token.
+The Deployment uses Recreate; brief update interruptions are expected. Hybrid search
+uses local FastEmbed inference; no external model API or telemetry is enabled.
+App pods have no Kubernetes token.
+
+## Hybrid search
+
+The default search mode is `hybrid`, combining SQLite FTS5 with `sqlite-vec`.
+FastEmbed runs `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`
+(384 dimensions) locally for Swedish and other supported languages. The model is
+downloaded on first use and cached on the retained PVC at `/data/cache/fastembed`.
+Only model artifacts are downloaded; note text is not sent to an embedding API.
+The container requests 1 GiB RAM, allows 2 GiB, and uses two inference threads
+within a two-core CPU limit. The startup probe allows up to 15 minutes for a cold
+start. Reranking remains disabled.
+
+After first enabling semantic search, restoring notes, or changing the embedding
+model, rebuild derived vectors in the running container:
+
+```bash
+kubectl -n basic-memory exec deployment/basic-memory -- basic-memory reindex --embeddings -p main
+```
+
+Run kubectl over SSH on the control-plane node as described in the repository
+instructions. Verify explicit `text`, `vector`, `hybrid`, and default MCP searches
+after indexing. New and edited notes are indexed by the existing change watcher.
+To roll back retrieval behavior, set `BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=false`
+and `BASIC_MEMORY_DEFAULT_SEARCH_TYPE=text` in Git and reconcile Flux; keep the
+Markdown files and PVC intact.
 
 ## Connect
 
@@ -39,7 +65,8 @@ archives in `/volume1/k3s_backups/basic-memory`. Credentials are SOPS-encrypted.
 The pinned NAS SSH key matches the existing successful OpenHAB backup log.
 
 Backups contain the complete project files, `config/config.json`, and a SHA256
-manifest. SQLite, WAL, logs, and caches are deliberately excluded. Pending writes,
+manifest. SQLite (including derived vectors), WAL, logs, and model caches are
+deliberately excluded. Pending writes,
 failed materializations, moved-path cleanup, changing files, or bad checksums fail
 the backup instead of silently losing accepted updates. Recovery point target: 24h.
 
@@ -52,7 +79,8 @@ and its `.sha256` file over SSH with the pinned host key; verify SHA256. Run
 `verify_archive` from `scripts/backup.py`, extract only the validated regular files
 into the empty PVC, and use UID/GID 1000. Start the same pinned app version with the
 same `/data` layout, but no Ingress. Startup indexes Markdown into a new SQLite DB.
-Verify note hashes and MCP search before switching the production Deployment to
+Rebuild embeddings with the same model configuration and verify note hashes and
+MCP search before switching the production Deployment to
 the restored PVC. Do not restore or copy a live `memory.db` file.
 
 The namespace and PVC have Flux prune protection; the StorageClass has Retain.
