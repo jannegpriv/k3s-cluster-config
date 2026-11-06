@@ -1,5 +1,4 @@
 """Render opt-in validation resources; never included by the production Kustomization."""
-import copy
 import json
 from pathlib import Path
 import sys
@@ -23,8 +22,8 @@ def volume(name, claim, readonly=False):
 
 if sys.argv[1] == 'setup':
     pvc = resource('PersistentVolumeClaim', PVC, {'accessModes': ['ReadWriteOnce'], 'storageClassName': 'rook-ceph-block', 'resources': {'requests': {'storage': '5Gi'}}})
-    scripts = {'apiVersion': 'v1', 'kind': 'ConfigMap', 'metadata': {'name': NAME + '-scripts', 'namespace': NS, 'labels': LABELS}, 'data': {'copy.py': Path(__file__).with_name('copy.py').read_text()}}
-    pod = {'automountServiceAccountToken': False, 'restartPolicy': 'Never', 'securityContext': SECURITY, 'affinity': AFFINITY, 'containers': [{'name': 'copy', 'image': OLD_IMAGE, 'command': ['python', '/scripts/copy.py'], 'securityContext': CONTAINER_SECURITY, 'resources': {'requests': {'cpu': '100m', 'memory': '128Mi'}, 'limits': {'cpu': '1', 'memory': '512Mi'}}, 'volumeMounts': [{'name': 'source', 'mountPath': '/source', 'readOnly': True}, {'name': 'target', 'mountPath': '/data'}, {'name': 'scripts', 'mountPath': '/scripts', 'readOnly': True}]}], 'volumes': [volume('source', 'basic-memory-data', True), volume('target', PVC), {'name': 'scripts', 'configMap': {'name': NAME + '-scripts'}}]}
+    scripts = {'apiVersion': 'v1', 'kind': 'ConfigMap', 'metadata': {'name': NAME + '-scripts', 'namespace': NS, 'labels': LABELS}, 'data': {'snapshot_copy.py': Path(__file__).with_name('snapshot_copy.py').read_text()}}
+    pod = {'automountServiceAccountToken': False, 'restartPolicy': 'Never', 'securityContext': SECURITY, 'affinity': AFFINITY, 'containers': [{'name': 'copy', 'image': OLD_IMAGE, 'command': ['python', '/scripts/snapshot_copy.py'], 'securityContext': CONTAINER_SECURITY, 'resources': {'requests': {'cpu': '100m', 'memory': '128Mi'}, 'limits': {'cpu': '1', 'memory': '512Mi'}}, 'volumeMounts': [{'name': 'source', 'mountPath': '/source', 'readOnly': True}, {'name': 'target', 'mountPath': '/data'}, {'name': 'scripts', 'mountPath': '/scripts', 'readOnly': True}]}], 'volumes': [volume('source', 'basic-memory-data', True), volume('target', PVC), {'name': 'scripts', 'configMap': {'name': NAME + '-scripts'}}]}
     job = resource('Job', NAME + '-copy', {'backoffLimit': 0, 'activeDeadlineSeconds': 600, 'template': {'metadata': {'labels': LABELS}, 'spec': pod}}, 'batch/v1')
     policy = resource('NetworkPolicy', NAME, {'podSelector': {'matchLabels': LABELS}, 'policyTypes': ['Ingress', 'Egress'], 'ingress': [], 'egress': [{'to': [{'namespaceSelector': {'matchLabels': {'kubernetes.io/metadata.name': 'kube-system'}}, 'podSelector': {'matchLabels': {'k8s-app': 'kube-dns'}}}], 'ports': [{'protocol': 'UDP', 'port': 53}, {'protocol': 'TCP', 'port': 53}]}, {'to': [{'ipBlock': {'cidr': '0.0.0.0/0', 'except': ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16', '100.64.0.0/10', '127.0.0.0/8', '169.254.0.0/16']}}], 'ports': [{'protocol': 'TCP', 'port': 443}]}]}, 'networking.k8s.io/v1')
     result = {'apiVersion': 'v1', 'kind': 'List', 'items': [pvc, scripts, policy, job]}
