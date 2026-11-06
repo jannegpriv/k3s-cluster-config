@@ -49,7 +49,8 @@ if __name__ == '__main__':
     client.call('bm_write', project='main', identifier=note['file_path'], content=updated, expected_checksum=note['checksum'], overwrite=True)
     other = module.Client('agent')
     readback = unpack(other.call('bm_read', project='main', identifier=identifier, output_format='json'))
-    assert readback['content'] == updated
+    # Basic Memory canonicalizes YAML; compare the body and parsed metadata separately.
+    assert readback['content'].split('---', 2)[2] == updated.split('---', 2)[2]
     actual_metadata = dict(readback['frontmatter'])
     assert actual_metadata.pop('tooling_validation')['version'] == '1.0.0'
     assert actual_metadata == note['frontmatter'], 'Existing frontmatter changed'
