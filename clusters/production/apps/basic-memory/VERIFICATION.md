@@ -1,4 +1,39 @@
-# Pilot acceptance — 2026-09-19
+# Basic Memory verification
+
+## Hybrid activation — 2026-11-06
+
+Implemented in [PR #6](https://github.com/jannegpriv/k3s-cluster-config/pull/6),
+merged revision `a892f47a278cac1b2a9357d02f530307d8b09e42`.
+
+- The pinned runtime accepted the FastEmbed multilingual MiniLM model, 384
+  dimensions, persistent model cache, and `default_search_type=hybrid`.
+  `sqlite-vec` loaded successfully. No embedding API credentials are used.
+- Five backup tests, Kustomize rendering, server-side deployment dry run, GitHub
+  validation, the independent public-boundary check, and the repository review
+  workflow passed.
+- Flux applied the merged revision. The replacement pod became Ready on
+  `k3s-w-6`; the retained Ceph volume moved successfully from `k3s-w-4`.
+- `basic-memory reindex --embeddings -p main` completed with 58 entities embedded,
+  zero skipped, and zero errors. Final database readback found all 59 notes
+  represented by 3,523 ready chunks and 3,523 vectors.
+- Production MCP searches succeeded in `text`, `vector`, explicit `hybrid`, and
+  default modes. A Swedish operational query returned the expected existing note
+  first in vector, hybrid, and default modes; default and explicit hybrid results
+  matched. Note titles and private contents are intentionally omitted here.
+- Aggregate path/content SHA256 for all Markdown notes matched before and after
+  activation. There were zero pending file writes and zero pod restarts at the
+  final check. Resource monitoring stayed below the 2 GiB container limit.
+- Manual NAS backups both before and after activation completed and verified
+  their remote SHA256 checksums. The post-activation backup ran with the app's
+  volume on the new node. The existing nightly schedule and retention remain.
+- Model files are cached under `/data/cache/fastembed`; derived SQLite vectors
+  and model artifacts remain excluded from the file backup. Recovery rebuilds
+  vectors using the configured model, as described in README.md.
+
+The checks above verify activation and a bounded live search sample, not a
+general retrieval-quality benchmark or a new full restore drill.
+
+## Initial pilot — 2026-09-19
 
 Initial installation: [PR #2](https://github.com/jannegpriv/k3s-cluster-config/pull/2),
 merged revision `7b35e6cdc651a588690df670e8b826c1e01fb30b`.

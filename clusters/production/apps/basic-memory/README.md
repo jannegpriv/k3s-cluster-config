@@ -1,6 +1,6 @@
 # Basic Memory pilot
 
-One ARM64 replica of Basic Memory 0.23.2, Markdown in `/data/memory`, configuration
+One replica of the pinned Basic Memory 0.23.2 image, Markdown in `/data/memory`, configuration
 and rebuildable SQLite index in `/data/config`, on the retained 5 GiB Ceph RBD PVC.
 The Deployment uses Recreate; brief update interruptions are expected. Hybrid search
 uses local FastEmbed inference; no external model API or telemetry is enabled.
