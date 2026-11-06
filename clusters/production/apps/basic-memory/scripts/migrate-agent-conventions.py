@@ -53,5 +53,6 @@ if __name__ == '__main__':
     assert readback['content'].split('---', 2)[2].rstrip('\n') == updated.split('---', 2)[2].rstrip('\n')
     actual_metadata = dict(readback['frontmatter'])
     assert actual_metadata.pop('tooling_validation')['version'] == '1.0.0'
-    assert actual_metadata == note['frontmatter'], 'Existing frontmatter changed'
+    expected_metadata = {k: v for k, v in note['frontmatter'].items() if k != 'tooling_validation'}
+    assert actual_metadata == expected_metadata, 'Existing frontmatter changed'
     print(json.dumps({'conventions_updated': True, 'readback_account': 'agent', 'frontmatter_preserved': True, 'checksum': readback['checksum']}))
