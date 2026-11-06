@@ -30,11 +30,22 @@ if sys.argv[1] == 'setup':
     job = resource('Job', NAME + '-copy', {'backoffLimit': 0, 'activeDeadlineSeconds': 600, 'template': {'metadata': {'labels': LABELS}, 'spec': pod}}, 'batch/v1')
     policy = resource('NetworkPolicy', NAME, {'podSelector': {'matchLabels': LABELS}, 'policyTypes': ['Ingress', 'Egress'], 'ingress': [], 'egress': [{'to': [{'namespaceSelector': {'matchLabels': {'kubernetes.io/metadata.name': 'kube-system'}}, 'podSelector': {'matchLabels': {'k8s-app': 'kube-dns'}}}], 'ports': [{'protocol': 'UDP', 'port': 53}, {'protocol': 'TCP', 'port': 53}]}, {'to': [{'ipBlock': {'cidr': '0.0.0.0/0', 'except': ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16', '100.64.0.0/10', '127.0.0.0/8', '169.254.0.0/16']}}], 'ports': [{'protocol': 'TCP', 'port': 443}]}]}, 'networking.k8s.io/v1')
     result = {'apiVersion': 'v1', 'kind': 'List', 'items': [pvc, scripts, policy, job]}
-elif sys.argv[1] == 'server':
+elif sys.argv[1] in ('server', 'index'):
     assert NAME != 'basic-memory-pre-v1-rollback', 'Never migrate the rollback copy'
     container = {'name': 'basic-memory', 'image': IMAGE, 'command': ['basic-memory', 'mcp', '--transport', 'streamable-http', '--host', '127.0.0.1', '--port', '8000', '--path', '/mcp', '--project', 'main'], 'env': [{'name': k, 'value': v} for k, v in ENV.items()], 'securityContext': CONTAINER_SECURITY, 'resources': {'requests': {'cpu': '500m', 'memory': '1Gi'}, 'limits': {'cpu': '2', 'memory': '3Gi'}}, 'volumeMounts': [{'name': 'data', 'mountPath': '/data'}], 'startupProbe': {'exec': {'command': ['python', '-c', 'import socket; socket.create_connection(("127.0.0.1",8000),3).close()']}, 'periodSeconds': 5, 'failureThreshold': 180}, 'readinessProbe': {'exec': {'command': ['python', '-c', 'import socket; socket.create_connection(("127.0.0.1",8000),3).close()']}, 'periodSeconds': 10}}
     pod = {'automountServiceAccountToken': False, 'securityContext': SECURITY, 'affinity': AFFINITY, 'containers': [container], 'volumes': [volume('data', PVC)]}
-    result = resource('Deployment', NAME, {'replicas': 1, 'strategy': {'type': 'Recreate'}, 'selector': {'matchLabels': LABELS}, 'template': {'metadata': {'labels': LABELS}, 'spec': pod}}, 'apps/v1')
+    if sys.argv[1] == 'index':
+        assert NAME == 'basic-memory-v1-restore'
+        container['command'] = ['/bin/sh', '-ec', 'basic-memory reindex --full --search -p main && basic-memory reindex --embeddings -p main']
+        container.pop('startupProbe')
+        container.pop('readinessProbe')
+        for item in container['env']:
+            if item['name'] == 'BASIC_MEMORY_INDEX_CHANGES':
+                item['value'] = 'false'
+        pod['restartPolicy'] = 'Never'
+        result = resource('Job', NAME + '-index', {'backoffLimit': 0, 'activeDeadlineSeconds': 3600, 'template': {'metadata': {'labels': LABELS}, 'spec': pod}}, 'batch/v1')
+    else:
+        result = resource('Deployment', NAME, {'replicas': 1, 'strategy': {'type': 'Recreate'}, 'selector': {'matchLabels': LABELS}, 'template': {'metadata': {'labels': LABELS}, 'spec': pod}}, 'apps/v1')
 elif sys.argv[1] == 'backup-restore':
     assert NAME == 'basic-memory-v1-restore'
     pvc = resource('PersistentVolumeClaim', PVC, {'accessModes': ['ReadWriteOnce'], 'storageClassName': 'rook-ceph-block', 'resources': {'requests': {'storage': '5Gi'}}})
@@ -47,5 +58,5 @@ elif sys.argv[1] == 'backup-restore':
     nas_policy = resource('NetworkPolicy', NAME + '-nas', {'podSelector': {'matchLabels': {**LABELS, 'validation-job': 'backup-restore'}}, 'policyTypes': ['Egress'], 'egress': [{'to': [{'ipBlock': {'cidr': '192.168.50.25/32'}}], 'ports': [{'protocol': 'TCP', 'port': 4711}]}]}, 'networking.k8s.io/v1')
     result = {'apiVersion': 'v1', 'kind': 'List', 'items': [pvc, scripts, policy, nas_policy, job]}
 else:
-    raise SystemExit('Choose setup, server or backup-restore')
+    raise SystemExit('Choose setup, server, index or backup-restore')
 print(json.dumps(result))
