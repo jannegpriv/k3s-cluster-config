@@ -1,10 +1,47 @@
 # Basic Memory verification
 
-## 1.0 validation attempt — 2026-11-06 — BLOCKED, not deployed
+## 1.0 restore gate — 2026-11-07 — PASSED
 
-[PR #7](https://github.com/jannegpriv/k3s-cluster-config/pull/7) is a draft upgrade.
-Production remains pinned to 0.23.2 with hybrid search. Global agent instructions,
-client authentication and ChatGPT tool metadata have not been switched to 1.0.
+The prior restore blocker below was reproduced and resolved before deployment.
+Production preflight still matched the tested 59-file snapshot, with SQLite
+integrity `ok` and zero pending materializations.
+
+- The official 1.0.0 source matches the pinned image byte-for-byte. Its local
+  project runtime hardcodes eight database indexing tasks; reducing that local
+  concurrency to one completed 59/59 files without errors and exited normally.
+- A version-locked, two-default compatibility overlay is built by an unprivileged
+  init container and mounted read-only into the server and maintenance Job. The
+  upstream image digest is unchanged. Its module hash guard rejects unknown code.
+- With this exact overlay, standalone Job
+  `basic-memory-v1-restore-index-20261107` completed a full search rebuild followed
+  by an incremental vector rebuild in 117 seconds: 59 indexed, zero failed files,
+  zero embedding errors, zero pending chunks; both CLI commands exited normally.
+- On the NAS-restored PVC, all 59 original file hashes and all 3,297 observations
+  match. The rebuilt graph exactly equals the 1.0 parser's 231 authored relations.
+  The old 232nd row was an inline-code example, not an authored link. There are
+  5,930 ready chunks/vectors covering all 59 notes, with zero orphan vectors.
+- The restarted 1.0 test server passed text, semantic, explicit/default hybrid,
+  read/write/edit/delete, stale-revision rejection, recent activity and folder
+  listing. The synthetic note was removed; file hashes and the complete graph
+  still matched. SQLite integrity is `ok`, pending writes zero, pod restarts zero.
+- All six backup tests, Kustomize validation, the independent public-network
+  boundary check and repository review workflow passed on commit `6a774e4`.
+- Fresh production NAS backup before deployment:
+  `basic-memory-20261107T084121039279Z.tar.gz`, SHA256
+  `fa983ef1759e6460f7a72cfa04e9c65877fb52bbdce024418738bca2ac706aeb`.
+  The untouched 0.23.2 rollback PVC remains available and matches the unchanged
+  source notes. No private note contents or credentials are published.
+
+The known 0.23.2 hang reports #1322 and #1581 were also checked against upstream;
+their fixes are already present in 1.0.0. The test above verifies this workload's
+index completion and process exit; it does not assume all historical hangs had
+the same cause. See README for the local overlay and its removal/review condition.
+
+## Earlier 1.0 validation attempt — 2026-11-06 — initially BLOCKED
+
+The initial attempt in [PR #7](https://github.com/jannegpriv/k3s-cluster-config/pull/7)
+was held as a draft. Production stayed on 0.23.2 until the complete gate above
+passed; the following records the original failure and diagnosis.
 
 - An online SQLite backup and byte-verified copy of all 59 project files were
   migrated on an isolated PVC. The 1.0 server exposed 12 `bm_*` tools. Text,
@@ -54,9 +91,8 @@ are retained for diagnosis with their Deployments scaled to zero. The failed
 `basic-memory-v1-restore-index` Job retains its diagnostic log. No test Service
 or Ingress was created. The NAS test archive is isolated from production retention.
 
-Before resuming: resolve and reproduce the restore-index failure, then pass file,
-graph, search, CRUD and recovery checks. Only then merge/deploy and apply the
-prepared agent instructions and ChatGPT tool refresh.
+These resume conditions were fulfilled on 2026-11-07 by the complete file, graph,
+search, CRUD and recovery checks recorded above.
 
 ## Hybrid activation — 2026-11-06
 
