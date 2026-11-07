@@ -35,6 +35,27 @@ spec:
             - matchExpressions:
               - key: node-role.kubernetes.io/control-plane
                 operator: DoesNotExist
+      initContainers:
+      - name: sqlite-index-compat
+        image: ghcr.io/basicmachines-co/basic-memory:1.0.0@sha256:cad49f5433bcd8592fea547907a2b967435b3fa60d0f81ebc4d558e2b5cb55a8
+        command: [python, /compat/sqlite-index-compat.py, /patched/local_project.py]
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: '1'
+            memory: 128Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+        volumeMounts:
+        - name: sqlite-compat-script
+          mountPath: /compat
+          readOnly: true
+        - name: sqlite-compat-module
+          mountPath: /patched
       containers:
       - name: basic-memory
         image: ghcr.io/basicmachines-co/basic-memory:1.0.0@sha256:cad49f5433bcd8592fea547907a2b967435b3fa60d0f81ebc4d558e2b5cb55a8
@@ -102,6 +123,10 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /data
+        - name: sqlite-compat-module
+          mountPath: /app/src/basic_memory/index/local_project.py
+          subPath: local_project.py
+          readOnly: true
         startupProbe:
           tcpSocket:
             port: mcp
@@ -121,6 +146,12 @@ spec:
           timeoutSeconds: 3
           failureThreshold: 6
       volumes:
+      - name: sqlite-compat-script
+        configMap:
+          name: basic-memory-sqlite-compat
+      - name: sqlite-compat-module
+        emptyDir:
+          sizeLimit: 1Mi
       - name: data
         persistentVolumeClaim:
           claimName: basic-memory-data

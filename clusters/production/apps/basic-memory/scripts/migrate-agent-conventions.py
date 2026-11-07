@@ -29,11 +29,11 @@ def migrate(content):
         line = line.replace('`list_directory("/projects")`', '`bm_list(path="/projects", project="main")`')
         lines.append(line)
     updated = '\n'.join(lines) + '\n'
-    validation = {'verified_at': '2026-11-06', 'verification_method': 'MCP CRUD, revision conflict, hybrid search and NAS restore on isolated copies', 'version': '1.0.0'}
+    validation = {'verified_at': '2026-11-07', 'verification_method': 'MCP CRUD, revision conflict, hybrid search and complete NAS restore with SQLite compatibility overlay on isolated copies', 'version': '1.0.0'}
     assert updated.startswith('---\n')
     updated = '---\ntooling_validation: ' + json.dumps(validation) + '\n' + updated[4:]
     assert not any(old in updated for old in ('`recent_activity`', '`search_notes`', '`list_directory('))
-    updated += '\n## Verktyg i Basic Memory 1.0\n\nVerifierat 2026-11-06 genom MCP-test på isolerad kopia och återställning från NAS. Ange alltid `project="main"` för projektbundna verktyg. Använd `bm_edit` med `command` för ändringar av befintliga anteckningar och `bm_write` för nya. Läs aktuell revision med `bm_read` och skicka `expected_checksum` vid ändring; vid `REVISION_CONFLICT`, läs om och bedöm ändringen på nytt. Läs tillbaka för att verifiera sparandet. Dessa tekniska kontroller ändrar inte kravet på Jannes tillstånd att skriva.\n'
+    updated += '\n## Verktyg i Basic Memory 1.0\n\nVerifierat 2026-11-07 genom MCP-test på isolerad kopia och fullständig återställning från NAS med SQLite-anpassningen. Ange alltid `project="main"` för projektbundna verktyg. Använd `bm_edit` med `command` för ändringar av befintliga anteckningar och `bm_write` för nya. Läs aktuell revision med `bm_read` och skicka `expected_checksum` vid ändring; vid `REVISION_CONFLICT`, läs om och bedöm ändringen på nytt. Läs tillbaka för att verifiera sparandet. Dessa tekniska kontroller ändrar inte kravet på Jannes tillstånd att skriva.\n'
     return updated
 
 

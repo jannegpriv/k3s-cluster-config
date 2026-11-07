@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+import re
 import sys
 
 NS = 'basic-memory'
@@ -22,6 +23,14 @@ def resource(kind, name, spec, api='v1'):
 def volume(name, claim, readonly=False):
     return {'name': name, 'persistentVolumeClaim': {'claimName': claim, 'readOnly': readonly}}
 
+def sqlite_compat(pod):
+    name = NAME + '-sqlite-compat'
+    scripts = {'apiVersion': 'v1', 'kind': 'ConfigMap', 'metadata': {'name': name, 'namespace': NS, 'labels': LABELS}, 'data': {'sqlite-index-compat.py': Path(__file__).parent.parent.joinpath('scripts/sqlite-index-compat.py').read_text()}}
+    pod['initContainers'] = [{'name': 'sqlite-index-compat', 'image': IMAGE, 'command': ['python', '/compat/sqlite-index-compat.py', '/patched/local_project.py'], 'securityContext': CONTAINER_SECURITY, 'resources': {'requests': {'cpu': '50m', 'memory': '64Mi'}, 'limits': {'cpu': '1', 'memory': '128Mi'}}, 'volumeMounts': [{'name': 'sqlite-compat-script', 'mountPath': '/compat', 'readOnly': True}, {'name': 'sqlite-compat-module', 'mountPath': '/patched'}]}]
+    pod['volumes'] += [{'name': 'sqlite-compat-script', 'configMap': {'name': name}}, {'name': 'sqlite-compat-module', 'emptyDir': {'sizeLimit': '1Mi'}}]
+    pod['containers'][0]['volumeMounts'].append({'name': 'sqlite-compat-module', 'mountPath': '/app/src/basic_memory/index/local_project.py', 'subPath': 'local_project.py', 'readOnly': True})
+    return scripts
+
 if sys.argv[1] == 'setup':
     pvc = resource('PersistentVolumeClaim', PVC, {'accessModes': ['ReadWriteOnce'], 'storageClassName': 'rook-ceph-block', 'resources': {'requests': {'storage': '5Gi'}}})
     pvc['metadata']['annotations'] = {'kustomize.toolkit.fluxcd.io/prune': 'disabled'}
@@ -34,6 +43,7 @@ elif sys.argv[1] in ('server', 'index'):
     assert NAME != 'basic-memory-pre-v1-rollback', 'Never migrate the rollback copy'
     container = {'name': 'basic-memory', 'image': IMAGE, 'command': ['basic-memory', 'mcp', '--transport', 'streamable-http', '--host', '127.0.0.1', '--port', '8000', '--path', '/mcp', '--project', 'main'], 'env': [{'name': k, 'value': v} for k, v in ENV.items()], 'securityContext': CONTAINER_SECURITY, 'resources': {'requests': {'cpu': '500m', 'memory': '1Gi'}, 'limits': {'cpu': '2', 'memory': '3Gi'}}, 'volumeMounts': [{'name': 'data', 'mountPath': '/data'}], 'startupProbe': {'exec': {'command': ['python', '-c', 'import socket; socket.create_connection(("127.0.0.1",8000),3).close()']}, 'periodSeconds': 5, 'failureThreshold': 180}, 'readinessProbe': {'exec': {'command': ['python', '-c', 'import socket; socket.create_connection(("127.0.0.1",8000),3).close()']}, 'periodSeconds': 10}}
     pod = {'automountServiceAccountToken': False, 'securityContext': SECURITY, 'affinity': AFFINITY, 'containers': [container], 'volumes': [volume('data', PVC)]}
+    compat = sqlite_compat(pod)
     if sys.argv[1] == 'index':
         assert NAME == 'basic-memory-v1-restore'
         container['command'] = ['/bin/sh', '-ec', 'basic-memory reindex --full --search -p main && basic-memory reindex --embeddings -p main']
@@ -43,9 +53,12 @@ elif sys.argv[1] in ('server', 'index'):
             if item['name'] == 'BASIC_MEMORY_INDEX_CHANGES':
                 item['value'] = 'false'
         pod['restartPolicy'] = 'Never'
-        result = resource('Job', NAME + '-index', {'backoffLimit': 0, 'activeDeadlineSeconds': 3600, 'template': {'metadata': {'labels': LABELS}, 'spec': pod}}, 'batch/v1')
+        run = os.environ.get('BM_VALIDATION_RUN', '')
+        assert re.fullmatch(r'[a-z0-9-]{0,20}', run)
+        result = resource('Job', NAME + '-index' + ('-' + run if run else ''), {'backoffLimit': 0, 'activeDeadlineSeconds': 3600, 'template': {'metadata': {'labels': LABELS}, 'spec': pod}}, 'batch/v1')
     else:
         result = resource('Deployment', NAME, {'replicas': 1, 'strategy': {'type': 'Recreate'}, 'selector': {'matchLabels': LABELS}, 'template': {'metadata': {'labels': LABELS}, 'spec': pod}}, 'apps/v1')
+    result = {'apiVersion': 'v1', 'kind': 'List', 'items': [compat, result]}
 elif sys.argv[1] == 'backup-restore':
     assert NAME == 'basic-memory-v1-restore'
     pvc = resource('PersistentVolumeClaim', PVC, {'accessModes': ['ReadWriteOnce'], 'storageClassName': 'rook-ceph-block', 'resources': {'requests': {'storage': '5Gi'}}})

@@ -6,6 +6,28 @@ The Deployment uses Recreate; brief update interruptions are expected. Hybrid se
 uses local FastEmbed inference; no external model API or telemetry is enabled.
 App pods have no Kubernetes token.
 
+## SQLite compatibility overlay
+
+The official 1.0.0 local project indexer hardcodes eight concurrent database tasks,
+including search refreshes. On this corpus, full indexing failed on 13 files even
+with the MCP server stopped. Running the same index with one task completed all
+59 files and reconstructed every authored relation.
+
+`scripts/sqlite-index-compat.py` changes only the two local batch-concurrency
+defaults from eight to one. An unprivileged init container checks the exact
+upstream module SHA256 and builds a read-only module overlay in an emptyDir.
+Both the server and maintenance CLI use it. Reads and embedding settings stay
+unchanged. This is a local compatibility fix on the pinned upstream 1.0.0 image;
+it must be reviewed or removed at the next image upgrade. A different source hash
+refuses startup. Recovery Jobs must mount this same overlay, as the validation
+renderer does; a bare upstream image will reproduce the failure.
+
+Earlier reports [#1322](https://github.com/basicmachines-co/basic-memory/issues/1322)
+and [#1581](https://github.com/basicmachines-co/basic-memory/issues/1581) describe
+reindex shutdown hangs and quadratic vector cleanup in 0.23.2. Their upstream
+fixes are already in 1.0.0. This overlay addresses the separately reproduced
+search-index writer contention; successful CLI exit is part of restore validation.
+
 ## Hybrid search
 
 The default search mode is `hybrid`, combining SQLite FTS5 with `sqlite-vec`.
@@ -103,8 +125,8 @@ failed materializations, moved-path cleanup, changing files, or bad checksums fa
 the backup instead of silently losing accepted updates. Recovery point target: 24h.
 
 To exercise a backup: create a uniquely named Job from CronJob `basic-memory-backup`
-and inspect its completion and log. Creating a manual Job does not update the
-CronJob's last-successful timestamp; the normal scheduled run does.
+and inspect that Job's completion and checksum log. Check the scheduled run
+separately; a recent successful manual backup alone does not prove the schedule ran.
 
 Restore into a **new** PVC, never over the running instance. Download the archive
 and its `.sha256` file over SSH with the pinned host key; verify SHA256. Run

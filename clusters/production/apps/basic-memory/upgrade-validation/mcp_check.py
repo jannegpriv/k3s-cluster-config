@@ -131,5 +131,6 @@ def verify_copy(restored=False):
 
 
 if __name__ == '__main__':
-    validate()
+    if '--graph-only' not in sys.argv:
+        validate()
     verify_copy(restored='--restored' in sys.argv)
