@@ -13,6 +13,10 @@ resources:
 - monitoring.yaml
 - chatgpt-tunnel
 configMapGenerator:
+- name: basic-memory-sqlite-compat
+  namespace: basic-memory
+  files:
+  - sqlite-index-compat.py=scripts/sqlite-index-compat.py
 - name: basic-memory-backup-scripts
   namespace: basic-memory
   files:

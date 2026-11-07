@@ -1,10 +1,11 @@
-"""Verified file backup for Basic Memory 0.23.2. No live SQLite files in archives."""
+"""Verified file backup for Basic Memory. No live SQLite files in archives."""
 
 import datetime
 import hashlib
 import io
 import json
 import os
+import re
 from pathlib import Path, PurePosixPath
 import shlex
 import sqlite3
@@ -76,7 +77,7 @@ def create_archive(root, archive, attempts=3, delay=10):
             with tarfile.open(archive, "w:gz") as tar:
                 for name in before:
                     tar.add(root / name, arcname=name, recursive=False)
-                manifest = json.dumps({"format": 1, "basic_memory": "0.23.2",
+                manifest = json.dumps({"format": 1, "basic_memory": os.environ.get("BASIC_MEMORY_BACKUP_VERSION", "0.23.2"),
                                        "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
                                        "sha256": before}, sort_keys=True).encode()
                 info = tarfile.TarInfo("manifest.json")
@@ -108,7 +109,9 @@ def remote(command, **kwargs):
 
 
 def upload(archive):
-    destination = "/volume1/k3s_backups/basic-memory"
+    destination = os.environ.get("BASIC_MEMORY_BACKUP_DESTINATION", "/volume1/k3s_backups/basic-memory")
+    if not re.fullmatch(r"/volume1/k3s_backups/basic-memory(?:-upgrade-test-[0-9]{8})?", destination):
+        raise ValueError("Unsupported backup destination")
     name = archive.name
     checksum = file_digest(archive)
     temporary = f"{destination}/.{name}.uploading"
