@@ -1,5 +1,15 @@
 # Basic Memory verification
 
+## 1.0 production rollout — 2026-11-07 — VERIFIED
+
+[PR #7](https://github.com/jannegpriv/k3s-cluster-config/pull/7) is deployed.
+Post-deployment MCP discovery, read/write/edit/delete, revision-conflict handling,
+and text/semantic/hybrid search passed. Agent instructions and ChatGPT's cached
+plugin tool definitions were updated to the 1.0 contracts. Existing conversations
+must be restarted to load the new tools; a microphone-driven Voice test was not
+performed. A post-upgrade backup passed verification. Detailed operational evidence
+is retained locally instead of publishing infrastructure or backup metadata.
+
 ## 1.0 restore gate — 2026-11-07 — PASSED
 
 The prior restore blocker below was reproduced and resolved before deployment.
