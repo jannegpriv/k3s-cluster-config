@@ -106,7 +106,7 @@
             "containers": [
               {
                 "name": "monitor",
-                "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:042b7446a1433c40f96f9104fc438dbd5a026c5b890d92d4d67ce81a497ec80d",
+                "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:94378459ade534416384dcdabd9cf353c66f8846a4e49f8dcab6b38a42c0c113",
                 "command": [
                   "python",
                   "/app/monitor.py"
@@ -165,7 +165,7 @@
                 ],
                 "readinessProbe": {
                   "httpGet": {
-                    "path": "/healthz",
+                    "path": "/readyz",
                     "port": "metrics"
                   },
                   "periodSeconds": 15
