@@ -49,6 +49,26 @@ Note: RoleBinding roleRef is immutable -> bindings renamed `ai-remediator-write`
 | 16 | get_pod_logs(kube-system, coredns) | same | logs outside old allow-list | ✅ |
 | 17 | restart_pod(kube-system) | same | still refused (write allow-list) | ✅ "outside REMEDIATOR_NAMESPACES allow-list" |
 
+## get_pod_logs: pods with several containers (2026-11-18)
+
+Trigger: AlertmanagerFailedToSendAlerts on 2026-11-18. The log API answers 400
+"a container name must be specified" for a pod with sidecars, the tool had no
+`container` input, and the agent could not read the Alertmanager log that named
+the cause (the router's DNS not answering). get_pod_logs now takes an optional
+`container`. Without it, a multi-container pod is looked up and its main
+container is read (the `kubectl.kubernetes.io/default-container` annotation,
+else the first non-init container); the result names the container shown and
+lists the others. Tested with a one-shot wrapper run by `n8n execute`, removed
+afterwards. Not tested: the agent itself passing `container` through `$fromAI`.
+
+| # | Case | Expected | Result |
+|---|------|----------|--------|
+| 18 | alertmanager pod, no container | log of `alertmanager`, note listing the others | ✅ note: config-reloader, init-config-reloader |
+| 19 | alertmanager pod, container=config-reloader | sidecar log | ✅ |
+| 20 | coredns pod (one container), no container | log, no note | ✅ |
+| 21 | container=nope | API error passed on | ✅ 400 "container nope is not valid" |
+| 22 | pod that does not exist | API error passed on | ✅ 404 |
+
 Verified during build (2026-07-10/11):
 - Phase 3 acceptance: synthetic alert -> agent used get_pod_status + get_events
   -> correct "synthetic, no action" conclusion -> structured Swedish report in
@@ -66,3 +86,6 @@ Verified during build (2026-07-10/11):
   inputs arrive as undefined.
 - CLI `n8n execute` collides with the running instance's task broker: use
   `N8N_RUNNERS_ENABLED=false N8N_RUNNERS_BROKER_PORT=5680`.
+- `kubectl rollout restart deploy/n8n` adds a pod-template annotation that Flux
+  removes at its next reconcile, which restarts n8n a second time. Delete the
+  pod instead.

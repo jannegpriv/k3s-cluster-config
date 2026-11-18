@@ -22,6 +22,9 @@
             },
             {
               "name": "previous"
+            },
+            {
+              "name": "container"
             }
           ]
         }
@@ -37,7 +40,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;\nfunction bad(s){ return !s || typeof s !== \"string\" || !RE.test(s); }\nconst i = $input.first().json;\nif (bad(i.namespace) || bad(i.pod)) return [{json: {blocked: true, ok: false, detail: \"invalid or missing namespace/pod\"}}];\nlet url = `https://kubernetes.default.svc/api/v1/namespaces/${i.namespace}/pods/${i.pod}/log?tailLines=200`;\nif (String(i.previous) === \"true\") url += \"&previous=true\";\nreturn [{json: {url}}];"
+        "jsCode": "const RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;\nfunction bad(s){ return !s || typeof s !== \"string\" || !RE.test(s); }\nconst i = $input.first().json;\nif (bad(i.namespace) || bad(i.pod)) return [{json: {blocked: true, ok: false, detail: \"invalid or missing namespace/pod\"}}];\n// container is optional; the model may send \"\", \"null\" or \"undefined\" for \"not set\".\nlet container = typeof i.container === \"string\" ? i.container.trim() : \"\";\nif ([\"\", \"null\", \"undefined\", \"none\"].includes(container.toLowerCase())) container = \"\";\nif (container && bad(container)) return [{json: {blocked: true, ok: false, detail: \"invalid container name\"}}];\nlet base = `https://kubernetes.default.svc/api/v1/namespaces/${i.namespace}/pods/${i.pod}/log?tailLines=200`;\nif (String(i.previous) === \"true\") base += \"&previous=true\";\nconst url = container ? `${base}&container=${container}` : base;\nconst podUrl = `https://kubernetes.default.svc/api/v1/namespaces/${i.namespace}/pods/${i.pod}`;\nreturn [{json: {url, base, podUrl, container}}];"
       }
     },
     {
@@ -73,8 +76,8 @@
       }
     },
     {
-      "id": "result",
-      "name": "Result",
+      "id": "pick",
+      "name": "Check Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
@@ -82,7 +85,131 @@
         0
       ],
       "parameters": {
-        "jsCode": "const r = $input.first().json;\nif (r.blocked) return [{json: {ok: false, detail: r.detail}}];\nif (r.statusCode >= 400) return [{json: {ok: false, detail: `K8s API ${r.statusCode}: ${String(r.body ?? r.data).slice(0,300)}`}}];\nlet log = String(r.body ?? r.data ?? \"\");\nif (log.length > 6000) log = \"...(truncated)...\\n\" + log.slice(-6000);\nreturn [{json: {ok: true, log}}];"
+        "jsCode": "// A pod with several containers makes the log API answer 400\n// \"a container name must be specified for pod X, choose one of: [...]\".\n// When no container was requested, look the pod up and retry with its main\n// container. The list in the error message is not used for the choice: it\n// puts init containers first.\nconst r = $input.first().json;\nconst prep = $('Prepare').first().json;\nif (prep.blocked) return [{json: {blocked: true, detail: prep.detail, retry: false}}];\nconst body = String(r.body ?? r.data ?? \"\");\nconst ambiguous = r.statusCode === 400 && !prep.container && body.includes(\"a container name must be specified\");\nif (!ambiguous) return [{json: {...r, retry: false, container: prep.container || \"\"}}];\nreturn [{json: {retry: true, url: prep.podUrl}}];"
+      }
+    },
+    {
+      "id": "needretry",
+      "name": "Retry?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "retry",
+              "leftValue": "={{ $json.retry }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "httppod",
+      "name": "K8s GET pod",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1000,
+        -100
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "aiRemediatorK8s1",
+          "name": "K8s ai-remediator"
+        }
+      }
+    },
+    {
+      "id": "choose",
+      "name": "Choose Container",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "// Main container = the kubectl default-container annotation when it names a\n// real container, otherwise the first regular (non-init) container.\nconst RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;\nconst r = $input.first().json;\nconst prep = $('Prepare').first().json;\nlet pod = null;\ntry { pod = JSON.parse(String(r.body ?? r.data ?? \"\")); } catch (e) {}\nconst containers = (pod?.spec?.containers ?? []).map(c => c.name).filter(c => RE.test(c));\nif (r.statusCode >= 400 || !containers.length) {\n  // Keep url empty of a container: the log call then repeats the original 400,\n  // which Result reports as it is.\n  return [{json: {url: prep.base, container: \"\", containers}}];\n}\nconst init = (pod.spec.initContainers ?? []).map(c => c.name).filter(c => RE.test(c));\nconst preferred = pod.metadata?.annotations?.[\"kubectl.kubernetes.io/default-container\"];\nconst container = containers.includes(preferred) ? preferred : containers[0];\nreturn [{json: {url: `${prep.base}&container=${container}`, container, containers, init}}];"
+      }
+    },
+    {
+      "id": "http2",
+      "name": "K8s GET container",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        -100
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "aiRemediatorK8s1",
+          "name": "K8s ai-remediator"
+        }
+      }
+    },
+    {
+      "id": "result",
+      "name": "Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nconst check = $('Check Response').first().json;\nif (check.blocked) return [{json: {ok: false, detail: check.detail}}];\nconst extra = {};\nif (check.retry) {\n  const c = $('Choose Container').first().json;\n  if (c.container) {\n    extra.container = c.container;\n    const others = c.containers.filter(n => n !== c.container).concat(c.init);\n    extra.note = `pod has several containers; showing \"${c.container}\". Pass container to read another one: ${others.join(\", \")}.`;\n  }\n} else if (check.container) {\n  extra.container = check.container;\n}\nif (r.statusCode >= 400) return [{json: {ok: false, detail: `K8s API ${r.statusCode}: ${String(r.body ?? r.data).slice(0,300)}`, ...extra}}];\nlet log = String(r.body ?? r.data ?? \"\");\nif (log.length > 6000) log = \"...(truncated)...\\n\" + log.slice(-6000);\nreturn [{json: {ok: true, log, ...extra}}];"
       }
     }
   ],
@@ -113,7 +240,69 @@
       "main": [
         [
           {
+            "node": "Check Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retry?": {
+      "main": [
+        [
+          {
+            "node": "K8s GET pod",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "K8s GET container": {
+      "main": [
+        [
+          {
+            "node": "Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Response": {
+      "main": [
+        [
+          {
+            "node": "Retry?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "K8s GET pod": {
+      "main": [
+        [
+          {
+            "node": "Choose Container",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Choose Container": {
+      "main": [
+        [
+          {
+            "node": "K8s GET container",
             "type": "main",
             "index": 0
           }

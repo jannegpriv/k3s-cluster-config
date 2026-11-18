@@ -188,7 +188,7 @@
       ],
       "parameters": {
         "name": "get_pod_logs",
-        "description": "Fetch the last 200 log lines from a pod. Inputs: namespace, pod, previous ('true' to read the PREVIOUS crashed container instance - use for CrashLoopBackOff).",
+        "description": "Fetch the last 200 log lines from a pod. Inputs: namespace, pod, previous ('true' to read the PREVIOUS crashed container instance - use for CrashLoopBackOff), container (optional container name; leave empty to get the pod's first container - the result then lists the other containers so you can call again for a sidecar).",
         "workflowId": {
           "__rl": true,
           "value": "aiRemGetPodLogs1",
@@ -199,7 +199,8 @@
           "value": {
             "namespace": "={{ $fromAI('namespace', 'namespace of the pod', 'string') }}",
             "pod": "={{ $fromAI('pod', 'exact pod name', 'string') }}",
-            "previous": "={{ $fromAI('previous', 'true for previous crashed container, else false', 'string') }}"
+            "previous": "={{ $fromAI('previous', 'true for previous crashed container, else false', 'string') }}",
+            "container": "={{ $fromAI('container', 'container name, or empty string for the first container', 'string') }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -226,6 +227,16 @@
             {
               "id": "previous",
               "displayName": "previous",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "container",
+              "displayName": "container",
               "required": false,
               "defaultMatch": false,
               "display": true,
