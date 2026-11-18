@@ -1,0 +1,24 @@
+# Extra CoreDNS configuration, imported by the k3s-packaged Corefile through
+# "import /etc/coredns/custom/*.override" (inside the .:53 server block).
+#
+# The packaged Corefile ends with "forward . /etc/resolv.conf", which on these
+# nodes means the home router (192.168.50.1) only. When the router's resolver
+# stops answering, every external lookup in the cluster returns SERVFAIL
+# (2026-11-17 and 2026-11-18, around 00:00-03:00: Alertmanager could not reach
+# hc-ping.com or the SMTP relay).
+#
+# This forward is imported before the packaged one and therefore handles all
+# non-cluster names. The router stays first, so its answers are used whenever
+# it responds; the public resolvers are only tried when it does not. A dead
+# upstream costs about 2 s for the first few queries and is then skipped until
+# its health check passes again.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  fallback.override: |
+    forward . 192.168.50.1 1.1.1.1 9.9.9.9 {
+        policy sequential
+    }
