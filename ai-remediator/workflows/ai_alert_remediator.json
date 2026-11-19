@@ -28,7 +28,35 @@
         0
       ],
       "parameters": {
-        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst alerts = (body.alerts || []).filter(a => a.status === \"firing\");\nif (!alerts.length) return [];\nconst sd = $getWorkflowStaticData(\"global\");\nsd.seen = sd.seen || {};\nconst cooldownMs = parseInt($env.COOLDOWN_MINUTES || \"30\", 10) * 60000;\nconst now = Date.now();\nconst out = [];\nfor (const a of alerts.slice(0, 3)) {\n  const fp = a.fingerprint || (a.labels?.alertname + \"/\" + (a.labels?.pod || a.labels?.deployment || \"\"));\n  if (sd.seen[fp] && now - sd.seen[fp] < cooldownMs) continue;\n  sd.seen[fp] = now;\n  out.push({json: {fingerprint: fp, alert: {\n    name: a.labels?.alertname, severity: a.labels?.severity,\n    namespace: a.labels?.namespace, pod: a.labels?.pod, deployment: a.labels?.deployment,\n    summary: a.annotations?.summary, description: a.annotations?.description,\n    startsAt: a.startsAt}}});\n}\nreturn out;"
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst alerts = (body.alerts || []).filter(a => a.status === \"firing\");\nif (!alerts.length) return [];\nconst sd = $getWorkflowStaticData(\"global\");\nsd.seen = sd.seen || {};\n// runs[fp] = {started, done}: set by \"Mark started\" and \"Mark done\" around the\n// agent. A run that started and never finished crashed (or is still running).\nsd.runs = sd.runs || {};\nconst cooldownMs = parseInt($env.COOLDOWN_MINUTES || \"30\", 10) * 60000;\nconst crashCooldownMs = parseFloat($env.CRASH_COOLDOWN_HOURS || \"24\") * 3600000;\nconst now = Date.now();\nconst keepMs = Math.max(7 * 86400000, crashCooldownMs);\nfor (const fp of Object.keys(sd.seen)) if (now - sd.seen[fp] > keepMs) delete sd.seen[fp];\nfor (const fp of Object.keys(sd.runs)) if (now - sd.runs[fp].started > keepMs) delete sd.runs[fp];\nconst out = [];\nfor (const a of alerts.slice(0, 3)) {\n  const fp = a.fingerprint || (a.labels?.alertname + \"/\" + (a.labels?.pod || a.labels?.deployment || \"\"));\n  if (sd.seen[fp] && now - sd.seen[fp] < cooldownMs) continue;\n  // Alertmanager repeats a firing alert every few hours. If the agent crashed\n  // on this alert last time, do not let it crash again on every repeat.\n  const run = sd.runs[fp];\n  if (run && !run.done && now - run.started < crashCooldownMs) continue;\n  sd.seen[fp] = now;\n  out.push({json: {fingerprint: fp, alert: {\n    name: a.labels?.alertname, severity: a.labels?.severity,\n    namespace: a.labels?.namespace, pod: a.labels?.pod, deployment: a.labels?.deployment,\n    summary: a.annotations?.summary, description: a.annotations?.description,\n    startsAt: a.startsAt}}});\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "loop",
+      "name": "Loop Over Alerts",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "notes": "One alert per agent run. With several items the AI Agent node restarts an item that has already finished while another item still has tool calls pending, and the run ends in 'Max iterations reached' (2026-11-18, executions 4274, 4304, 4332)."
+    },
+    {
+      "id": "markstarted",
+      "name": "Mark started",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        100
+      ],
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst sd = $getWorkflowStaticData(\"global\");\nsd.runs = sd.runs || {};\nsd.runs[item.fingerprint] = {started: Date.now()};\nreturn [{json: item}];"
       }
     },
     {
@@ -37,8 +65,8 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3,
       "position": [
-        420,
-        0
+        800,
+        100
       ],
       "parameters": {
         "promptType": "define",
@@ -55,8 +83,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
       "typeVersion": 1.3,
       "position": [
-        300,
-        220
+        700,
+        320
       ],
       "parameters": {
         "model": {
@@ -80,11 +108,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        680,
-        0
+        1000,
+        100
       ],
       "parameters": {
-        "jsCode": "const txt = $input.first().json.output || $input.first().json.text || JSON.stringify($input.first().json).slice(0,3000);\nreturn [{json: {text: \"🤖 **AI-remediator** (fingerprint: \" + ($('Filter & Dedup').first().json.fingerprint || \"?\") + \")\\n\\n\" + txt}}];"
+        "jsCode": "const txt = $input.first().json.output || $input.first().json.text || JSON.stringify($input.first().json).slice(0,3000);\nreturn [{json: {text: \"🤖 **AI-remediator** (fingerprint: \" + ($('Mark started').first().json.fingerprint || \"?\") + \")\\n\\n\" + txt}}];"
       }
     },
     {
@@ -93,8 +121,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        880,
-        0
+        1200,
+        100
       ],
       "parameters": {
         "method": "POST",
@@ -118,13 +146,26 @@
       "waitBetweenTries": 5000
     },
     {
+      "id": "markdone",
+      "name": "Mark done",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        100
+      ],
+      "parameters": {
+        "jsCode": "const fp = $('Mark started').first().json.fingerprint;\nconst sd = $getWorkflowStaticData(\"global\");\nif (sd.runs?.[fp]) sd.runs[fp].done = Date.now();\nreturn [{json: {fingerprint: fp, done: true}}];"
+      }
+    },
+    {
       "id": "tool-get_pod_status",
       "name": "get_pod_status",
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        100,
-        420
+        500,
+        520
       ],
       "parameters": {
         "name": "get_pod_status",
@@ -183,8 +224,8 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        230,
-        420
+        630,
+        520
       ],
       "parameters": {
         "name": "get_pod_logs",
@@ -254,8 +295,8 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        360,
-        420
+        760,
+        520
       ],
       "parameters": {
         "name": "get_events",
@@ -303,8 +344,8 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        490,
-        420
+        890,
+        520
       ],
       "parameters": {
         "name": "describe_deployment",
@@ -363,8 +404,8 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        620,
-        420
+        1020,
+        520
       ],
       "parameters": {
         "name": "get_pod_metrics",
@@ -401,8 +442,8 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        750,
-        420
+        1150,
+        520
       ],
       "parameters": {
         "name": "restart_pod",
@@ -461,8 +502,8 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        880,
-        420
+        1280,
+        520
       ],
       "parameters": {
         "name": "rollout_restart_deployment",
@@ -521,8 +562,8 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        1010,
-        420
+        1410,
+        520
       ],
       "parameters": {
         "name": "scale_deployment",
@@ -592,8 +633,8 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        1140,
-        420
+        1540,
+        520
       ],
       "parameters": {
         "name": "get_node_status",
@@ -630,8 +671,8 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        1270,
-        420
+        1670,
+        520
       ],
       "parameters": {
         "name": "get_top_pods",
@@ -701,7 +742,7 @@
       "main": [
         [
           {
-            "node": "AI Agent",
+            "node": "Loop Over Alerts",
             "type": "main",
             "index": 0
           }
@@ -846,6 +887,51 @@
           {
             "node": "AI Agent",
             "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Alerts": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Mark started",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark started": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to k3s-cluster": {
+      "main": [
+        [
+          {
+            "node": "Mark done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark done": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Alerts",
+            "type": "main",
             "index": 0
           }
         ]

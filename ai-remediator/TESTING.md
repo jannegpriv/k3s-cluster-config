@@ -59,7 +59,7 @@ the cause (the router's DNS not answering). get_pod_logs now takes an optional
 container is read (the `kubectl.kubernetes.io/default-container` annotation,
 else the first non-init container); the result names the container shown and
 lists the others. Tested with a one-shot wrapper run by `n8n execute`, removed
-afterwards. Not tested: the agent itself passing `container` through `$fromAI`.
+afterwards. The agent passing `container` through `$fromAI` is covered by #23.
 
 | # | Case | Expected | Result |
 |---|------|----------|--------|
@@ -68,6 +68,30 @@ afterwards. Not tested: the agent itself passing `container` through `$fromAI`.
 | 20 | coredns pod (one container), no container | log, no note | ✅ |
 | 21 | container=nope | API error passed on | ✅ 400 "container nope is not valid" |
 | 22 | pod that does not exist | API error passed on | ✅ 404 |
+
+## Several alerts in one webhook + crash cooldown (2026-11-19)
+
+Trigger: executions 4274, 4304 and 4332 on 2026-11-18 ended in "Max iterations
+(10) reached". Each carried two KubeJobFailed alerts. The trace of 4332 shows
+the item that had finished (full report, no tool calls) starting over while the
+other item still had tool calls pending, three times, until the limit. Runs
+with one alert were not affected. Reading of the cause from the trace; the n8n
+source was not checked.
+
+- `Loop Over Alerts` (batch size 1) now feeds the agent one alert at a time.
+  Each alert gets its own report; before, only the first item was reported.
+- `Mark started` / `Mark done` record each run in workflow static data. When
+  the last run for a fingerprint started and never finished, `Filter & Dedup`
+  skips that alert for `CRASH_COOLDOWN_HOURS` (default 24, optional n8n env)
+  instead of crashing again at every Alertmanager repeat (6 h). Static data
+  survives a crashed execution and a workflow import (checked in the database).
+
+| # | Case | Expected | Result |
+|---|------|----------|--------|
+| 23 | Synthetic webhook with 2 alerts (monitoring: read sidecar + main log + events; mosquitto: pod status) | 2 agent runs, 2 reports with their own fingerprint, no write tools | ✅ execution 4375, 25 s, 4 LLM calls, `container=config-reloader` passed by the agent, both runs marked done |
+| 24 | Filter & Dedup logic run outside n8n: fresh, within 30 min, crashed 6 h ago, crashed 25 h ago, `CRASH_COOLDOWN_HOURS=1`, resolved only | skip only inside the cooldowns; old entries pruned after 7 days | ✅ 6/6 |
+
+Not tested: a real crash followed by a real Alertmanager repeat.
 
 Verified during build (2026-07-10/11):
 - Phase 3 acceptance: synthetic alert -> agent used get_pod_status + get_events
