@@ -251,7 +251,7 @@
             "containers": [
               {
                 "name": "tunnel",
-                "image": "ghcr.io/jannegpriv/openhab-analytics-tunnel@sha256:129a26293ae91e15a6f63e0c341fdd3a1d9561f88912afc2cad7276569911f2b",
+                "image": "ghcr.io/jannegpriv/openhab-analytics-tunnel@sha256:2299b5309cc272ee45e02c1719f2066542597bf5abd3c7584ab51b0c93fe48ba",
                 "securityContext": {
                   "allowPrivilegeEscalation": false,
                   "readOnlyRootFilesystem": true,

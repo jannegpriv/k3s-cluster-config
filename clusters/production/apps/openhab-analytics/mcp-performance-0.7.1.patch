@@ -1,0 +1,350 @@
+--- a/src/openhab_analytics/daily.py
++++ b/src/openhab_analytics/daily.py
+@@ -23,6 +23,7 @@
+ from .catalog import Catalog, QueryError, calendar_date
+ from .collector import CollectionError, collect, load_config, write_private
+ from .snapshots import read_json
++from .capabilities_cache import CapabilitiesCache
+ 
+ MAX_DAYS = 31
+ MAX_DAYS_PER_RUN = 3
+@@ -264,18 +265,20 @@
+ 
+     def __init__(self, root):
+         self.root = root
++        self.capabilities_cache = CapabilitiesCache()
+         self.request_view()  # Fail startup if no valid manifest is present.
+ 
+     def request_view(self):
+         try:
+-            return DailyView(self.root, read_index(self.root))
++            return DailyView(self.root, read_index(self.root), self.capabilities_cache)
+         except (OSError, ValueError, TypeError, KeyError, AttributeError):
+             raise QueryError("daily_catalog_unavailable") from None
+ 
+ 
+ class DailyView:
+-    def __init__(self, root, index):
++    def __init__(self, root, index, capabilities_cache=None):
+         self.root, self.index = root, index
++        self.capabilities_cache = capabilities_cache or CapabilitiesCache()
+ 
+     def collection_status(self):
+         index = self.index
+@@ -301,7 +304,14 @@
+                 "local_snapshot_only": True, "queryable_day_limit": MAX_DAYS}
+ 
+     def capabilities(self, site=None):
+-        sites = self._catalog(max(self.index["days"])).capabilities(site)["sites"]
++        if site is not None and site not in {s['site'] for s in self.index['sites']}:
++            raise QueryError('unknown_site')
++        day = max(self.index['days'])
++        try:
++            sites = self.capabilities_cache.get(self.root, self.index['days'][day], day,
++                self.index['sites'], lambda: self._catalog(day))['sites']
++        except (OSError, ValueError, TypeError, KeyError, AttributeError):
++            raise QueryError('daily_catalog_unavailable') from None
+         for s in sites:
+             s["today"] = now_utc().astimezone(ZoneInfo(s["timezone"])).date().isoformat()
+             for item in s["items"]:
+--- a/src/openhab_analytics/composite.py
++++ b/src/openhab_analytics/composite.py
+@@ -68,12 +68,23 @@
+         if self.index:
+             try:
+                 for day in sorted(self.index['days']):
+-                    extra.extend(self._feature(day).capabilities(site)['sites'])
++                    # Check structural paths even when metadata is already cached.
++                    ref = self.index['days'][day]
++                    from pathlib import Path
++                    if (self.root/'runs').is_symlink() or (self.root/Path(ref['catalog']).parent).is_symlink():
++                        raise QueryError('feature_catalog_unavailable')
++                    try:
++                        rows = self.daily.capabilities_cache.get(self.root, ref, day,
++                            self.index['policy'], lambda: self._feature(day))['sites']
++                    except (OSError, ValueError, TypeError, KeyError, AttributeError):
++                        raise QueryError('feature_catalog_unavailable') from None
++                    extra.extend(r for r in rows if site is None or r['site'] == site)
+             except QueryError:
+                 self.error = 'feature_catalog_unavailable'
+                 extra = []
+         by_site = {s['site']: s for s in data['sites']}
+         for s in by_site.values():
++            s['today'] = self.now.astimezone(ZoneInfo(s['timezone'])).date().isoformat()
+             s['heating_summary_available'] = False
+             s['heating_dates'] = []
+             s['partial_windows'] = []
+--- a/src/openhab_analytics/server.py
++++ b/src/openhab_analytics/server.py
+@@ -2,6 +2,9 @@
+ 
+ import argparse
+ import asyncio
++import json
++import time
++import uuid
+ from pathlib import Path
+ import sys
+ from typing import Annotated, Literal
+@@ -25,11 +28,11 @@
+ 
+ 
+ class CapabilitiesArgs(Arguments):
+-    site: Identifier | None = None
++    site: Identifier | None = Field(default=None, description="Exakt plats-ID från katalogen: huddinge eller landet i denna installation. Skiftlägeskänsligt; inte Huddinge.")
+ 
+ 
+ class EnergyArgs(Arguments):
+-    site: Annotated[Identifier, Field(description="Plats från get_history_capabilities. Blanda inte Huddinge och Landet.")]
++    site: Annotated[Identifier, Field(description="Exakt plats-ID från get_history_capabilities (huddinge eller landet, inte Huddinge eller Landet).")]
+     date: Annotated[Day, Field(description="Exakt kalenderdatum YYYY-MM-DD i platsens tidszon. Igår = dagen före today i capabilities, aldrig senaste sparade datum.")]
+ 
+     @field_validator("date")
+@@ -161,7 +164,7 @@
+     async def list_tools(context, params):
+         return ListToolsResult(tools=definitions)
+ 
+-    async def call_tool(context, params):
++    def execute_tool(params):
+         if params.name not in tool_definitions:
+             return failure("unknown_tool")
+         model = tool_definitions[params.name][0]
+@@ -207,7 +210,38 @@
+         return CallToolResult(content=[TextContent(type="text", text=response.summary)],
+                               structured_content=response.model_dump())
+ 
+-    return Server("openhab-analytics-local", version="0.7.0", on_list_tools=list_tools, on_call_tool=call_tool,
++    # Keep CPU/file work off the event loop. The gate stays held after client
++    # cancellation until the underlying thread finishes; at most two jobs run.
++    work_gate = asyncio.Semaphore(2)
++    pending = set()
++
++    async def call_tool(context, params):
++        queued = time.perf_counter()
++        request_id = uuid.uuid4().hex
++
++        async def work():
++            async with work_gate:
++                started = time.perf_counter()
++                result = await asyncio.to_thread(execute_tool, params)
++                finished = time.perf_counter()
++                encoded = result.model_dump_json().encode()
++                print(json.dumps({'event': 'mcp_request', 'request_id': request_id,
++                    'tool': params.name, 'queue_ms': round((started-queued)*1000, 2),
++                    'work_ms': round((finished-started)*1000, 2),
++                    'total_ms': round((finished-queued)*1000, 2),
++                    'response_bytes': len(encoded), 'is_error': result.is_error}),
++                    file=sys.stderr, flush=True)
++                return result
++
++        task = asyncio.create_task(work())
++        pending.add(task)
++        def finished(task):
++            pending.discard(task)
++            if not task.cancelled(): task.exception()  # Retrieve detached failures.
++        task.add_done_callback(finished)
++        return await asyncio.shield(task)
++
++    return Server("openhab-analytics-local", version="0.7.1", on_list_tools=list_tools, on_call_tool=call_tool,
+                   instructions="Endast läsning av sparad historik. Börja med get_history_capabilities. "
+                   "Fråga vilken plats om Huddinge/Landet är oklart. Tolka relativa datum med platsens today och tidszon; "
+                   "byt aldrig ett saknat datum mot senaste sparade. Använd get_energy_summary för förbrukning: "
+@@ -256,6 +290,15 @@
+     except (OSError, ValueError, TypeError, KeyError, AttributeError) as error:
+         print(f"Cannot load local catalog ({type(error).__name__}); check its schema and snapshots.", file=sys.stderr)
+         return 2
++    if isinstance(catalog, (DailyCatalog, CompositeCatalog)):
++        started = time.perf_counter()
++        try:
++            catalog.request_view().capabilities()
++            status = 'ready'
++        except QueryError:
++            status = 'unavailable'  # Queries still fail closed with their normal error.
++        print(json.dumps({'event': 'capabilities_cache_warmup', 'status': status,
++              'duration_ms': round((time.perf_counter()-started)*1000, 2)}), file=sys.stderr, flush=True)
+     asyncio.run(serve(catalog))
+     return 0
+ 
+--- /dev/null
++++ b/src/openhab_analytics/capabilities_cache.py
+@@ -0,0 +1,62 @@
++"""Small validated-metadata cache; every hit still verifies file contents.
++
++Only metadata is cached, never sensor histories or analysis results. The cache
++key includes reference, policy and date. All referenced bytes are SHA-256 checked
++on every request, so corruption is detected even if size/mtime are unchanged.
++"""
++from collections import OrderedDict
++from copy import deepcopy
++import hashlib
++import json
++from pathlib import Path
++import threading
++
++from .snapshots import MAX_FILE_BYTES, read_json
++
++
++def verify_files(root, ref):
++    path = root / ref['catalog']
++    if not path.resolve().is_relative_to(root.resolve()) or path.is_symlink():
++        raise ValueError('catalog_path_outside_root')
++    document, raw = read_json(path, 256 * 1024)
++    if hashlib.sha256(raw).hexdigest() != ref['sha256']:
++        raise ValueError('catalog_digest_mismatch')
++    seen = set()
++    for entry in document['sites'].values():
++        for name in entry['snapshots']:
++            source = path.parent / name
++            if (Path(name).name != name or source.is_symlink()
++                    or not source.resolve().is_relative_to(path.parent.resolve())
++                    or not source.is_file()):
++                raise ValueError('snapshot_path_outside_generation')
++            with source.open('rb') as stream:
++                raw = stream.read(MAX_FILE_BYTES + 1)
++            if len(raw) > MAX_FILE_BYTES or hashlib.sha256(raw).hexdigest() != ref['snapshots'].get(name):
++                raise ValueError('snapshot_digest_mismatch')
++            seen.add(name)
++    if seen != set(ref['snapshots']):
++        raise ValueError('snapshot_digest_set_mismatch')
++
++
++class CapabilitiesCache:
++    def __init__(self, limit=128):
++        self.limit = limit
++        self.entries = OrderedDict()
++        self.lock = threading.Lock()
++
++    def get(self, root, ref, day, policy, load):
++        key = (str(root.absolute()), day, json.dumps([ref, policy], sort_keys=True))
++        verify_files(root, ref)
++        with self.lock:
++            if key in self.entries:
++                self.entries.move_to_end(key)
++                return deepcopy(self.entries[key])
++        # Full validation and analysis happens only for a new immutable generation.
++        value = load().capabilities()
++        verify_files(root, ref)  # Do not cache a generation changed during validation.
++        with self.lock:
++            self.entries[key] = deepcopy(value)
++            self.entries.move_to_end(key)
++            while len(self.entries) > self.limit:
++                self.entries.popitem(last=False)
++        return value
+--- /dev/null
++++ b/tests/test_capabilities_performance.py
+@@ -0,0 +1,115 @@
++"""Integrity-preserving metadata reuse and nonblocking MCP request execution."""
++import asyncio
++from datetime import timedelta
++import hashlib
++import json
++import os
++from pathlib import Path
++import threading
++import time
++import unittest
++from unittest.mock import patch
++
++import test_feature_store as fixture
++from openhab_analytics.composite import CompositeCatalog
++from openhab_analytics.catalog import QueryError
++from openhab_analytics import feature_store, server
++from mcp.types import CallToolRequestParams
++
++
++class CacheTests(unittest.TestCase):
++    setUp = fixture.FeatureTests.setUp
++    save = fixture.FeatureTests.save
++    configure_ev = fixture.FeatureTests.configure_ev
++    setup_store = fixture.FeatureTests.setup_store
++    run_features = fixture.FeatureTests.run_features
++
++    def prepare(self):
++        self.setup_store(); self.run_features()
++        self.catalog = CompositeCatalog(self.daily, self.feature)
++        return self.catalog.request_view().capabilities()
++
++    def test_warm_capabilities_match_cold_without_reanalysis(self):
++        first = self.prepare()
++        with patch('openhab_analytics.snapshots.analyze', side_effect=AssertionError('reanalysis')):
++            self.assertEqual(first, self.catalog.request_view().capabilities())
++            self.assertEqual(first['sites'], self.catalog.request_view().capabilities('house')['sites'])
++        first['sites'].clear()
++        self.assertTrue(self.catalog.request_view().capabilities()['sites'])
++
++    def test_same_size_restored_mtime_corruption_and_recovery(self):
++        self.prepare(); ref=feature_store.read_index(self.feature)['days']['2026-10-18']
++        p=(self.feature/ref['catalog']).parent/next(iter(ref['snapshots']))
++        raw=p.read_bytes(); st=p.stat()
++        changed=raw.replace(b'"schema_version":1',b'"schema_version":2')
++        self.assertNotEqual(changed,raw)
++        p.write_bytes(changed);os.utime(p,ns=(st.st_atime_ns,st.st_mtime_ns))
++        self.assertEqual(self.catalog.request_view().capabilities()['feature_status'],'unavailable')
++        p.write_bytes(raw)
++        self.assertEqual(self.catalog.request_view().capabilities()['feature_status'],'available')
++
++    def test_new_generation_revalidates_and_old_view_is_pinned(self):
++        self.prepare(); old=self.catalog.request_view();before=old.capabilities()
++        self.run_features(fixture.NOW+timedelta(minutes=15))
++        self.assertEqual(old.capabilities(),before)
++        after=self.catalog.request_view().capabilities()
++        self.assertNotEqual(before['sites'][0]['partial_windows'],after['sites'][0]['partial_windows'])
++        self.assertEqual(self.catalog.request_view().energy('house','2026-10-18')['reported_load_energy_kwh'],12.25)
++
++    def test_changed_policy_and_unknown_site_fail_closed(self):
++        self.prepare()
++        with patch('openhab_analytics.snapshots.analyze',side_effect=AssertionError('must reject before reading')):
++            with self.assertRaisesRegex(QueryError,'unknown_site'):
++                self.catalog.request_view().capabilities('House')
++        p=self.feature/'active.json';ix=json.loads(p.read_text());ix['policy']['house']['heating']['additional_heat_semantics']='invalid';p.write_text(json.dumps(ix))
++        self.assertEqual(self.catalog.request_view().capabilities()['feature_status'],'unavailable')
++
++    def test_deletion_and_symlink_cannot_reuse_cache(self):
++        self.prepare();ref=feature_store.read_index(self.feature)['days']['2026-10-18']
++        p=(self.feature/ref['catalog']).parent/next(iter(ref['snapshots']));raw=p.read_bytes();p.unlink()
++        self.assertEqual(self.catalog.request_view().capabilities()['feature_status'],'unavailable')
++        target=self.folder/'outside.json';target.write_bytes(raw);p.symlink_to(target)
++        self.assertEqual(self.catalog.request_view().capabilities()['feature_status'],'unavailable')
++
++
++class AsyncTests(unittest.IsolatedAsyncioTestCase):
++    async def test_slow_call_does_not_block_other_requests(self):
++        callbacks={}
++        def capture(*a,**kw): callbacks.update(kw);return object()
++        started=threading.Event();release=threading.Event()
++        class Catalog:
++            def capabilities(self,**kw):started.set();release.wait(5);return {'sites':[]}
++            def energy(self,**kw):raise QueryError('unknown_site')
++            ev = history = statistics = energy
++        with patch.object(server,'Server',side_effect=capture):server.make_server(Catalog())
++        callback=callbacks['on_call_tool']
++        slow=asyncio.create_task(callback(None,CallToolRequestParams(name='get_history_capabilities',arguments={})))
++        try:
++            self.assertTrue(await asyncio.to_thread(started.wait,2))
++            quick=await asyncio.wait_for(callback(None,CallToolRequestParams(name='get_energy_summary',arguments={'site':'missing','date':'2026-11-20'})),1)
++            self.assertTrue(quick.is_error);self.assertFalse(slow.done())
++        finally:release.set();await slow
++
++    async def test_cancellation_does_not_free_a_running_worker_slot(self):
++        callbacks={};lock=threading.Lock();active=0;peak=0;release=threading.Event();both=threading.Event()
++        def capture(*a,**kw):callbacks.update(kw);return object()
++        class Catalog:
++            def capabilities(self,**kw):
++                nonlocal active,peak
++                with lock:
++                    active+=1;peak=max(peak,active)
++                    if active==2:both.set()
++                release.wait(5)
++                with lock:active-=1
++                return {'sites':[]}
++            def energy(self,**kw):raise QueryError('unknown_site')
++            ev = history = statistics = energy
++        with patch.object(server,'Server',side_effect=capture):server.make_server(Catalog())
++        cb=callbacks['on_call_tool'];params=CallToolRequestParams(name='get_history_capabilities',arguments={})
++        tasks=[asyncio.create_task(cb(None,params)) for _ in range(2)]
++        self.assertTrue(await asyncio.to_thread(both.wait,2));tasks[0].cancel()
++        await asyncio.gather(tasks[0],return_exceptions=True)
++        third=asyncio.create_task(cb(None,params))
++        await asyncio.sleep(.1);self.assertEqual(peak,2);self.assertFalse(third.done())
++        release.set();await asyncio.gather(tasks[1],third)
++        self.assertEqual(peak,2)

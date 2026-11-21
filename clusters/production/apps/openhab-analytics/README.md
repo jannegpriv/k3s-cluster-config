@@ -10,6 +10,31 @@ helt avstängd. Codex/Work-röstprovet efter övergång är också användarbekr
 Den gamla pilotnyckeln återkallades 23 oktober; produktionsnyckeln fungerar.
 Mac-reserven har verifierats med fryst produktionskod och produktionsnyckeln.
 
+
+## MCP-prestanda 0.7.1-mcp1 (2026-11-21)
+
+Katalogfrågor återanvänder nu validerad metadata per oföränderlig kataloggeneration.
+Varje fråga kontrollerar fortfarande SHA-256 för alla refererade filer, även om
+filstorlek och mtime är oförändrade. Bara metadata cachas, inte mätserier eller
+analysresultat. Nya referenser/policyer valideras fullt; gamla indexvyer är fortsatt
+sammanhängande. Saknade/skadade feature-data blir unavailable utan att ersätta
+dem med äldre data. Cachegränsen är 128 kataloger.
+
+MCP-processen värmer cachen före initiering (cirka 34 sekunder vid prov med 31 dygn).
+Varm katalogfråga tog 1,2–1,8 sekunder inne i produktionscontainern, jämfört med
+36–39 sekunder före ändringen. Analys/filarbete körs utanför asyncio-loopen med
+högst två samtidiga arbeten, även efter klientavbrott. Nya stderr-loggar anger
+verktyg, lokalt request-ID, kötid, arbetstid, totaltid, svarsstorlek och felstatus;
+argument, mätvärden och hemligheter loggas inte.
+
+218 regressionstester passerade i den byggda ARM64-imagen, inklusive korruption
+med återställd mtime, borttagning/symlänkar, ny generation, policyändring, samtidiga
+frågor och avbrutna anrop. OCI-blobbarnas checksummor och 23 källfiler verifierades.
+Källpatchen mot tidigare tunnelkod finns i `mcp-performance-0.7.1.patch`.
+Endast tunnelimagen byts; insamlare, monitor, datalager, regler och resursgränser
+behålls. Återgång: återlägg föregående image-digest i `tunnel.json` och låt Flux
+rulla om denna Deployment. Cachen är enbart i minnet; inga data behöver återställas.
+
 ## Release 0.7.0, aktiverad 2026-10-24
 
 `3eb1bf8` aktiverar deldygn och Huddinges värmepumpsanalys efter fem godkända
