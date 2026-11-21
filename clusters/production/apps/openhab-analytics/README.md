@@ -35,6 +35,44 @@ Endast tunnelimagen byts; insamlare, monitor, datalager, regler och resursgräns
 behålls. Återgång: återlägg föregående image-digest i `tunnel.json` och låt Flux
 rulla om denna Deployment. Cachen är enbart i minnet; inga data behöver återställas.
 
+### Verifiering i drift 2026-11-21, cirka 14.47–14.50 CET
+
+Flux applicerade `f71f2263261ab2f3abe9109be7fd957cf11ac6e2`. Deploymenten
+blev Ready med digest `sha256:2299b5309cc272ee45e02c1719f2066542597bf5abd3c7584ab51b0c93fe48ba`.
+
+| Prov | Före | Efter uppvärmning |
+| --- | --- | --- |
+| Riktig MCP, full katalog | 32,4 s (användarens mätning) | 3,135 och 2,735 s |
+| Riktig MCP, huddinge-katalog | 34,424 och 39,056 s | 2,087 och 2,029 s |
+| Riktig MCP, energi Huddinge / Landet 20 november | cirka 1,7–2,3 s | 1,600 / 1,769 s |
+| Stdio, energi skickad 1 s efter katalogstart | 33,042 s | 0,760 s; färdig före katalogen |
+| Stdio, katalog vid samma samtidighetsprov | 32,850 s | 2,064 s |
+
+Riktiga samtidiga MCP-anrop gav 2,262 s för full katalog och 2,499 s för energi
+(energi skickad 300 ms senare). Serverns interna kötid var 0,28/0,36 ms.
+Sekventiell arbetstid var 1,14–2,07 s för katalog och 0,64–0,71 s för energi;
+resten av klienttiden, cirka 0,85–1,07 s, omfattar transport/connector och är
+inte en separat nätverksmätning. Inga 30-sekunders köer reproducerades i varm drift.
+
+Viktig begränsning: kall uppstart är inte omedelbar. Produktionsprocessens
+uppvärmning tog 49,03 s; ett anrop under den tiden tog 31,419 s totalt, varav
+1,902 s var själva verktygsarbetet efter uppvärmningen. Ett separat processprov
+värmde upp på 34,10 s. Tunnelns Ready-status ensam bevisar inte färdig uppvärmning;
+kontrollera även `capabilities_cache_warmup` med `status=ready`. Uppvärmningen
+sker vid processstart, inte per katalogfråga. Ingen längre timeout infördes.
+
+Energivärdena var oförändrade: Huddinge 79,33 kWh, Landet 32,03 kWh.
+Landets avvikande effektintegral 28,04 kWh och kvalitetsvarningarna finns kvar.
+Båda platserna, datum till och med 21 november och aktuell deldygnsgeneration
+returnerades. Kanoniska plats-ID är fortsatt `huddinge`/`landet`; `Huddinge`
+avvisades korrekt med `unknown_site` på 1,152 s. Ingen tyst platsnormalisering.
+
+Det direkta stdio-provet använder en separat läsprocess i samma image/container,
+utan ytterligare tunnel eller produktionsnyckel. Samma prov användes före/efter.
+Fysisk ChatGPT Voice i bilen har inte provats efter uppdateringen. Råmätningar,
+serverloggar och publiceringskvitton finns i Analytics-arbetsytans
+`work/mcp-performance-fix-2026-11-21/`.
+
 ## Release 0.7.0, aktiverad 2026-10-24
 
 `3eb1bf8` aktiverar deldygn och Huddinges värmepumpsanalys efter fem godkända
