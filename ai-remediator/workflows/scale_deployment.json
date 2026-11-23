@@ -100,7 +100,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "https://chat.k3s.nu/hooks/n6ix6iani3ro8c7h17hm36xkze",
+        "url": "={{ $env.MATTERMOST_HOOK_K3S }}",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({text: $json.text}) }}",

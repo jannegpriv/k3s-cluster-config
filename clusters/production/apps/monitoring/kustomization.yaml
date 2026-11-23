@@ -26,6 +26,7 @@ resources:
   - openhab-dashboard-configmap.yaml
   - openhab-logs-dashboard-configmap.yaml
   - grafana-alerting-provisioning.yaml
+  - grafana-mattermost-hook.enc.yaml
   - maintenance-mode-rule.yaml
   - node-specific-memory-alerts.yaml
   - openhab-node-silence.yaml

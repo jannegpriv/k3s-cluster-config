@@ -54,7 +54,7 @@
         "method": "POST",
         "options": {},
         "sendBody": true,
-        "url": "https://chat.k3s.nu/hooks/REDACTED_MATTERMOST_WEBHOOK_ENERGY_ANALYSIS"
+        "url": "={{ $env.MATTERMOST_HOOK_ENERGY_ANALYSIS }}"
       },
       "position": [
         1584,

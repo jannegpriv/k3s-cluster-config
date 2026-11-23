@@ -5,6 +5,7 @@ resources:
   - namespace.yaml
   - pvc.yaml
   - secret.yaml
+  - mattermost-hooks.enc.yaml
   - serviceaccount.yaml
   - serviceaccount-token.yaml
   - clusterrole.yaml

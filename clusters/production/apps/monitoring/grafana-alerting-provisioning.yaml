@@ -13,7 +13,8 @@ data:
           - uid: openhab-mattermost-webhook
             type: webhook
             settings:
-              url: https://chat.k3s.nu/hooks/j1cwwhjhzpbqdx8uhndgiiyx5c
+              # Expanded by Grafana from the env var set by the secret grafana-mattermost-hook.
+              url: $MATTERMOST_HOOK_OPENHAB
               httpMethod: POST
             disableResolveMessage: false
     policies:

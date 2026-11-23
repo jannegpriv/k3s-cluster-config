@@ -32,6 +32,13 @@ spec:
         image: n8nio/n8n:2.29.9
         ports:
         - containerPort: 5678
+        # Mattermost incoming webhook addresses (MATTERMOST_HOOK_*), read by the
+        # workflows as $env.MATTERMOST_HOOK_<CHANNEL>. Kept out of the workflow
+        # JSON because the repository is public. After changing the secret,
+        # delete the pod: an env change in a Secret does not restart it.
+        envFrom:
+        - secretRef:
+            name: n8n-mattermost-hooks
         env:
         - name: N8N_PORT
           value: "5678"

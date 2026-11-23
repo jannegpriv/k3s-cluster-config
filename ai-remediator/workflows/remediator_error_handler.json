@@ -38,7 +38,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "https://chat.k3s.nu/hooks/6qstcuba9tdg5xpmhm4dfptfph",
+        "url": "={{ $env.MATTERMOST_HOOK_K3S_ALERTS }}",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({text: $json.text}) }}",

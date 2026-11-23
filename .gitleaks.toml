@@ -1,0 +1,9 @@
+# Used by scripts/check-secrets.sh when gitleaks is installed.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "mattermost-incoming-webhook"
+description = "Mattermost incoming webhook address"
+regex = '''hooks/[a-z0-9]{26}\b'''
+keywords = ["hooks/"]

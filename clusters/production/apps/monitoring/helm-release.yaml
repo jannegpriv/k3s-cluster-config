@@ -55,6 +55,9 @@ spec:
           value: grafana-secure-password
         - name: GF_DATABASE_SSL_MODE
           value: disable
+      # MATTERMOST_HOOK_OPENHAB for the contact point in grafana-alerting-provisioning.
+      envFromSecrets:
+        - name: grafana-mattermost-hook
       extraConfigmapMounts:
         - name: grafana-alerting-provisioning
           mountPath: /etc/grafana/provisioning/alerting

@@ -6,4 +6,6 @@ metadata:
 spec:
   type: slack
   channel: flux-alerts
-  address: https://chat.k3s.nu/hooks/95z499na3jr5dm9mhedccydd7w
+  # The webhook address is the key "address" in this SOPS-encrypted secret.
+  secretRef:
+    name: mattermost-webhook

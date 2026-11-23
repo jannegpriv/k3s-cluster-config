@@ -82,16 +82,33 @@ skulle skicka oönskade Mattermost-meddelanden.
 Exporterade med `n8n export:workflow` i podden och nedskurna till `name`, `nodes`,
 `connections`, `settings`, `id`. De ingår inte i `export-workflows.sh`.
 
-- Mattermost-webhooken är ersatt med `REDACTED_MATTERMOST_WEBHOOK`. Sätt in den
-  riktiga adressen i noden "Posta till Mattermost" före import, annars postas ingen rapport.
 - Code-noden körs i UTC även när n8n-podden har `TZ=Europe/Stockholm`. Dygnsgränserna
   räknas därför uttryckligen i `Europe/Stockholm` (`localMidnight`). Före 2026-11-21
   räknades dygnet 01:00-01:00 svensk tid och en timmes priser saknades.
 - Sidan som visar värdena: `clusters/production/apps/openhab/sigenstor-ai/`.
 
-## Webhook-adresser är maskade (2026-11-23)
+## Mattermost-webhookar ligger utanför flödena (2026-11-23)
 
-Repot är publikt. Mattermost-webhookarna i exporterna är ersatta med
-`REDACTED_MATTERMOST_WEBHOOK_<KANAL>` (`K3S`, `K3S_ALERTS`, `CLAUDE_AI`,
-`ENERGY_ANALYSIS`). Sätt in riktiga adresser före import, och maska dem igen
-innan en ny export committas.
+Repot är publikt. Inget flöde innehåller längre någon webhook-adress. Noderna
+läser `={{ $env.MATTERMOST_HOOK_<KANAL> }}`:
+
+| Variabel | Webhook i Mattermost (kanal) |
+|---|---|
+| `MATTERMOST_HOOK_K3S` | "k3s status" (`k3s`) |
+| `MATTERMOST_HOOK_K3S_ALERTS` | "k3s-alerts" (`k3s-alerts`) |
+| `MATTERMOST_HOOK_CLAUDE_AI` | "claude-ai" (`claude-ai`) |
+| `MATTERMOST_HOOK_ENERGY_ANALYSIS` | "Energy Analysis Bot" (`energy-analysis`) |
+
+Värdena ligger i den SOPS-krypterade hemligheten
+`clusters/production/apps/n8n/mattermost-hooks.enc.yaml` och når n8n via
+`envFrom` i deploymenten. Kräver `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` (redan satt).
+
+Byta en webhook: skapa en ny i Mattermost, skriv en fil med samma form som
+hemligheten med den nya adressen, kryptera med `sops -e -i`, pusha, och radera
+n8n-podden när Flux har applicerat (en ändrad hemlighet startar inte om podden).
+Flux-notiserna och Grafana har egna hemligheter:
+`infrastructure/notifications/mattermost-webhook.enc.yaml` och
+`apps/monitoring/grafana-mattermost-hook.enc.yaml`.
+
+`scripts/check-secrets.sh` stoppar commits som innehåller en webhook-adress.
+Slå på spärren en gång per klon: `git config core.hooksPath .githooks`.

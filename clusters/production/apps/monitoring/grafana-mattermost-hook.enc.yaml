@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: grafana-mattermost-hook
+    namespace: monitoring
+type: Opaque
+stringData:
+    MATTERMOST_HOOK_OPENHAB: ENC[AES256_GCM,data:fDE8tmemsfg4FfYcX8LvyyP6og5SSnzqRVRaiLM03Ob4c5so857D7tWh0o9TcynFlvGA0Q==,iv:Wdk7rQL87cyJmlsavfRmwzL1lmA5nQ1lWjXx0j4XbVs=,tag:z3r1BDTOEzygpPNUZOpbOQ==,type:str]
+sops:
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-11-23T19:07:43Z"
+    mac: ENC[AES256_GCM,data:OiGYLPBKftQwbUGZtmphHmMDPmahFKqFN5qbO2rIkT/r7H848zLXbb3LNxvxLG3eatReuS5yaaoFikvY/9cI2vyDX3QzhH81cjnUpgh1md2ZI5CRNKAmpDDN38L9OHyQXzI1654WhxFZCAcHlz9RrjyAJ5Zvv0EjSjE3Wld9TxI=,iv:miuB5nIyMpTqXiisy9Fp0iqvaVMoWuY5GaskG4VhDQM=,tag:/S6oHKdqMd0o3oXYH+45SA==,type:str]
+    pgp:
+        - created_at: "2026-11-23T19:07:43Z"
+          enc: |-
+            -----BEGIN PGP MESSAGE-----
+
+            hQIMA6/oW9tH5TjwAQ//Zp51oGSfxVlknnd7Qgl7wj5Yej3TpRGxWGj4l7Umz4Ip
+            xMiOUM26F4HVo4rc+Ze+WO0cytX9YyelgDLurX7bB9cRDoL9rpH00Da4dtLXzzFP
+            LF54CveqFQakiQqGzgp6X4kbflkz3lvuwPZUBYWZmj3XZ7cbOnW1d5oIsjZ6LC0z
+            FkohxWJkRwcHW+BXC0QJAUFNSXOSYlkyI+omvUVRO1i40IVZADQoZItR6DwvPt4h
+            xjsJ0vOjAqFkcmaxHP5te/rh/NaoPd4kOhPVRLHUvBwNJ3UqEvUicjzwuM0Uc08s
+            L9I3TiOflAnfR2+j8P5Q8zcqVOfp7P2v/gVKBqFskq9dTzyBfM37mv2HSUo4IK80
+            XRQeEaSfSHro2+H9T8+Va5uvhGN4f9SyEyDNEgqMJ0pU33pCmBNHirbTstteij+d
+            SsoGWn8ceWiOpwhQDLWp7Pxp9R/EHSAL5HJRfl4g7WpUVv00EpwwNN76Sm2sFdOB
+            DaSOa01wARfSYFGapLR31PQlu2YDnZ/1+SN3eMFjWYVb+KZmbTAIV8+Cd1htKTWj
+            wVEboRmjkDXt9FGURhRNRz2TOYbYNHKjByp0s0pVBF+ELZCpni/PuQYboqCgbw7l
+            DYVHJS5iwYd3V2zAQJ7vm6Z79JX2k+JZcHhv56exTnIkQ7CzSiCKbjAYTQ80OnXU
+            aAEJAhDCqz16hQFWLqdUmdjA94YAnF/idOYePq8WBcL+D1dQDe7xf1MDoSSdsNQg
+            a4jil1NEZJF31dM0uK+SuycqtKSeMj4YR3BeGeAfaZGmTTipMbT3MpgaydORAV9J
+            urk3CoXtz/gO
+            =vjZa
+            -----END PGP MESSAGE-----
+          fp: BE7CC9C5400AF50610072526D7332A14FB23EE47
+    version: 3.13.3

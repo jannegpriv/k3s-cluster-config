@@ -88,7 +88,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "https://chat.k3s.nu/hooks/REDACTED_MATTERMOST_WEBHOOK",
+        "url": "={{ $env.MATTERMOST_HOOK_ENERGY_ANALYSIS }}",
         "sendBody": true,
         "options": {},
         "bodyParameters": {
