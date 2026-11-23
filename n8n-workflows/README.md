@@ -7,6 +7,8 @@ Denna mapp innehåller backups av n8n workflows för K3s-klustret.
 - **K3s** (OovUiuo0GcJ1Wftw) - Övervakar K3s kluster-status med CPU, minne, alerts och Kubernetes events
 - **Daglig Energianalys** (J54qTYk9YbJezmHQ) - Daglig analys av energiförbrukning
 - **Vecko Energisammanfattning** (WX2uKcMMSgeP8Qaf) - Veckovis energisammanfattning
+- **SigenStor AI Dygnsrapport** (1SJu7R9tsR8dOB9X) - `sigenstor-ai-dygnsrapport.json`. Batteriets ekonomiska bidrag per dygn (kalkylmodell v2.0), postar till Mattermost och till `SigenStorAI_*`-items i openHAB
+- **SigenStor AI Veckorapport** (4OBqNK9RRSKytdDY) - `sigenstor-ai-veckorapport.json`. Samma kalkyl över sju dygn
 
 ## Export av workflows
 
@@ -74,3 +76,15 @@ utkast, registrerade triggers och att flödet fortfarande är aktivt.
 Vid problem: återaktivera föregående publicerade versions-ID via API. Ingen
 n8n- eller K3s-omstart behövs. Kör inte hela produktionsflödet som test om det
 skulle skicka oönskade Mattermost-meddelanden.
+
+## SigenStor AI-rapporterna (2026-11-23)
+
+Exporterade med `n8n export:workflow` i podden och nedskurna till `name`, `nodes`,
+`connections`, `settings`, `id`. De ingår inte i `export-workflows.sh`.
+
+- Mattermost-webhooken är ersatt med `REDACTED_MATTERMOST_WEBHOOK`. Sätt in den
+  riktiga adressen i noden "Posta till Mattermost" före import, annars postas ingen rapport.
+- Code-noden körs i UTC även när n8n-podden har `TZ=Europe/Stockholm`. Dygnsgränserna
+  räknas därför uttryckligen i `Europe/Stockholm` (`localMidnight`). Före 2026-11-21
+  räknades dygnet 01:00-01:00 svensk tid och en timmes priser saknades.
+- Sidan som visar värdena: `clusters/production/apps/openhab/sigenstor-ai/`.

@@ -1,0 +1,157 @@
+{
+  "name": "SigenStor AI Veckorapport",
+  "nodes": [
+    {
+      "name": "Schema",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 7,
+              "triggerAtMinute": 10
+            }
+          ]
+        }
+      },
+      "id": "16611de7-2188-406c-9c9b-0698cb8b429d"
+    },
+    {
+      "name": "Hämta och analysera SigenStor-data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const OH = 'http://openhab-production.openhab:8080/rest/persistence/items';\nconst ITEMS = [\n  'SigenStor_Battery_SOC',\n  'SigenStor_Battery_Power',\n  'SigenStor_Grid_Power',\n  'SigenStor_PV_Power',\n  'SigenStor_Load_Power',\n  'SigenStor_EVAC_Power',\n  'SigenStor_Batt_Charged_Today',\n  'SigenStor_Batt_Discharged_Today',\n  'SigenStor_Battery_SOH',\n];\nconst CAP = 18.0; // nominell batterikapacitet, kWh\nconst CHARGE_EFFICIENCY = 0.95; // endast för värdering av SOC-förändring\nconst STEP_MS = 60 * 1000;\nconst STALE_MS = 150 * 1000;\nconst pad = n => String(n).padStart(2, '0');\nconst dstr = d => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;\nconst TZ = 'Europe/Stockholm';\n// Code-noden körs i UTC oavsett n8n:s tidszon. Dygnsgränser räknas därför\n// uttryckligen i svensk tid. Ett dygn bärs som ett Date vars UTC-fält är det\n// svenska kalenderdatumet (kl 12 UTC).\nconst tzParts = new Intl.DateTimeFormat('en-US', {\n  timeZone: TZ, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric',\n  hour: 'numeric', minute: 'numeric', second: 'numeric',\n});\nfunction wallClock(t) {\n  const p = {};\n  for (const part of tzParts.formatToParts(new Date(t))) {\n    if (part.type !== 'literal') p[part.type] = Number(part.value);\n  }\n  return p;\n}\nfunction tzOffsetMs(t) {\n  const p = wallClock(t);\n  return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - Math.floor(t / 1000) * 1000;\n}\n// Epoch-ms för svensk midnatt vid början av dygnet (plus addDays dygn).\nfunction localMidnight(day, addDays = 0) {\n  const wall = Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate() + addDays);\n  const guess = wall - tzOffsetMs(wall);\n  return wall - tzOffsetMs(guess);\n}\nfunction yesterdayLocal() {\n  const p = wallClock(Date.now());\n  return new Date(Date.UTC(p.year, p.month - 1, p.day - 1, 12));\n}\nconst sum = (a, key) => a.reduce((s, x) => s + (x[key] || 0), 0);\n\nasync function fetchDay(helpers, day) {\n  const st = new Date(localMidnight(day)).toISOString();\n  const et = new Date(localMidnight(day, 1)).toISOString();\n  const res = {};\n  for (const item of ITEMS) {\n    try {\n      const reply = await helpers.httpRequest({\n        method: 'GET',\n        url: `${OH}/${item}?starttime=${st}&endtime=${et}`,\n        json: true,\n      });\n      res[item] = reply.data || [];\n    } catch (error) {\n      res[item] = [];\n    }\n  }\n  let spot = [];\n  try {\n    spot = await helpers.httpRequest({\n      method: 'GET',\n      url: `https://www.elprisetjustnu.se/api/v1/prices/${day.getUTCFullYear()}/${pad(day.getUTCMonth() + 1)}-${pad(day.getUTCDate())}_SE3.json`,\n      json: true,\n      headers: { 'User-Agent': 'openhab-sigenstor-report/2.0' },\n    });\n  } catch (error) {\n    spot = [];\n  }\n  return { res, spot };\n}\n\nfunction numericState(point) {\n  const value = parseFloat(String(point.state).split(' ')[0]);\n  return Number.isFinite(value) ? value : null;\n}\n\nfunction pointsFor(rows) {\n  return (rows || [])\n    .map(point => ({ t: Number(point.time), v: numericState(point) }))\n    .filter(point => Number.isFinite(point.t) && point.v !== null)\n    .sort((a, b) => a.t - b.t);\n}\n\nfunction sampler(rows) {\n  const points = pointsFor(rows);\n  const gaps = [];\n  for (let i = 1; i < points.length; i += 1) {\n    const gap = points[i].t - points[i - 1].t;\n    if (gap > 0 && gap <= 60 * STEP_MS) gaps.push(gap);\n  }\n  gaps.sort((a, b) => a - b);\n  const cadenceMs = gaps.length ? gaps[Math.floor(gaps.length / 2)] : STEP_MS;\n  // Äldre rrd4j-historik är nedproverad. Ett regelbundet 15-minutersprov\n  // representerar sitt intervall och ska inte misstolkas som 80 % databortfall.\n  const maxAgeMs = Math.max(STALE_MS, Math.min(30 * STEP_MS, cadenceMs * 1.5));\n  let index = 0;\n  let last = null;\n  return {\n    points,\n    cadenceMinutes: cadenceMs / STEP_MS,\n    at(t) {\n      while (index < points.length && points[index].t <= t) {\n        last = points[index];\n        index += 1;\n      }\n      return last && t - last.t <= maxAgeMs ? last.v : null;\n    },\n  };\n}\n\nfunction priceBands(spot) {\n  return (spot || [])\n    .map(point => ({\n      start: Date.parse(point.time_start),\n      end: Date.parse(point.time_end),\n      spotKr: Number(point.SEK_per_kWh),\n    }))\n    .filter(point => Number.isFinite(point.start) && Number.isFinite(point.end) && Number.isFinite(point.spotKr))\n    .sort((a, b) => a.start - b.start);\n}\n\nfunction buildPriceSampler(spot) {\n  const bands = priceBands(spot);\n  let index = 0;\n  return {\n    bands,\n    at(t) {\n      while (index < bands.length && t >= bands[index].end) index += 1;\n      const band = bands[index];\n      return band && t >= band.start && t < band.end ? band : null;\n    },\n  };\n}\n\nfunction localTime(t) {\n  return new Date(t).toLocaleTimeString('sv-SE', {\n    hour: '2-digit',\n    minute: '2-digit',\n    hourCycle: 'h23',\n    timeZone: 'Europe/Stockholm',\n  });\n}\n\nfunction mergeFlowBlocks(quarters, type, energyKey, valueKey, threshold) {\n  const blocks = [];\n  for (const quarter of quarters) {\n    const energy = quarter[energyKey] || 0;\n    if (energy < threshold) continue;\n    const previous = blocks[blocks.length - 1];\n    if (previous && previous.end === quarter.start) {\n      previous.end = quarter.end;\n      previous.energy += energy;\n      previous.value += quarter[valueKey] || 0;\n      previous.spotWeighted += (quarter.spotWeighted || 0);\n      previous.spotHours += (quarter.spotHours || 0);\n    } else {\n      blocks.push({\n        type,\n        start: quarter.start,\n        end: quarter.end,\n        energy,\n        value: quarter[valueKey] || 0,\n        spotWeighted: quarter.spotWeighted || 0,\n        spotHours: quarter.spotHours || 0,\n      });\n    }\n  }\n  return blocks;\n}\n\nfunction buildEvents(quarterMap) {\n  const quarters = [...quarterMap.values()].sort((a, b) => a.start - b.start);\n  const blocks = [\n    ...mergeFlowBlocks(quarters, 'gridCharge', 'gridChargeKwh', 'gridChargeCost', 0.05),\n    ...mergeFlowBlocks(quarters, 'batteryToLoad', 'batteryToLoadKwh', 'avoidedImportValue', 0.10),\n    ...mergeFlowBlocks(quarters, 'export', 'exportKwh', 'exportRevenue', 0.05),\n    ...mergeFlowBlocks(quarters, 'solarCharge', 'solarChargeKwh', 'solarOpportunityCost', 0.05),\n    ...mergeFlowBlocks(quarters, 'ev', 'evKwh', 'zero', 0.10),\n  ].sort((a, b) => a.start - b.start || a.type.localeCompare(b.type));\n\n  return blocks.map(block => {\n    const range = `${localTime(block.start)}–${localTime(block.end)}`;\n    const energy = block.energy.toFixed(2);\n    if (block.type === 'gridCharge') {\n      const unit = block.energy ? block.value / block.energy * 100 : 0;\n      return `${range} NÄTLADDNING ${energy} kWh @ snittköp ${unit.toFixed(0)} öre/kWh`;\n    }\n    if (block.type === 'batteryToLoad') {\n      const unit = block.energy ? block.value / block.energy * 100 : 0;\n      return `${range} BATTERI→LAST ${energy} kWh @ undviket nätköp ${unit.toFixed(0)} öre/kWh`;\n    }\n    if (block.type === 'export') {\n      const unit = block.energy ? block.value / block.energy * 100 : 0;\n      return `${range} EXPORT ${energy} kWh @ snittsälj ${unit.toFixed(0)} öre/kWh`;\n    }\n    if (block.type === 'solarCharge') {\n      return `${range} SOLLADDNING ${energy} kWh (alternativ exportintäkt ${block.value.toFixed(2)} kr)`;\n    }\n    const avgSpot = block.spotHours ? block.spotWeighted / block.spotHours * 100 : null;\n    return `${range} BILLADDNING ${energy} kWh${avgSpot === null ? '' : ` @ snittspot ${avgSpot.toFixed(0)} öre/kWh`}`;\n  });\n}\n\nfunction analyseDay(day, res, spot) {\n  const start = localMidnight(day);\n  const end = localMidnight(day, 1);\n  const totalMinutes = Math.round((end - start) / STEP_MS);\n\n  const bat = sampler(res.SigenStor_Battery_Power);\n  const grid = sampler(res.SigenStor_Grid_Power);\n  const pv = sampler(res.SigenStor_PV_Power);\n  const load = sampler(res.SigenStor_Load_Power);\n  const ev = sampler(res.SigenStor_EVAC_Power);\n  const soc = sampler(res.SigenStor_Battery_SOC);\n  const prices = buildPriceSampler(spot);\n  const resolutionMinutes = Math.max(\n    bat.cadenceMinutes,\n    grid.cadenceMinutes,\n    pv.cadenceMinutes,\n    load.cadenceMinutes,\n  );\n  const quarterMap = new Map();\n\n  const totals = {\n    pvKwh: 0,\n    loadKwh: 0,\n    evKwh: 0,\n    impKwh: 0,\n    impC: 0,\n    expKwh: 0,\n    expR: 0,\n    batChg: 0,\n    batDis: 0,\n    gridChargeKwh: 0,\n    gridChargeCost: 0,\n    solarChargeKwh: 0,\n    solarOpportunityCost: 0,\n    batteryToLoadKwh: 0,\n    avoidedImportValue: 0,\n    batteryToExportKwh: 0,\n    batteryExportRevenue: 0,\n  };\n  let coveredMinutes = 0;\n  let pricedMinutes = 0;\n\n  for (let t = start; t < end; t += STEP_MS) {\n    const batPower = bat.at(t);\n    const gridPower = grid.at(t);\n    const pvPower = pv.at(t);\n    const loadPower = load.at(t);\n    const evPower = ev.at(t) || 0;\n    if ([batPower, gridPower, pvPower, loadPower].some(value => value === null)) continue;\n    coveredMinutes += 1;\n\n    const band = prices.at(t);\n    const spotKr = band ? band.spotKr : null;\n    const buy = spotKr === null ? null : (spotKr + 0.667) * 1.25;\n    const sell = spotKr === null ? null : spotKr + 0.06;\n    if (band) pricedMinutes += 1;\n\n    const dt = 1 / 60;\n    const charge = Math.max(batPower, 0);\n    const discharge = Math.max(-batPower, 0);\n    const imported = Math.max(gridPower, 0);\n    const exported = Math.max(-gridPower, 0);\n    const gridCharge = Math.min(charge, imported);\n    const solarCharge = Math.max(charge - gridCharge, 0);\n    // Konservativ marginalallokering: samtidig export tillskrivs batteriet först.\n    const batteryToExport = Math.min(discharge, exported);\n    const batteryToLoad = Math.min(Math.max(discharge - batteryToExport, 0), Math.max(loadPower, 0));\n\n    totals.pvKwh += Math.max(pvPower, 0) * dt;\n    totals.loadKwh += Math.max(loadPower, 0) * dt;\n    totals.evKwh += Math.max(evPower, 0) * dt;\n    totals.impKwh += imported * dt;\n    totals.expKwh += exported * dt;\n    totals.batChg += charge * dt;\n    totals.batDis += discharge * dt;\n    totals.gridChargeKwh += gridCharge * dt;\n    totals.solarChargeKwh += solarCharge * dt;\n    totals.batteryToLoadKwh += batteryToLoad * dt;\n    totals.batteryToExportKwh += batteryToExport * dt;\n\n    const quarterStart = Math.floor(t / (15 * STEP_MS)) * 15 * STEP_MS;\n    const quarter = quarterMap.get(quarterStart) || {\n      start: quarterStart,\n      end: quarterStart + 15 * STEP_MS,\n      gridChargeKwh: 0,\n      gridChargeCost: 0,\n      batteryToLoadKwh: 0,\n      avoidedImportValue: 0,\n      exportKwh: 0,\n      exportRevenue: 0,\n      solarChargeKwh: 0,\n      solarOpportunityCost: 0,\n      evKwh: 0,\n      spotWeighted: 0,\n      spotHours: 0,\n      zero: 0,\n    };\n    quarter.gridChargeKwh += gridCharge * dt;\n    quarter.batteryToLoadKwh += batteryToLoad * dt;\n    quarter.exportKwh += exported * dt;\n    quarter.solarChargeKwh += solarCharge * dt;\n    quarter.evKwh += Math.max(evPower, 0) * dt;\n\n    if (band) {\n      totals.impC += imported * buy * dt;\n      totals.expR += exported * sell * dt;\n      totals.gridChargeCost += gridCharge * buy * dt;\n      totals.solarOpportunityCost += solarCharge * sell * dt;\n      totals.avoidedImportValue += batteryToLoad * buy * dt;\n      totals.batteryExportRevenue += batteryToExport * sell * dt;\n      quarter.gridChargeCost += gridCharge * buy * dt;\n      quarter.avoidedImportValue += batteryToLoad * buy * dt;\n      quarter.exportRevenue += exported * sell * dt;\n      quarter.solarOpportunityCost += solarCharge * sell * dt;\n      quarter.spotWeighted += spotKr * dt;\n      quarter.spotHours += dt;\n    }\n    quarterMap.set(quarterStart, quarter);\n  }\n\n  const socPoints = soc.points.filter(point => point.t >= start && point.t <= end);\n  const socStart = socPoints.length ? socPoints[0].v : null;\n  const socEnd = socPoints.length ? socPoints[socPoints.length - 1].v : null;\n  const socMin = socPoints.length ? Math.min(...socPoints.map(point => point.v)) : null;\n  const socMax = socPoints.length ? Math.max(...socPoints.map(point => point.v)) : null;\n  const socDeltaKwh = socStart === null || socEnd === null ? null : (socEnd - socStart) * CAP / 100;\n\n  const acquisitionCost = totals.gridChargeCost + totals.solarOpportunityCost;\n  const chargeInput = totals.gridChargeKwh + totals.solarChargeKwh;\n  const minimumBuy = prices.bands.length\n    ? Math.min(...prices.bands.map(point => (point.spotKr + 0.667) * 1.25))\n    : 0;\n  const inventoryRate = chargeInput > 0.05\n    ? acquisitionCost / chargeInput / CHARGE_EFFICIENCY\n    : minimumBuy / CHARGE_EFFICIENCY;\n  const inventoryAdjustment = socDeltaKwh === null ? 0 : socDeltaKwh * inventoryRate;\n  const batteryValueBeforeCarry = totals.avoidedImportValue + totals.batteryExportRevenue\n    - totals.gridChargeCost - totals.solarOpportunityCost;\n  const batteryValue = batteryValueBeforeCarry + inventoryAdjustment;\n  const legacyNet = totals.expR - totals.gridChargeCost;\n  const coverage = totalMinutes ? coveredMinutes / totalMinutes : 0;\n  const priceCoverage = coveredMinutes ? pricedMinutes / coveredMinutes : 0;\n  const largeCarry = socDeltaKwh !== null && Math.abs(socDeltaKwh) > CAP * 0.10;\n  const coarseHistory = resolutionMinutes > 5;\n  const confidence = coverage < 0.95 || priceCoverage < 0.95 || socDeltaKwh === null\n    ? 'låg'\n    : largeCarry || coarseHistory ? 'medel' : 'hög';\n\n  const last = item => {\n    const values = pointsFor(res[item]);\n    return values.length ? values[values.length - 1].v : null;\n  };\n  const spotsOre = prices.bands.map(point => point.spotKr * 100);\n  return {\n    datum: dstr(day),\n    ...totals,\n    legacyNet,\n    batteryValueBeforeCarry,\n    batteryValue,\n    inventoryAdjustment,\n    inventoryRate,\n    socStart,\n    socEnd,\n    socMin,\n    socMax,\n    socDeltaKwh,\n    cycles: (totals.batChg + totals.batDis) / (2 * CAP),\n    soh: last('SigenStor_Battery_SOH'),\n    counterCharged: last('SigenStor_Batt_Charged_Today'),\n    counterDischarged: last('SigenStor_Batt_Discharged_Today'),\n    spread: spotsOre.length ? Math.max(...spotsOre) - Math.min(...spotsOre) : 0,\n    events: buildEvents(quarterMap),\n    coverage,\n    priceCoverage,\n    coveredMinutes,\n    totalMinutes,\n    confidence,\n    resolutionMinutes,\n  };\n}\n\nfunction dayTable(a) {\n  const soc = a.socStart === null || a.socEnd === null\n    ? '?'\n    : `${a.socStart.toFixed(0)} → ${a.socEnd.toFixed(0)} % (${a.socDeltaKwh >= 0 ? '+' : ''}${a.socDeltaKwh.toFixed(1)} kWh)`;\n  return [\n    `| Nyckeltal | Värde |`,\n    `|---|---|`,\n    `| Solproduktion | ${a.pvKwh.toFixed(1)} kWh |`,\n    `| Husets förbrukning (exkl. bil) | ${Math.max(a.loadKwh - a.evKwh, 0).toFixed(1)} kWh |`,\n    `| Elbilsladdning (EVAC) | ${a.evKwh.toFixed(1)} kWh |`,\n    `| Import totalt | ${a.impKwh.toFixed(1)} kWh (${a.impC.toFixed(2)} kr) |`,\n    `| Export totalt | ${a.expKwh.toFixed(1)} kWh (${a.expR.toFixed(2)} kr) |`,\n    `| Nätladdning av batteri | ${a.gridChargeKwh.toFixed(1)} kWh (${a.gridChargeCost.toFixed(2)} kr) |`,\n    `| Batteri till huslast | ${a.batteryToLoadKwh.toFixed(1)} kWh (undviket köp ${a.avoidedImportValue.toFixed(2)} kr) |`,\n    `| Batteri till export | ${a.batteryToExportKwh.toFixed(1)} kWh (${a.batteryExportRevenue.toFixed(2)} kr) |`,\n    `| Solladdningens alternativkostnad | ${a.solarOpportunityCost.toFixed(2)} kr |`,\n    `| Batterivärde före SOC-periodisering | ${a.batteryValueBeforeCarry.toFixed(2)} kr |`,\n    `| SOC start→slut | ${soc} |`,\n    `| SOC-periodisering (est.) | ${a.inventoryAdjustment >= 0 ? '+' : ''}${a.inventoryAdjustment.toFixed(2)} kr |`,\n    `| **Batteriets ekonomiska bidrag (est.)** | **${a.batteryValue.toFixed(2)} kr** |`,\n    `| Datakvalitet | ${a.confidence} (${(a.coverage * 100).toFixed(1)} % effekt, ${(a.priceCoverage * 100).toFixed(1)} % pris, ${a.resolutionMinutes.toFixed(0)} min upplösning) |`,\n    `| Batteri laddat/urladdat | ${a.batChg.toFixed(1)} / ${a.batDis.toFixed(1)} kWh (${a.cycles.toFixed(2)} ekv. cykler) |`,\n    `| Spot-spread | ${a.spread.toFixed(0)} öre/kWh |`,\n    a.soh !== null ? `| Batteri SOH | ${a.soh.toFixed(1)} % |` : null,\n  ].filter(Boolean).join('\\n');\n}\n\nfunction periodSummary(per) {\n  const first = per[0];\n  const last = per[per.length - 1];\n  const socStart = first ? first.socStart : null;\n  const socEnd = last ? last.socEnd : null;\n  const socDeltaKwh = socStart === null || socEnd === null ? null : (socEnd - socStart) * CAP / 100;\n  const gridChargeCost = sum(per, 'gridChargeCost');\n  const solarOpportunityCost = sum(per, 'solarOpportunityCost');\n  const chargeInput = sum(per, 'gridChargeKwh') + sum(per, 'solarChargeKwh');\n  const minimumRate = per.length ? Math.min(...per.map(day => day.inventoryRate || Infinity)) : 0;\n  const inventoryRate = chargeInput > 0.05\n    ? (gridChargeCost + solarOpportunityCost) / chargeInput / CHARGE_EFFICIENCY\n    : Number.isFinite(minimumRate) ? minimumRate : 0;\n  const inventoryAdjustment = socDeltaKwh === null ? 0 : socDeltaKwh * inventoryRate;\n  const batteryValueBeforeCarry = sum(per, 'avoidedImportValue') + sum(per, 'batteryExportRevenue')\n    - gridChargeCost - solarOpportunityCost;\n  const coverage = per.length ? per.reduce((s, day) => s + day.coverage, 0) / per.length : 0;\n  const priceCoverage = per.length ? per.reduce((s, day) => s + day.priceCoverage, 0) / per.length : 0;\n  const largeCarry = socDeltaKwh !== null && Math.abs(socDeltaKwh) > CAP * 0.10;\n  const resolutionMinutes = per.length ? Math.max(...per.map(day => day.resolutionMinutes || 0)) : 0;\n  const confidence = coverage < 0.95 || priceCoverage < 0.95 || socDeltaKwh === null\n    ? 'låg'\n    : largeCarry || resolutionMinutes > 5 ? 'medel' : 'hög';\n  return {\n    socStart,\n    socEnd,\n    socDeltaKwh,\n    inventoryAdjustment,\n    batteryValueBeforeCarry,\n    batteryValue: batteryValueBeforeCarry + inventoryAdjustment,\n    coverage,\n    priceCoverage,\n    confidence,\n    resolutionMinutes,\n  };\n}\n\nconst input = $input.first() ? $input.first().json : {};\nconst periodEnd = input.reportDate\n  ? new Date(`${input.reportDate}T12:00:00Z`)\n  : yesterdayLocal();\nconst days = [];\nfor (let offset = 6; offset >= 0; offset -= 1) {\n  const day = new Date(periodEnd);\n  day.setUTCDate(day.getUTCDate() - offset);\n  days.push(day);\n}\nconst per = [];\nfor (const day of days) {\n  const { res, spot } = await fetchDay(this.helpers, day);\n  per.push(analyseDay(day, res, spot));\n}\nconst period = periodSummary(per);\nconst best = per.reduce((current, day) => day.batteryValue > current.batteryValue ? day : current, per[0]);\nconst weekTable = [\n  `| Vecka | Värde |`,\n  `|---|---|`,\n  `| Solproduktion | ${sum(per, 'pvKwh').toFixed(1)} kWh |`,\n  `| Elbilsladdning | ${sum(per, 'evKwh').toFixed(1)} kWh |`,\n  `| Export totalt | ${sum(per, 'expKwh').toFixed(1)} kWh (${sum(per, 'expR').toFixed(2)} kr) |`,\n  `| Nätladdning | ${sum(per, 'gridChargeKwh').toFixed(1)} kWh (${sum(per, 'gridChargeCost').toFixed(2)} kr) |`,\n  `| Undviket nätköp via batteri | ${sum(per, 'batteryToLoadKwh').toFixed(1)} kWh (${sum(per, 'avoidedImportValue').toFixed(2)} kr) |`,\n  `| Batteriexport | ${sum(per, 'batteryToExportKwh').toFixed(1)} kWh (${sum(per, 'batteryExportRevenue').toFixed(2)} kr) |`,\n  `| Solladdningens alternativkostnad | ${sum(per, 'solarOpportunityCost').toFixed(2)} kr |`,\n  `| Batterivärde före SOC-periodisering | ${period.batteryValueBeforeCarry.toFixed(2)} kr |`,\n  `| SOC start→slut | ${period.socStart === null || period.socEnd === null ? '?' : `${period.socStart.toFixed(0)} → ${period.socEnd.toFixed(0)} % (${period.socDeltaKwh >= 0 ? '+' : ''}${period.socDeltaKwh.toFixed(1)} kWh)`} |`,\n  `| SOC-periodisering (est.) | ${period.inventoryAdjustment >= 0 ? '+' : ''}${period.inventoryAdjustment.toFixed(2)} kr |`,\n  `| **Batteriets ekonomiska bidrag (est.)** | **${period.batteryValue.toFixed(2)} kr** |`,\n  `| Datakvalitet | ${period.confidence} (${(period.coverage * 100).toFixed(1)} % effekt, ${(period.priceCoverage * 100).toFixed(1)} % pris, ${period.resolutionMinutes.toFixed(0)} min upplösning) |`,\n  `| Batteri-cykler | ${sum(per, 'cycles').toFixed(1)} |`,\n  `| Bästa dag, daglig uppskattning | ${best.datum} (${best.batteryValue.toFixed(2)} kr) |`,\n  per[per.length - 1].soh !== null ? `| Batteri SOH | ${per[per.length - 1].soh.toFixed(1)} % |` : null,\n].filter(Boolean).join('\\n');\n\nconst dayRows = per.map(day => [\n  day.datum,\n  day.pvKwh.toFixed(1),\n  day.evKwh.toFixed(1),\n  day.gridChargeKwh.toFixed(1),\n  day.batteryToLoadKwh.toFixed(1),\n  `${day.socDeltaKwh >= 0 ? '+' : ''}${day.socDeltaKwh.toFixed(1)}`,\n  day.batteryValue.toFixed(2),\n  day.confidence,\n].join(' | ')).map(row => `| ${row} |`).join('\\n');\n\nconst report = [\n  `VECKA: ${per[0].datum} – ${per[per.length - 1].datum}`,\n  `KALKYLMODELL: v2.0 — observerat batterivärde med undvikna nätköp, 15-minuterspris och SOC-periodisering`,\n  `OBS: Beloppet är en spårbar uppskattning av batteriets bidrag, inte samma kontrafaktiska mått som MySigens intäktskalender.`,\n  ``,\n  `VECKOTABELL (återge EXAKT):`,\n  weekTable,\n  ``,\n  `PER DAG (återge EXAKT):`,\n  `| Datum | Sol kWh | Bil kWh | Nätladdn kWh | Batteri→last kWh | SOC Δ kWh | Batterivärde est. kr | Kvalitet |`,\n  `|---|---|---|---|---|---|---|---|`,\n  dayRows,\n].join('\\n');\n\nreturn [{ json: { report } }];\n"
+      },
+      "id": "67ff4dad-d6d4-4fcd-8a39-43ff560ea11a"
+    },
+    {
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=Du är energiexpert och summerar VECKAN för SigenStor-batteriets AI-styrning.\n\nPLATSKONTEXT: Rapporten gäller ENBART sommarstället i Glava Glasbruk, Värmland — 8 solpaneler (4,12 kWp), SigenStor-batteri 18 kWh och Sigen EVAC-laddbox. Nämn aldrig Huddinge eller IVT-värmepumpen.\n\nSvaret MÅSTE börja med \"# SigenStor Glava Glasbruk – veckorapport [datumintervall]\".\n\nKALKYLREGLER SOM INTE FÅR BRYTAS:\n- Köpkostnad = 1,25 × (spot + 66,7 öre/kWh). Säljpris = spot + 6 öre/kWh.\n- Jämför aldrig en full köpkostnad med ett rått spotpris.\n- Batteri som täcker huslast krediteras med det fulla nätköp som undviks. Ingen export betyder därför inte automatiskt förlust.\n- Tabellen använder observerad laddad och urladdad energi; lägg inte på en extra schablonförlust.\n- SOC-periodiseringen hanterar energi som flyttas över periodgränsen men är uppskattad. Var försiktig vid medel/låg datakvalitet.\n- \"Batteriets ekonomiska bidrag\" är ett observerat estimat, inte samma kontrafaktiska jämförelse som MySigens intäktskalender.\n- Elbilsladdning är normal last och ska bedömas separat.\n\nGe 3–5 meningars bedömning av mönster, tydligt lönsamma eller olönsamma beslut och cykelslitage. Kritiserar du ett beslut måste du jämföra samma pristyp på båda sidor. Återge sedan VECKOTABELLEN och PER DAG-tabellen exakt. Inga frågor på slutet. Svenska, kompakt Mattermost-markdown.\n\nUnderlag:\n{{ $json.report }}",
+        "options": "{}"
+      },
+      "id": "aad8cdb6-7e5f-433d-a612-813d55e7c3f0"
+    },
+    {
+      "name": "Anthropic Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        440,
+        200
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "cachedResultName": "Claude Sonnet 5",
+          "mode": "list",
+          "value": "claude-sonnet-5"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": "MsJOoUoULSXgQVIj",
+          "name": "Anthropic account"
+        }
+      },
+      "id": "e412a64d-c9ed-4844-97ed-f23bf6a2fe43"
+    },
+    {
+      "name": "Posta till Mattermost",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://chat.k3s.nu/hooks/REDACTED_MATTERMOST_WEBHOOK",
+        "sendBody": true,
+        "options": {},
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=text",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        }
+      },
+      "id": "b847e247-88b1-4ba7-80f5-a7c8c5ca01d0"
+    }
+  ],
+  "connections": {
+    "Schema": {
+      "main": [
+        [
+          {
+            "node": "Hämta och analysera SigenStor-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hämta och analysera SigenStor-data": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Posta till Mattermost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "id": "4OBqNK9RRSKytdDY"
+}

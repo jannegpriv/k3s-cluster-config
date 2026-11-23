@@ -1,0 +1,187 @@
+{
+  "editable": true,
+  "uid": "chart_sigenai",
+  "tags": [],
+  "props": {
+    "parameters": [],
+    "parameterGroups": []
+  },
+  "component": "oh-chart-page",
+  "config": {
+    "chartType": "month",
+    "icon": "oh:price",
+    "label": "SigenStor AI Utvärdering",
+    "order": "410",
+    "period": "M",
+    "sidebar": true
+  },
+  "slots": {
+    "grid": [
+      {
+        "component": "oh-chart-grid",
+        "config": {
+          "height": "42%",
+          "top": "8%"
+        }
+      },
+      {
+        "component": "oh-chart-grid",
+        "config": {
+          "height": "28%",
+          "top": "64%"
+        }
+      }
+    ],
+    "legend": [
+      {
+        "component": "oh-chart-legend",
+        "config": {
+          "top": "0%"
+        }
+      }
+    ],
+    "series": [
+      {
+        "component": "oh-aggregate-series",
+        "config": {
+          "aggregationFunction": "last",
+          "dimension1": "date",
+          "gridIndex": 0.0,
+          "item": "SigenStorAI_Daily_Battery_Value",
+          "name": "Batterivärde kr (föreg. dygn)",
+          "type": "bar",
+          "xAxisIndex": 0.0,
+          "yAxisIndex": 0.0
+        }
+      },
+      {
+        "component": "oh-aggregate-series",
+        "config": {
+          "aggregationFunction": "last",
+          "dimension1": "date",
+          "gridIndex": 0.0,
+          "item": "SigenStorAI_Cumulative_Battery_Value",
+          "name": "Ackumulerat batterivärde kr (sedan 1/11)",
+          "type": "line",
+          "xAxisIndex": 0.0,
+          "yAxisIndex": 0.0
+        }
+      },
+      {
+        "component": "oh-aggregate-series",
+        "config": {
+          "aggregationFunction": "last",
+          "dimension1": "date",
+          "gridIndex": 1.0,
+          "item": "SigenStorAI_Avoided_Import_Value",
+          "name": "Undviket nätköp kr",
+          "type": "bar",
+          "xAxisIndex": 1.0,
+          "yAxisIndex": 1.0
+        }
+      },
+      {
+        "component": "oh-aggregate-series",
+        "config": {
+          "aggregationFunction": "last",
+          "dimension1": "date",
+          "gridIndex": 1.0,
+          "item": "SigenStorAI_Battery_Export_Revenue",
+          "name": "Batteriexport kr",
+          "type": "bar",
+          "xAxisIndex": 1.0,
+          "yAxisIndex": 1.0
+        }
+      },
+      {
+        "component": "oh-aggregate-series",
+        "config": {
+          "aggregationFunction": "last",
+          "dimension1": "date",
+          "gridIndex": 1.0,
+          "item": "SigenStorAI_GridCharge_Cost",
+          "name": "Nätladdningskostnad kr",
+          "type": "bar",
+          "xAxisIndex": 1.0,
+          "yAxisIndex": 1.0
+        }
+      },
+      {
+        "component": "oh-aggregate-series",
+        "config": {
+          "aggregationFunction": "last",
+          "dimension1": "date",
+          "gridIndex": 1.0,
+          "item": "SigenStorAI_Solar_Opportunity_Cost",
+          "name": "Solladdning alternativkostnad kr",
+          "type": "bar",
+          "xAxisIndex": 1.0,
+          "yAxisIndex": 1.0
+        }
+      },
+      {
+        "component": "oh-aggregate-series",
+        "config": {
+          "aggregationFunction": "last",
+          "dimension1": "date",
+          "gridIndex": 1.0,
+          "item": "SigenStorAI_Cycles",
+          "name": "Cykler",
+          "type": "line",
+          "xAxisIndex": 1.0,
+          "yAxisIndex": 2.0
+        }
+      }
+    ],
+    "tooltip": [
+      {
+        "component": "oh-chart-tooltip",
+        "config": {
+          "confine": true
+        }
+      }
+    ],
+    "xAxis": [
+      {
+        "component": "oh-category-axis",
+        "config": {
+          "categoryType": "month",
+          "gridIndex": 0.0
+        }
+      },
+      {
+        "component": "oh-category-axis",
+        "config": {
+          "categoryType": "month",
+          "gridIndex": 1.0
+        }
+      }
+    ],
+    "yAxis": [
+      {
+        "component": "oh-value-axis",
+        "config": {
+          "gridIndex": 0.0,
+          "name": "kr"
+        }
+      },
+      {
+        "component": "oh-value-axis",
+        "config": {
+          "gridIndex": 1.0,
+          "name": "kr"
+        }
+      },
+      {
+        "component": "oh-value-axis",
+        "config": {
+          "gridIndex": 1.0,
+          "max": 2.0,
+          "min": 0.0,
+          "name": "cykler",
+          "opposite": true
+        }
+      }
+    ]
+  }
+}
