@@ -52,7 +52,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://chat.k3s.nu/hooks/cybd87dfgj8pzrxn6xm384tc8o",
+        "url": "https://chat.k3s.nu/hooks/REDACTED_MATTERMOST_WEBHOOK_CLAUDE_AI",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -261,7 +261,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://chat.k3s.nu/hooks/n6ix6iani3ro8c7h17hm36xkze",
+        "url": "https://chat.k3s.nu/hooks/REDACTED_MATTERMOST_WEBHOOK_K3S",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -314,7 +314,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://chat.k3s.nu/hooks/6qstcuba9tdg5xpmhm4dfptfph",
+        "url": "https://chat.k3s.nu/hooks/REDACTED_MATTERMOST_WEBHOOK_K3S_ALERTS",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ $json }}",

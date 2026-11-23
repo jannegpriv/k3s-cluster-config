@@ -88,3 +88,10 @@ Exporterade med `n8n export:workflow` i podden och nedskurna till `name`, `nodes
   räknas därför uttryckligen i `Europe/Stockholm` (`localMidnight`). Före 2026-11-21
   räknades dygnet 01:00-01:00 svensk tid och en timmes priser saknades.
 - Sidan som visar värdena: `clusters/production/apps/openhab/sigenstor-ai/`.
+
+## Webhook-adresser är maskade (2026-11-23)
+
+Repot är publikt. Mattermost-webhookarna i exporterna är ersatta med
+`REDACTED_MATTERMOST_WEBHOOK_<KANAL>` (`K3S`, `K3S_ALERTS`, `CLAUDE_AI`,
+`ENERGY_ANALYSIS`). Sätt in riktiga adresser före import, och maska dem igen
+innan en ny export committas.
