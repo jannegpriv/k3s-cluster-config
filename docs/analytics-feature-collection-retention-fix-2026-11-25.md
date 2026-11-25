@@ -61,6 +61,18 @@ kontrolleras för lyckade kvartskörningar 00.00–04.30, inga nya nattfel och
 normal stängning av gårdagen vid 04.22. Larm ska inte tystas för att uppfylla
 detta kriterium.
 
+GitOps-ändring `addb533` applicerades av Flux den 25 november. Första ordinarie
+körningen `analytics-collect-features-29927407` använde den nya digesten och
+slutfördes med `success`, 54 GET och publicerat datum 2026-11-25.
+Körningens starttid var 23.07 CET; ny generation blev
+`c4dc29898c664dd791f479e86adbe025`. Detta verifierar skarp publicering efter
+driftsättningen, men ersätter inte nattkontrollen ovan.
+
+De tre gamla terminala feljobben har metadata och nio poddloggar arkiverade i
+Analytics-arbetsytans `work/feature-retention-fix-2026-11-25/`.
+Avgränsad städning finns i `scripts/cleanup-analytics-nightly-failures-20261125.sh`,
+med namn/UID-kontroll och krav på lyckad ersättningskörning med rätt image.
+
 Återgång: återställ den tidigare huvudcontainer-digesten
 `sha256:042b7446a1433c40f96f9104fc438dbd5a026c5b890d92d4d67ce81a497ec80d`
 i just CronJob `analytics-collect-features`, via Git/Flux. Ingen datamigrering.
