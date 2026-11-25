@@ -225,7 +225,7 @@
                 "containers": [
                   {
                     "name": "collector",
-                    "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:042b7446a1433c40f96f9104fc438dbd5a026c5b890d92d4d67ce81a497ec80d",
+                    "image": "ghcr.io/jannegpriv/openhab-analytics-collector@sha256:6e46e85b74cad09d5341b3af9e26fa26484a7c38638ea5cf34c5233de0b14277",
                     "securityContext": {
                       "allowPrivilegeEscalation": false,
                       "readOnlyRootFilesystem": true,

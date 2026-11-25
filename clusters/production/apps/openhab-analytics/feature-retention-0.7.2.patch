@@ -1,0 +1,91 @@
+--- a/src/openhab_analytics/feature_store.py
++++ b/src/openhab_analytics/feature_store.py
+@@ -152,6 +152,7 @@
+     with exclusive(root) as acquired:
+         if not acquired:
+             return {'status': 'busy'}
++        stage, attempted_day = 'prepare', None
+         try:
+             cfg = load_config(config_path)
+             if any(s['timezone'] != TZ for s in cfg['sites'].values()):
+@@ -184,7 +185,11 @@
+             # Yesterday is collected as a full window only once due. At most two catch-up
+             # days per invocation, after today's request; no implicit historical backfill.
+             target = target_day(now, 4, 15)
+-            start = max(calendar_date(index['start_date']), target - timedelta(days=29))
++            # Today's publication occupies one of MAX_DAYS slots. Before 04:15,
++            # target is two days ago: anchoring only to target would request a
++            # date already evicted by today's publication, on every retry.
++            start = max(calendar_date(index['start_date']), target - timedelta(days=29),
++                        calendar_date(today) - timedelta(days=MAX_DAYS - 1))
+             for n in range(max(0, (target - start).days + 1)):
+                 day = (target - timedelta(days=n)).isoformat()
+                 if day not in index['days'] or index['days'][day]['partial']:
+@@ -194,17 +199,21 @@
+                 return {'status': 'up_to_date'}
+             count = 0
+             for day, partial, cut in tasks:
++                attempted_day, stage = day, 'collect'
+                 atomic_json(root / 'status.json', {'status': 'collecting', 'started_at': now.isoformat()})
+                 output = root / 'runs' / uuid.uuid4().hex
+                 report = collect(config_path, day, output, now=now, partial_until=cut if partial else None)
++                stage = 'publish'
+                 index = publish(root, index, output, day, partial, cut, now)
+                 count += report['requests']
+             result = {'status': 'success', 'requests': count, 'finished_at': now.isoformat(),
+                       'generation': index['generation'], 'dates': [d for d, _, _ in tasks]}
+             atomic_json(root / 'status.json', result)
+             return result
+-        except Exception:
+-            result = {'status': 'failed', 'error': 'feature_collection_failed', 'finished_at': now.isoformat()}
++        except Exception as error:
++            # Never include exception text: it can contain URLs or credentials.
++            result = {'status': 'failed', 'error': 'feature_collection_failed', 'finished_at': now.isoformat(),
++                      'stage': stage, 'date': attempted_day, 'error_type': type(error).__name__}
+             atomic_json(root / 'status.json', result)
+             return result
+ 
+--- a/tests/test_feature_store.py
++++ b/tests/test_feature_store.py
+@@ -173,6 +173,41 @@
+         with self.assertRaises(ValueError):feature_backup.retire(self.feature,self.state,self.nas,now=NOW,apply=True)
+         self.assertEqual(self.daily_bytes,(self.daily/'active.json').read_bytes())
+ 
++    def test_full_catalog_midnight_catchup_never_reimports_evicted_days(self):
++        self.setup_store()
++        # Fill a real catalog, including the 25-hour autumn DST day.
++        for n in range(32):
++            self.run_features(datetime(2026,10,24,11,tzinfo=timezone.utc)+timedelta(days=n))
++        old=store.read_index(self.feature)
++        self.assertEqual(len(old['days']),31)
++        self.assertIn('2026-10-25',old['days'])
++        self.assertTrue(old['days']['2026-11-24']['partial'])
++        self.assertEqual(store.checked(self.feature,old,'2026-10-25').energy('house','2026-10-25')['reported_load_energy_kwh'],25)
++        # The first new-day publication evicts Oct 25; following retries must
++        # not reimport it merely because target_day still points to Nov 23.
++        for clock in ['00:07','00:22','01:37','04:07','04:14','04:15','04:22']:
++            now=datetime.fromisoformat('2026-11-25T'+clock+':00+01:00')
++            self.fake.requests.clear()
++            result=store.run(self.feature,self.config_path,now=now)
++            self.assertIn(result['status'],('success','up_to_date'),result)
++            for request in self.fake.requests:
++                self.assertNotIn('2026-10-25',str(request))
++            ix=store.read_index(self.feature)
++            self.assertEqual(len(ix['days']),31)
++            self.assertNotIn('2026-10-25',ix['days'])
++            self.assertEqual(ix['days']['2026-11-24']['partial'],clock<'04:15')
++        self.assertEqual(self.daily_bytes,(self.daily/'active.json').read_bytes())
++
++    def test_publication_error_has_safe_stage_and_date(self):
++        self.setup_store()
++        with patch.object(store,'publish',side_effect=KeyError('secret-token-must-not-be-logged')):
++            result=store.run(self.feature,self.config_path,now=NOW)
++        self.assertEqual(result['status'],'failed')
++        self.assertEqual(result['stage'],'publish')
++        self.assertEqual(result['date'],'2026-10-18')
++        self.assertEqual(result['error_type'],'KeyError')
++        self.assertNotIn('secret-token',json.dumps(result))
++
+     def test_protocol_hot_reload_window_voice_and_pagination(self):
+         self.setup_store();self.run_features()
+         from mcp import Client
