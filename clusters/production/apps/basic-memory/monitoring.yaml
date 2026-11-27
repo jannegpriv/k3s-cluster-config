@@ -20,15 +20,40 @@ spec:
         severity: warning
       annotations:
         summary: Basic Memory has been unavailable for five minutes
+    # Backup Jobs must keep the basic-memory-backup- prefix, including manual runs.
+    # Completion time is only accepted with a successful pod; restore/copy Jobs
+    # are deliberately excluded. CronJob status survives ordinary Job rotation.
+    - record: basic_memory_backup_last_successful_time_seconds
+      expr: |
+        max by (namespace) (
+          kube_cronjob_status_last_successful_time{namespace="basic-memory",cronjob="basic-memory-backup"}
+          or
+          (kube_job_status_completion_time{namespace="basic-memory",job_name=~"basic-memory-backup-.+"}
+            and on (namespace, job_name)
+            (kube_job_status_succeeded{namespace="basic-memory",job_name=~"basic-memory-backup-.+"} > 0))
+        )
     - alert: BasicMemoryBackupStale
-      expr: (time() - kube_cronjob_status_last_successful_time{namespace="basic-memory",cronjob="basic-memory-backup"}
-        > 108000) or ((time() - kube_cronjob_created{namespace="basic-memory",cronjob="basic-memory-backup"}
-        > 108000) unless on(namespace,cronjob) kube_cronjob_status_last_successful_time{namespace="basic-memory",cronjob="basic-memory-backup"})
+      expr: |
+        time() - (
+          basic_memory_backup_last_successful_time_seconds{namespace="basic-memory"}
+          or on (namespace)
+          max by (namespace) (kube_cronjob_created{namespace="basic-memory",cronjob="basic-memory-backup"})
+        ) > 108000
       for: 5m
       labels:
         severity: warning
       annotations:
-        summary: Basic Memory has no successful NAS backup within 30 hours
+        summary: Basic Memory has no successful NAS backup within 30 hours (scheduled or manual)
+    - alert: BasicMemoryScheduledBackupStale
+      expr: (time() - kube_cronjob_status_last_successful_time{namespace="basic-memory",cronjob="basic-memory-backup"}
+        > 108000) or ((time() - kube_cronjob_created{namespace="basic-memory",cronjob="basic-memory-backup"}
+        > 108000) unless on(namespace,cronjob) kube_cronjob_status_last_successful_time{namespace="basic-memory",cronjob="basic-memory-backup"})
+        or absent(kube_cronjob_created{namespace="basic-memory",cronjob="basic-memory-backup"})
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: Basic Memory scheduled backup has not succeeded within 30 hours, or its schedule is missing; manual backups do not clear this alert
     - alert: BasicMemoryStorageHigh
       expr: 100 * kubelet_volume_stats_used_bytes{namespace="basic-memory",persistentvolumeclaim="basic-memory-data"}
         / kubelet_volume_stats_capacity_bytes{namespace="basic-memory",persistentvolumeclaim="basic-memory-data"}

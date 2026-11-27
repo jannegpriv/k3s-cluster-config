@@ -127,6 +127,10 @@ the backup instead of silently losing accepted updates. Recovery point target: 2
 To exercise a backup: create a uniquely named Job from CronJob `basic-memory-backup`
 and inspect that Job's completion and checksum log. Check the scheduled run
 separately; a recent successful manual backup alone does not prove the schedule ran.
+Use the `basic-memory-backup-` Job name prefix for manual backups too. Keep the
+completed manual Job until a newer scheduled backup succeeds: its completion
+metric is the receipt used by the freshness alert. Do not use this prefix for
+restore or copy tests.
 
 Restore into a **new** PVC, never over the running instance. Download the archive
 and its `.sha256` file over SSH with the pinned host key; verify SHA256. Run
@@ -157,8 +161,18 @@ and reconcile Flux before adding data. An absent DNS record alone is not isolati
 Acceptance also requires authenticated cross-client create/read/search/update/delete,
 unauthenticated 401s, NetworkPolicy denial from other pods, persistence across restart
 and worker relocation, and NAS restoration with index rebuild on an isolated volume.
-Prometheus alerts cover no ready replica for 5m, no successful scheduled backup for
-30h, and volume usage above 80% for 15m.
+Prometheus alerts cover no ready replica for 5m and volume usage above 80% for 15m.
+Backup monitoring has two independent warnings, each with a five-minute pending period:
+
+- `BasicMemoryBackupStale`: no successful NAS backup within 30h, counting both
+  scheduled and manual Jobs. Failed Jobs and restore tests do not count.
+- `BasicMemoryScheduledBackupStale`: no successful scheduled backup within 30h,
+  or the CronJob is missing. A manual backup never clears this warning. Individual
+  failed Jobs also remain covered by the cluster's existing Job failure alert.
+
+Run `python3 scripts/test-basic-memory-backup-alerts.py` from the repository root
+with PyYAML and `promtool` installed. The tests cover manual recovery, failed and
+unrelated Jobs, missing schedules, history rotation, and the threshold/pending period.
 
 References: [Basic Memory release](https://github.com/basicmachines-co/basic-memory/releases/tag/v1.0.0),
 [configuration](https://docs.basicmemory.com/reference/configuration),
