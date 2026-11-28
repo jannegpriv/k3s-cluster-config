@@ -614,7 +614,7 @@
                 "containers": [
                   {
                     "name": "backup",
-                    "image": "ghcr.io/jannegpriv/openhab-analytics-backup@sha256:7773692f064343adca82b15b1132830ba71c8f00144b833bd5c1fa460e3814e6",
+                    "image": "ghcr.io/jannegpriv/openhab-analytics-backup@sha256:86179c5c76711477fb3de732f8df18f2ac5d4074e78f9c6f013b467f27dcfc8c",
                     "args": [
                       "retire",
                       "--apply",
